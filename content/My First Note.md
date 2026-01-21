@@ -1,10 +1,5 @@
----
-date: 1-20-26
-tags:
-  - thoughts
-  - tech
----
-This is a new page on my site. I am working on connecting my AI central command to Obsidian for easy note taking - betr guy
+// entire file content ...
+Title: My First Note
 
-I like studying the self and being intentional with how I spend my attention - betr guy
-[[2026_Goals]]
+This is my first note. It's just a test.
+Edit: this edit was made by pegasus garden writer on 1/20/26 - betr guy
