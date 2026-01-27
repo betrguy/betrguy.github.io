@@ -1,48 +1,56 @@
 @use "./base.scss";
 
-// 1. BIGGER BODY TEXT
-body, p, li {
-  font-size: 1.25rem; // Larger, book-like text
-  line-height: 1.8;   // More breathing room
+// 1. TARGETED RED THEME (#8A1800)
+// Forces the "Explorer" title, "Home", and file links to be Deep Red
+h1.article-title, 
+.explorer .explorer-title, 
+.explorer .folder-outer a, 
+.explorer .folder-outer .file-title {
+  color: #8A1800 !important;
 }
 
-// 2. THE "REVEAL ON SCROLL" FADE
-// Creates a fog at the bottom of the screen
+// 2. LARGE HOME & HEADER TEXT
+// Makes the main page title (e.g. "Home" or "7 - New World Grid") significantly larger
+h1.article-title {
+  font-size: 3.5rem !important; 
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+// 3. LARGE NOTE BODY TEXT
+// Only targets text inside the article (paragraphs and lists)
+// NOT the sidebar/explorer
+article p, article li {
+  font-size: 1.4rem !important; // Big, readable book text
+  line-height: 1.8;
+  color: var(--dark); // Keep body text standard color (black/white)
+}
+
+// 4. "REVEAL ON SCROLL" FADE
+// The fog effect at the bottom
 body::after {
   content: "";
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 150px; // Height of the fade
-  pointer-events: none; // Allows clicking through the fade
+  height: 150px; 
+  pointer-events: none; 
   background: linear-gradient(to bottom, transparent, var(--light));
   z-index: 100;
 }
 
-// 3. EXPLORER & HOME RED THEME
-// Targets the "Home" title and Explorer text
-h1, .page-title a, .explorer-title {
-  color: var(--secondary) !important;
-  font-weight: 700;
+// 5. EXPLORER SIZE LOCK
+// Ensures Explorer stays compact while body text grows
+.explorer {
+  font-size: 0.95rem !important; 
 }
 
-// 4. DARK MODE TOGGLE
-.darkmode-toggle {
-  color: var(--secondary);
-}
-
-// 5. EXPLORER ITEM COLORS
-// Makes the folder names/file names Mahogany
-.explorer .folder-title, .explorer .file-title {
-  color: var(--secondary);
-}
-
-// 6. WHITE TEXT IN DARK MODE
-// Ensures the main note text is crisp white
-[saved-theme="dark"] p, 
-[saved-theme="dark"] li, 
-[saved-theme="dark"] h2, 
-[saved-theme="dark"] h3 {
-  color: #ffffff;
+// 6. DARK MODE ADJUSTMENT
+// In dark mode, #8A1800 is hard to read against black. 
+// We switch it to a brighter red ONLY for dark mode.
+[saved-theme="dark"] h1.article-title, 
+[saved-theme="dark"] .explorer .explorer-title, 
+[saved-theme="dark"] .explorer .folder-outer a {
+  color: #ff6b6b !important;
 }

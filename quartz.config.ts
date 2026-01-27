@@ -15,9 +15,10 @@ const config: QuartzConfig = {
       fontOrigin: "googleFonts",
       cdnCaching: true,
       typography: {
-        // STYLIZED FONTS
-        header: "Playfair Display", 
-        body: "Crimson Pro",
+        // HEAVY SERIF for Headers
+        header: "Tinos", 
+        // Readable Serif for Body
+        body: "Merriweather",
         code: "IBM Plex Mono",
       },
       colors: {
@@ -27,18 +28,20 @@ const config: QuartzConfig = {
           gray: "#b8b8b8",
           darkgray: "#4e4e4e",
           dark: "#2b2b2b",
-          secondary: "#660000", // Mahogany Red (Light Mode)
+          // YOUR DEEP RED (Applied to links/headers)
+          secondary: "#8A1800", 
           tertiary: "#84a59d",
-          highlight: "rgba(102, 0, 0, 0.15)",
+          highlight: "rgba(138, 24, 0, 0.15)",
           textHighlight: "#fff23688",
         },
         darkMode: {
-          light: "#121212",      // Deep Black background
+          light: "#121212",
           lightgray: "#393639",
           gray: "#646464",
           darkgray: "#d4d4d4",
-          dark: "#ffffff",       // Pure White text
-          secondary: "#ff4d4d",  // Bright Red for links (Dark Mode)
+          dark: "#ebebec",
+          // Bright Red for contrast in dark mode (or keep #8A1800 if you prefer dark-on-dark)
+          secondary: "#ff4d4d", 
           tertiary: "#84a59d",
           highlight: "rgba(255, 77, 77, 0.15)",
           textHighlight: "#b3aa0288",
