@@ -39,12 +39,15 @@ export const defaultPageLayout: PageLayout = {
 // 3. REQUIRED EXPORT
 export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
-// 4. HOMEPAGE LAYOUT (Fixed: Single definition, Date enabled)
+// 4. HOMEPAGE LAYOUT (The Clean Fix)
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // Component.ArticleTitle(), // <--- HIDDEN (Removes "Home"/"Index" header)
-    Component.ContentMeta(),  // <--- ACTIVE (Shows "Jan 27, 2026 1 min read")
-    Component.Content(),
+    // --- VISUAL ELEMENTS HIDDEN ---
+    // Component.ArticleTitle(), // <--- HIDDEN: Removes the big "Betrguy is writing..." text
+    // Component.ContentMeta(),  // <--- HIDDEN: Removes "Jan 27, 2026 1 min read"
+    // ------------------------------
+    
+    Component.Content(), // Only your "Welcome" text remains
   ],
   left: [
     // Component.PageTitle(), // REMOVED
