@@ -14,36 +14,39 @@ export const sharedPageComponents: SharedLayout = {
   }),
 }
 
-// 2. STANDARD NOTE LAYOUT
+// 2. STANDARD NOTE LAYOUT (Keeps Title for normal notes)
 export const defaultPageLayout: PageLayout = {
   beforeBody: [
     Component.Breadcrumbs(),
     Component.ArticleTitle(),
-    Component.ContentMeta(),
+    Component.ContentMeta(), 
     Component.TagList(),
   ],
   left: [
+    Component.PageTitle(),
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
   right: [
+    Component.Graph(),
     Component.DesktopOnly(Component.TableOfContents()),
     Component.Backlinks(),
   ],
 }
 
-// 3. REQUIRED EXPORT
+// 3. CONTENT PAGE LAYOUT
 export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
-// 4. HOMEPAGE LAYOUT (The Clean Fix)
+// 4. HOMEPAGE LAYOUT (MODIFIED)
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // WE HAVE PHYSICALLY DELETED THE TITLE AND META COMPONENTS HERE
+    // REMOVED: Component.ArticleTitle() <-- This stops it from printing "Betrguy is writing..."
     Component.Content(), 
   ],
   left: [
+    Component.PageTitle(),
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
@@ -53,8 +56,8 @@ export const defaultIndexPageLayout: PageLayout = {
   afterBody: [
     Component.RecentNotes({ 
       title: "Latest Notes", 
-      limit: 10, 
-      showTags: false 
+      limit: 10,
+      showTags: false,
     }),
   ],
 }
@@ -63,6 +66,7 @@ export const defaultIndexPageLayout: PageLayout = {
 export const defaultListPageLayout: PageLayout = {
   beforeBody: [Component.Breadcrumbs(), Component.ArticleTitle(), Component.ContentMeta()],
   left: [
+    Component.PageTitle(),
     Component.MobileOnly(Component.Spacer()),
     Component.Flex({
       components: [

@@ -1,33 +1,39 @@
 @use "./base.scss";
 
-// 1. TARGETED RED THEME (#8A1800)
-// Forces the "Explorer" title, "Home", and file links to be Deep Red
+// 1. GLOBAL RED THEME (#8A1800)
+// Targets Article Titles AND Manual H1s (like "# Home")
 h1.article-title, 
+article h1, 
 .explorer .explorer-title, 
 .explorer .folder-outer a, 
 .explorer .folder-outer .file-title {
   color: #8A1800 !important;
 }
 
-// 2. LARGE HOME & HEADER TEXT
-// Makes the main page title (e.g. "Home" or "7 - New World Grid") significantly larger
-h1.article-title {
+// 2. DEEPER RED FOR DARK MODE
+[saved-theme="dark"] h1.article-title, 
+[saved-theme="dark"] article h1,
+[saved-theme="dark"] .explorer .explorer-title, 
+[saved-theme="dark"] .explorer .folder-outer a {
+  color: #D32F2F !important; 
+}
+
+// 3. TYPOGRAPHY SCALING (For both types of Headers)
+h1.article-title, article h1 {
   font-size: 3.5rem !important; 
   font-weight: 700;
   margin-bottom: 1rem;
+  margin-top: 0; /* Fix alignment since we removed the component */
 }
 
-// 3. LARGE NOTE BODY TEXT
-// Only targets text inside the article (paragraphs and lists)
-// NOT the sidebar/explorer
+// 4. BODY TEXT
 article p, article li {
-  font-size: 1.4rem !important; // Big, readable book text
+  font-size: 1.4rem !important; 
   line-height: 1.8;
-  color: var(--dark); // Keep body text standard color (black/white)
+  color: var(--dark); 
 }
 
-// 4. "REVEAL ON SCROLL" FADE
-// The fog effect at the bottom
+// 5. FADE EFFECT
 body::after {
   content: "";
   position: fixed;
@@ -40,17 +46,7 @@ body::after {
   z-index: 100;
 }
 
-// 5. EXPLORER SIZE LOCK
-// Ensures Explorer stays compact while body text grows
+// 6. EXPLORER SIZE LOCK
 .explorer {
   font-size: 0.95rem !important; 
-}
-
-// 6. DARK MODE ADJUSTMENT
-// In dark mode, #8A1800 is hard to read against black. 
-// We switch it to a brighter red ONLY for dark mode.
-[saved-theme="dark"] h1.article-title, 
-[saved-theme="dark"] .explorer .explorer-title, 
-[saved-theme="dark"] .explorer .folder-outer a {
-  color: #ff6b6b !important;
 }
