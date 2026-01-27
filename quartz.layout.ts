@@ -14,7 +14,7 @@ export const sharedPageComponents: SharedLayout = {
   }),
 }
 
-// 2. STANDARD NOTE LAYOUT (For your individual notes)
+// 2. STANDARD NOTE LAYOUT
 export const defaultPageLayout: PageLayout = {
   beforeBody: [
     Component.Breadcrumbs(),
@@ -23,33 +23,30 @@ export const defaultPageLayout: PageLayout = {
     Component.TagList(),
   ],
   left: [
-    Component.PageTitle(),
+    // Component.PageTitle(), // <--- REMOVED (Hides "Pegasus Garden")
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
   right: [
-    Component.Graph(),
+    // Component.Graph(), // <--- REMOVED (Hides Graph View)
     Component.DesktopOnly(Component.TableOfContents()),
     Component.Backlinks(),
   ],
 }
 
-// 3. CONTENT PAGE LAYOUT (*** CRITICAL FIX: The missing export ***)
-// Quartz requires this specific name to function. We just point it to the default layout.
+// 3. REQUIRED EXPORT (Do not delete)
 export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
-// 4. HOMEPAGE LAYOUT (The Feed)
+// 4. HOMEPAGE LAYOUT
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // We removed 'Hero' because it doesn't exist. 
-    // Instead, we use the standard Title/Content to show your "Welcome" text.
-    Component.ArticleTitle(), 
+    // Component.ArticleTitle(), // <--- REMOVED (Hides "index" title)
     Component.Content(),
   ],
   left: [
-    Component.PageTitle(),
+    // Component.PageTitle(), // <--- REMOVED (Hides "Pegasus Garden")
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
@@ -57,20 +54,19 @@ export const defaultIndexPageLayout: PageLayout = {
   ],
   right: [],
   afterBody: [
-    // THE FEED: We use 'RecentNotes' which is the REAL Quartz component.
     Component.RecentNotes({ 
       title: "Latest Notes", 
-      limit: 10,
-      showTags: false,
+      limit: 10, 
+      showTags: false 
     }),
   ],
 }
 
-// 5. LIST LAYOUT (For Tags/Folders)
+// 5. LIST LAYOUT
 export const defaultListPageLayout: PageLayout = {
   beforeBody: [Component.Breadcrumbs(), Component.ArticleTitle(), Component.ContentMeta()],
   left: [
-    Component.PageTitle(),
+    // Component.PageTitle(), // <--- REMOVED
     Component.MobileOnly(Component.Spacer()),
     Component.Flex({
       components: [
