@@ -14,7 +14,7 @@ export const sharedPageComponents: SharedLayout = {
   }),
 }
 
-// 2. STANDARD NOTE LAYOUT
+// 2. STANDARD NOTE LAYOUT (For regular notes)
 export const defaultPageLayout: PageLayout = {
   beforeBody: [
     Component.Breadcrumbs(),
@@ -23,30 +23,30 @@ export const defaultPageLayout: PageLayout = {
     Component.TagList(),
   ],
   left: [
-    // Component.PageTitle(), // <--- REMOVED (Hides "Pegasus Garden")
+    // Component.PageTitle(), // REMOVED
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
   right: [
-    // Component.Graph(), // <--- REMOVED (Hides Graph View)
+    // Component.Graph(), // REMOVED
     Component.DesktopOnly(Component.TableOfContents()),
     Component.Backlinks(),
   ],
 }
 
-// 3. REQUIRED EXPORT (Do not delete)
+// 3. REQUIRED EXPORT
 export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
-// 4. HOMEPAGE LAYOUT
+// 4. HOMEPAGE LAYOUT (The Critical Fix)
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // Component.ArticleTitle(), // <--- REMOVED (Hides "index" title)
+    // Component.ArticleTitle(), // <--- STRICTLY COMMENTED OUT (Kills "index" text)
     Component.Content(),
   ],
   left: [
-    // Component.PageTitle(), // <--- REMOVED (Hides "Pegasus Garden")
+    // Component.PageTitle(), // REMOVED
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
@@ -66,7 +66,7 @@ export const defaultIndexPageLayout: PageLayout = {
 export const defaultListPageLayout: PageLayout = {
   beforeBody: [Component.Breadcrumbs(), Component.ArticleTitle(), Component.ContentMeta()],
   left: [
-    // Component.PageTitle(), // <--- REMOVED
+    // Component.PageTitle(), // REMOVED
     Component.MobileOnly(Component.Spacer()),
     Component.Flex({
       components: [
