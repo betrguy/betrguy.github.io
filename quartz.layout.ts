@@ -15,7 +15,6 @@ export const sharedPageComponents: SharedLayout = {
 }
 
 // 2. STANDARD NOTE LAYOUT (For pages 1, 2, 3...)
-// We keep navigation tools here so individual notes are still easy to use.
 export const defaultPageLayout: PageLayout = {
   beforeBody: [
     Component.Breadcrumbs(),
@@ -24,14 +23,14 @@ export const defaultPageLayout: PageLayout = {
     Component.TagList(),
   ],
   left: [
-    Component.PageTitle(), // We keep "Pegasus Garden" on notes for context
+    Component.PageTitle(), // Keep Title on inner notes for navigation context
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
   right: [
-    // Graph is kept for NOTES only. If you want it gone everywhere, delete this line.
+    // Graph is kept for NOTES only.
     Component.Graph(), 
     Component.DesktopOnly(Component.TableOfContents()),
     Component.Backlinks(),
@@ -41,22 +40,22 @@ export const defaultPageLayout: PageLayout = {
 // 3. CONTENT PAGE LAYOUT
 export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
-// 4. HOMEPAGE LAYOUT (THE CLEAN VERSION)
+// 4. HOMEPAGE LAYOUT (THE CLEAN VERSION + LIST)
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // CLEAN: No Breadcrumbs, No Titles, No Metadata.
-    // Only your manual Markdown content will show.
+    // No Title, No Meta. Just your manual # Home text.
     Component.Content(), 
   ],
   left: [
-    // CLEAN: "Pegasus Garden" title removed.
+    // REMOVED: Component.PageTitle() -> This kills "Pegasus Garden" on the left
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
-  right: [], // CLEAN: Empty array = No Graph View.
+  right: [], // REMOVED: Graph -> This ensures the right side is empty
   afterBody: [
+    // ADDED: This creates the list of notes you wanted!
     Component.RecentNotes({ 
       title: "Latest Notes", 
       limit: 10,
