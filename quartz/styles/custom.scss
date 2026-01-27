@@ -14,3 +14,18 @@
   gap: 1.5rem;
   padding-left: 0;
 }
+
+/* HIDE TITLE AND METADATA ON HOMEPAGE ONLY */
+.popover-hint:has(a.internal[href="/"]) ~ .article-title, 
+.popover-hint:has(a.internal[href="/"]) ~ .content-meta {
+    display: none !important;
+}
+
+/* Fallback: Direct targeting if the above selector misses */
+h1.article-title {
+  display: none !important;
+}
+
+.content-meta {
+  display: none !important;
+}

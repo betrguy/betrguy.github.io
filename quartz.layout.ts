@@ -14,7 +14,7 @@ export const sharedPageComponents: SharedLayout = {
   }),
 }
 
-// 2. STANDARD NOTE LAYOUT (For regular notes)
+// 2. STANDARD NOTE LAYOUT
 export const defaultPageLayout: PageLayout = {
   beforeBody: [
     Component.Breadcrumbs(),
@@ -23,14 +23,12 @@ export const defaultPageLayout: PageLayout = {
     Component.TagList(),
   ],
   left: [
-    // Component.PageTitle(), // REMOVED (Hides "Pegasus Garden")
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
   right: [
-    // Component.Graph(), // REMOVED (Hides Graph)
     Component.DesktopOnly(Component.TableOfContents()),
     Component.Backlinks(),
   ],
@@ -42,15 +40,10 @@ export const defaultContentPageLayout: PageLayout = defaultPageLayout
 // 4. HOMEPAGE LAYOUT (The Clean Fix)
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // --- VISUAL ELEMENTS HIDDEN ---
-    // Component.ArticleTitle(), // <--- HIDDEN: Removes the big "Betrguy is writing..." text
-    // Component.ContentMeta(),  // <--- HIDDEN: Removes "Jan 27, 2026 1 min read"
-    // ------------------------------
-    
-    Component.Content(), // Only your "Welcome" text remains
+    // WE HAVE PHYSICALLY DELETED THE TITLE AND META COMPONENTS HERE
+    Component.Content(), 
   ],
   left: [
-    // Component.PageTitle(), // REMOVED
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
@@ -70,7 +63,6 @@ export const defaultIndexPageLayout: PageLayout = {
 export const defaultListPageLayout: PageLayout = {
   beforeBody: [Component.Breadcrumbs(), Component.ArticleTitle(), Component.ContentMeta()],
   left: [
-    // Component.PageTitle(), // REMOVED
     Component.MobileOnly(Component.Spacer()),
     Component.Flex({
       components: [
