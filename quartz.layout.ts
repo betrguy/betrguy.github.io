@@ -1,20 +1,44 @@
 import { PageLayout, SharedLayout } from "./quartz/cfg"
 import * as Component from "./quartz/components"
 
-// components shared across all pages
+// 1. SHARED COMPONENTS (Header/Footer)
 export const sharedPageComponents: SharedLayout = {
   head: Component.Head(),
   header: [],
   afterBody: [],
   footer: Component.Footer({
     links: {
-      GitHub: "https://github.com/jackyzha0/quartz",
-      "Discord Community": "https://discord.gg/cRFFHYye7t",
+      GitHub: "https://github.com/betrguy", // Updated to your username
+      "Quartz Discord": "https://discord.gg/cRFFHYye7t",
     },
   }),
 }
 
-// components for pages that display a single page (e.g. a single note)
+// 2. STANDARD NOTE LAYOUT (This was missing!)
+// This controls how your actual notes (1, 2, 3...) look when clicked.
+export const defaultPageLayout: PageLayout = {
+  beforeBody: [
+    Component.Breadcrumbs(),
+    Component.ArticleTitle(),
+    Component.ContentMeta(),
+    Component.TagList(),
+  ],
+  left: [
+    Component.PageTitle(),
+    Component.MobileOnly(Component.Spacer()),
+    Component.Search(),
+    Component.Darkmode(),
+    Component.DesktopOnly(Component.Explorer()),
+  ],
+  right: [
+    Component.Graph(),
+    Component.DesktopOnly(Component.TableOfContents()),
+    Component.Backlinks(),
+  ],
+}
+
+// 3. YOUR HOMEPAGE LAYOUT (The Feed)
+// This controls the Index page.
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
     Component.Hero({
@@ -31,11 +55,10 @@ export const defaultIndexPageLayout: PageLayout = {
   ],
   right: [],
   afterBody: [
-    // REPLACE "Component.Content()," WITH THIS:
+    // THE FEED: Lists notes in reverse order (7, 6, 5...)
     Component.PageList({
       limit: 10,
       sort: (f1, f2) => {
-        // Sorts 7 before 6, etc.
         const name1 = f1.name 
         const name2 = f2.name
         if (name1 > name2) return -1 
@@ -45,7 +68,8 @@ export const defaultIndexPageLayout: PageLayout = {
     }),
   ],
 }
-// components for pages that display lists of pages  (e.g. tags or folders)
+
+// 4. LIST LAYOUT (For Tags/Folders)
 export const defaultListPageLayout: PageLayout = {
   beforeBody: [Component.Breadcrumbs(), Component.ArticleTitle(), Component.ContentMeta()],
   left: [
