@@ -1,39 +1,56 @@
 @use "./base.scss";
 
-// 1. GLOBAL RED THEME (#8A1800)
-// Targets Article Titles AND Manual H1s (like "# Home")
-h1.article-title, 
-article h1, 
-.explorer .explorer-title, 
-.explorer .folder-outer a, 
-.explorer .folder-outer .file-title {
+/* --- 1. THE RED THEME (#8A1800) --- */
+
+// Targets Manual H1s (like your "# Home")
+article h1 {
   color: #8A1800 !important;
-}
-
-// 2. DEEPER RED FOR DARK MODE
-[saved-theme="dark"] h1.article-title, 
-[saved-theme="dark"] article h1,
-[saved-theme="dark"] .explorer .explorer-title, 
-[saved-theme="dark"] .explorer .folder-outer a {
-  color: #D32F2F !important; 
-}
-
-// 3. TYPOGRAPHY SCALING (For both types of Headers)
-h1.article-title, article h1 {
   font-size: 3.5rem !important; 
   font-weight: 700;
   margin-bottom: 1rem;
-  margin-top: 0; /* Fix alignment since we removed the component */
+  margin-top: 0; 
 }
 
-// 4. BODY TEXT
+// Targets "Explorer" Title
+.explorer .explorer-title {
+  color: #8A1800 !important;
+}
+
+/* --- 2. THE EXPLORER TEXT FIX --- */
+// We target every anchor tag (a) and file span inside the explorer
+.explorer .folder-outer a,
+.explorer .folder-outer .file-title,
+.explorer ul li a,
+.explorer .file-title {
+  color: #8A1800 !important;
+}
+
+
+/* --- 3. DARK MODE ADJUSTMENTS --- */
+// Switch to Deeper Blood Red (#D32F2F) for visibility on black
+[saved-theme="dark"] article h1,
+[saved-theme="dark"] .explorer .explorer-title {
+  color: #D32F2F !important; 
+}
+
+// Force Explorer Text to match the Blood Red in Dark Mode
+[saved-theme="dark"] .explorer .folder-outer a,
+[saved-theme="dark"] .explorer .folder-outer .file-title,
+[saved-theme="dark"] .explorer ul li a,
+[saved-theme="dark"] .explorer .file-title {
+  color: #D32F2F !important;
+}
+
+
+/* --- 4. GENERAL STYLING --- */
+// Body Text
 article p, article li {
   font-size: 1.4rem !important; 
   line-height: 1.8;
   color: var(--dark); 
 }
 
-// 5. FADE EFFECT
+// Fade Effect
 body::after {
   content: "";
   position: fixed;
@@ -46,7 +63,7 @@ body::after {
   z-index: 100;
 }
 
-// 6. EXPLORER SIZE LOCK
+// Lock Explorer Size
 .explorer {
   font-size: 0.95rem !important; 
 }

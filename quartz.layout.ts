@@ -14,23 +14,25 @@ export const sharedPageComponents: SharedLayout = {
   }),
 }
 
-// 2. STANDARD NOTE LAYOUT (Keeps Title for normal notes)
+// 2. STANDARD NOTE LAYOUT (For your content pages - Keeps everything)
 export const defaultPageLayout: PageLayout = {
   beforeBody: [
     Component.Breadcrumbs(),
-    Component.ArticleTitle(),
-    Component.ContentMeta(), 
+    Component.ArticleTitle(), // Keeps title on notes
+    Component.ContentMeta(),  // Keeps dates on notes
     Component.TagList(),
   ],
   left: [
-    Component.PageTitle(),
+    Component.PageTitle(),    // Keeps site name on notes
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
   right: [
-    Component.Graph(),
+    // Graph removed from Home, but usually kept on Notes. 
+    // If you want it gone EVERYWHERE, delete this line:
+    Component.Graph(), 
     Component.DesktopOnly(Component.TableOfContents()),
     Component.Backlinks(),
   ],
@@ -39,20 +41,20 @@ export const defaultPageLayout: PageLayout = {
 // 3. CONTENT PAGE LAYOUT
 export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
-// 4. HOMEPAGE LAYOUT (MODIFIED)
+// 4. HOMEPAGE LAYOUT (The "Clean" Version)
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // REMOVED: Component.ArticleTitle() <-- This stops it from printing "Betrguy is writing..."
+    // STRIPPED: No Title, No Meta. Just your manual content.
     Component.Content(), 
   ],
   left: [
-    Component.PageTitle(),
+    // STRIPPED: Component.PageTitle() removed. "Pegasus Garden" is gone.
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
-  right: [],
+  right: [], // STRIPPED: Empty array = No Graph View.
   afterBody: [
     Component.RecentNotes({ 
       title: "Latest Notes", 
