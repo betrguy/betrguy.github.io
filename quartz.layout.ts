@@ -14,25 +14,24 @@ export const sharedPageComponents: SharedLayout = {
   }),
 }
 
-// 2. STANDARD NOTE LAYOUT (For your content pages - Keeps everything)
+// 2. STANDARD NOTE LAYOUT (For your Content Pages 1-7)
+// We keep the "Standard" look here so navigation works on inner pages.
 export const defaultPageLayout: PageLayout = {
   beforeBody: [
     Component.Breadcrumbs(),
-    Component.ArticleTitle(), // Keeps title on notes
-    Component.ContentMeta(),  // Keeps dates on notes
+    Component.ArticleTitle(),
+    Component.ContentMeta(),
     Component.TagList(),
   ],
   left: [
-    Component.PageTitle(),    // Keeps site name on notes
+    Component.PageTitle(), // Keeps "Pegasus Garden" on inner notes (optional)
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
   right: [
-    // Graph removed from Home, but usually kept on Notes. 
-    // If you want it gone EVERYWHERE, delete this line:
-    Component.Graph(), 
+    Component.Graph(),
     Component.DesktopOnly(Component.TableOfContents()),
     Component.Backlinks(),
   ],
@@ -41,20 +40,24 @@ export const defaultPageLayout: PageLayout = {
 // 3. CONTENT PAGE LAYOUT
 export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
-// 4. HOMEPAGE LAYOUT (The "Clean" Version)
+// 4. HOMEPAGE LAYOUT (THE CLEAN VERSION)
+// This is the specific layout for your "Home" / "Index" page.
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // STRIPPED: No Title, No Meta. Just your manual content.
+    // STRIPPED: No Breadcrumbs (Small "Home")
+    // STRIPPED: No ArticleTitle ("Betrguy is writing...")
+    // STRIPPED: No ContentMeta (Dates/Read time)
+    // RESULT: Only shows your manual "# Home" and text
     Component.Content(), 
   ],
   left: [
-    // STRIPPED: Component.PageTitle() removed. "Pegasus Garden" is gone.
+    // STRIPPED: No PageTitle ("Pegasus Garden")
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
-  right: [], // STRIPPED: Empty array = No Graph View.
+  right: [], // STRIPPED: Empty Array = No Graph View
   afterBody: [
     Component.RecentNotes({ 
       title: "Latest Notes", 
