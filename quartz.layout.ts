@@ -14,8 +14,8 @@ export const sharedPageComponents: SharedLayout = {
   }),
 }
 
-// 2. STANDARD NOTE LAYOUT (For your Content Pages 1-7)
-// We keep the "Standard" look here so navigation works on inner pages.
+// 2. STANDARD NOTE LAYOUT (For pages 1, 2, 3...)
+// We keep navigation tools here so individual notes are still easy to use.
 export const defaultPageLayout: PageLayout = {
   beforeBody: [
     Component.Breadcrumbs(),
@@ -24,14 +24,15 @@ export const defaultPageLayout: PageLayout = {
     Component.TagList(),
   ],
   left: [
-    Component.PageTitle(), // Keeps "Pegasus Garden" on inner notes (optional)
+    Component.PageTitle(), // We keep "Pegasus Garden" on notes for context
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
   right: [
-    Component.Graph(),
+    // Graph is kept for NOTES only. If you want it gone everywhere, delete this line.
+    Component.Graph(), 
     Component.DesktopOnly(Component.TableOfContents()),
     Component.Backlinks(),
   ],
@@ -41,23 +42,20 @@ export const defaultPageLayout: PageLayout = {
 export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
 // 4. HOMEPAGE LAYOUT (THE CLEAN VERSION)
-// This is the specific layout for your "Home" / "Index" page.
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // STRIPPED: No Breadcrumbs (Small "Home")
-    // STRIPPED: No ArticleTitle ("Betrguy is writing...")
-    // STRIPPED: No ContentMeta (Dates/Read time)
-    // RESULT: Only shows your manual "# Home" and text
+    // CLEAN: No Breadcrumbs, No Titles, No Metadata.
+    // Only your manual Markdown content will show.
     Component.Content(), 
   ],
   left: [
-    // STRIPPED: No PageTitle ("Pegasus Garden")
+    // CLEAN: "Pegasus Garden" title removed.
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
-  right: [], // STRIPPED: Empty Array = No Graph View
+  right: [], // CLEAN: Empty array = No Graph View.
   afterBody: [
     Component.RecentNotes({ 
       title: "Latest Notes", 
