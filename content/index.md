@@ -1,11 +1,6 @@
 ---
-
-title: Home
-
+title: Betrguy is writing...
 ---
-
-
-
 Welcome to my library of notes written using pegasus writer! This is where I'll share my thoughts and insights on various topics. I like to study the self, being mindful with how we spend our attention, and exploring new ideas.
 
 Some of my current projects:

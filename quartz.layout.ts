@@ -23,14 +23,14 @@ export const defaultPageLayout: PageLayout = {
     Component.TagList(),
   ],
   left: [
-    // Component.PageTitle(), // REMOVED
+    // Component.PageTitle(), // REMOVED (Hides "Pegasus Garden")
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
   right: [
-    // Component.Graph(), // REMOVED
+    // Component.Graph(), // REMOVED (Hides Graph)
     Component.DesktopOnly(Component.TableOfContents()),
     Component.Backlinks(),
   ],
@@ -39,10 +39,11 @@ export const defaultPageLayout: PageLayout = {
 // 3. REQUIRED EXPORT
 export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
-// 4. HOMEPAGE LAYOUT (The Critical Fix)
+// 4. HOMEPAGE LAYOUT (Fixed: Single definition, Date enabled)
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // Component.ArticleTitle(), // <--- STRICTLY COMMENTED OUT (Kills "index" text)
+    // Component.ArticleTitle(), // <--- HIDDEN (Removes "Home"/"Index" header)
+    Component.ContentMeta(),  // <--- ACTIVE (Shows "Jan 27, 2026 1 min read")
     Component.Content(),
   ],
   left: [
