@@ -1,7 +1,7 @@
 import { PageLayout, SharedLayout } from "./quartz/cfg"
 import * as Component from "./quartz/components"
 
-// 1. SHARED
+// 1. SHARED COMPONENTS
 export const sharedPageComponents: SharedLayout = {
   head: Component.Head(),
   header: [],
@@ -14,7 +14,7 @@ export const sharedPageComponents: SharedLayout = {
   }),
 }
 
-// 2. STANDARD NOTE LAYOUT (*** MAKE SURE THIS IS HERE ***)
+// 2. STANDARD NOTE LAYOUT (For your individual notes)
 export const defaultPageLayout: PageLayout = {
   beforeBody: [
     Component.Breadcrumbs(),
@@ -36,13 +36,17 @@ export const defaultPageLayout: PageLayout = {
   ],
 }
 
-// 3. HOMEPAGE LAYOUT
+// 3. CONTENT PAGE LAYOUT (*** CRITICAL FIX: The missing export ***)
+// Quartz requires this specific name to function. We just point it to the default layout.
+export const defaultContentPageLayout: PageLayout = defaultPageLayout
+
+// 4. HOMEPAGE LAYOUT (The Feed)
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    Component.Hero({
-      title: "Pegasus Garden",
-      content: "A digital garden cultivated by AI and Human collaboration.",
-    }),
+    // We removed 'Hero' because it doesn't exist. 
+    // Instead, we use the standard Title/Content to show your "Welcome" text.
+    Component.ArticleTitle(), 
+    Component.Content(),
   ],
   left: [
     Component.PageTitle(),
@@ -53,20 +57,16 @@ export const defaultIndexPageLayout: PageLayout = {
   ],
   right: [],
   afterBody: [
-    Component.PageList({
+    // THE FEED: We use 'RecentNotes' which is the REAL Quartz component.
+    Component.RecentNotes({ 
+      title: "Latest Notes", 
       limit: 10,
-      sort: (f1, f2) => {
-        const name1 = f1.name 
-        const name2 = f2.name
-        if (name1 > name2) return -1 
-        if (name1 < name2) return 1
-        return 0
-      }
+      showTags: false,
     }),
   ],
 }
 
-// 4. LIST LAYOUT
+// 5. LIST LAYOUT (For Tags/Folders)
 export const defaultListPageLayout: PageLayout = {
   beforeBody: [Component.Breadcrumbs(), Component.ArticleTitle(), Component.ContentMeta()],
   left: [
