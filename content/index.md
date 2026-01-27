@@ -7,7 +7,7 @@ Some of my current projects:
 
 ☢️ E.A.T. (Energy Acceleration Tracker) - A new tool for the American energy sector. 
 
-The E.A.T. tool is designed to track the 'acceleration of energy' by monitoring job listings, loan approvals, and other signals of breakthroughs that would necessitate sudden, massive hiring waves for companies at the forefront of tech/defense.
+The E.A.T. tool is designed to track the 'acceleration of energy' by monitoring job listings, loan approvals, and other signals of breakthroughs that would necessitate sudden, massive hiring waves for companies at the forefront of tech/defense. (SpaceX, Anduril, Helion Energy, Oklo, Radiant, Kairos Power, Commonwealth Fusion, etc.) 
 
 🦄 pegasus writer is my own local writer agent equipped with llama 3.1 uncensored and aider chat. It writes the notes on these pages and I sometimes edit them!
 
