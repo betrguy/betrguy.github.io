@@ -1,21 +1,20 @@
 import { PageLayout, SharedLayout } from "./quartz/cfg"
 import * as Component from "./quartz/components"
 
-// 1. SHARED COMPONENTS (Header/Footer)
+// 1. SHARED
 export const sharedPageComponents: SharedLayout = {
   head: Component.Head(),
   header: [],
   afterBody: [],
   footer: Component.Footer({
     links: {
-      GitHub: "https://github.com/betrguy", // Updated to your username
+      GitHub: "https://github.com/betrguy",
       "Quartz Discord": "https://discord.gg/cRFFHYye7t",
     },
   }),
 }
 
-// 2. STANDARD NOTE LAYOUT (This was missing!)
-// This controls how your actual notes (1, 2, 3...) look when clicked.
+// 2. STANDARD NOTE LAYOUT (*** MAKE SURE THIS IS HERE ***)
 export const defaultPageLayout: PageLayout = {
   beforeBody: [
     Component.Breadcrumbs(),
@@ -37,8 +36,7 @@ export const defaultPageLayout: PageLayout = {
   ],
 }
 
-// 3. YOUR HOMEPAGE LAYOUT (The Feed)
-// This controls the Index page.
+// 3. HOMEPAGE LAYOUT
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
     Component.Hero({
@@ -55,7 +53,6 @@ export const defaultIndexPageLayout: PageLayout = {
   ],
   right: [],
   afterBody: [
-    // THE FEED: Lists notes in reverse order (7, 6, 5...)
     Component.PageList({
       limit: 10,
       sort: (f1, f2) => {
@@ -69,7 +66,7 @@ export const defaultIndexPageLayout: PageLayout = {
   ],
 }
 
-// 4. LIST LAYOUT (For Tags/Folders)
+// 4. LIST LAYOUT
 export const defaultListPageLayout: PageLayout = {
   beforeBody: [Component.Breadcrumbs(), Component.ArticleTitle(), Component.ContentMeta()],
   left: [
