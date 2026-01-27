@@ -15,38 +15,36 @@ export const sharedPageComponents: SharedLayout = {
 }
 
 // components for pages that display a single page (e.g. a single note)
-export const defaultContentPageLayout: PageLayout = {
+export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    Component.ConditionalRender({
-      component: Component.Breadcrumbs(),
-      condition: (page) => page.fileData.slug !== "index",
+    Component.Hero({
+      title: "Pegasus Garden",
+      content: "A digital garden cultivated by AI and Human collaboration.",
     }),
-    Component.ArticleTitle(),
-    Component.ContentMeta(),
-    Component.TagList(),
   ],
   left: [
     Component.PageTitle(),
     Component.MobileOnly(Component.Spacer()),
-    Component.Flex({
-      components: [
-        {
-          Component: Component.Search(),
-          grow: true,
-        },
-        { Component: Component.Darkmode() },
-        { Component: Component.ReaderMode() },
-      ],
-    }),
-    Component.Explorer(),
+    Component.Search(),
+    Component.Darkmode(),
+    Component.DesktopOnly(Component.Explorer()),
   ],
-  right: [
-    Component.Graph(),
-    Component.DesktopOnly(Component.TableOfContents()),
-    Component.Backlinks(),
+  right: [],
+  afterBody: [
+    // REPLACE "Component.Content()," WITH THIS:
+    Component.PageList({
+      limit: 10,
+      sort: (f1, f2) => {
+        // Sorts 7 before 6, etc.
+        const name1 = f1.name 
+        const name2 = f2.name
+        if (name1 > name2) return -1 
+        if (name1 < name2) return 1
+        return 0
+      }
+    }),
   ],
 }
-
 // components for pages that display lists of pages  (e.g. tags or folders)
 export const defaultListPageLayout: PageLayout = {
   beforeBody: [Component.Breadcrumbs(), Component.ArticleTitle(), Component.ContentMeta()],

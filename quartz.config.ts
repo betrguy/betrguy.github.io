@@ -16,15 +16,22 @@ const config: QuartzConfig = {
       provider: "plausible",
     },
     locale: "en-US",
-    baseUrl: "quartz.jzhao.xyz",
+    
+    // CHANGE 1: Update the URL to your GitHub Pages address
+    baseUrl: "betrguy.github.io",
+    
     ignorePatterns: ["private", "templates", ".obsidian"],
-    defaultDateType: "modified",
+    defaultDateType: "created", // I switched this to "created" so your numbered notes stay in order
     theme: {
       fontOrigin: "googleFonts",
       cdnCaching: true,
       typography: {
-        header: "Schibsted Grotesk",
-        body: "Source Sans Pro",
+        // CHANGE 2: Set Header Font to "Libre Baskerville" (Premium Book Look)
+        header: "Libre Baskerville", 
+        
+        // CHANGE 3: Set Body Font to "Merriweather" (Premium Reading Look)
+        body: "Merriweather",
+        
         code: "IBM Plex Mono",
       },
       colors: {
