@@ -1,31 +1,48 @@
 @use "./base.scss";
 
-// put your custom CSS here!
-
-/* Force Footer Centering */
-.page-footer, footer {
-  text-align: center !important;
-  margin-top: 2rem;
+// 1. BIGGER BODY TEXT
+body, p, li {
+  font-size: 1.25rem; // Larger, book-like text
+  line-height: 1.8;   // More breathing room
 }
 
-.page-footer ul, footer ul {
-  display: flex !important;
-  justify-content: center !important;
-  gap: 1.5rem;
-  padding-left: 0;
+// 2. THE "REVEAL ON SCROLL" FADE
+// Creates a fog at the bottom of the screen
+body::after {
+  content: "";
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 150px; // Height of the fade
+  pointer-events: none; // Allows clicking through the fade
+  background: linear-gradient(to bottom, transparent, var(--light));
+  z-index: 100;
 }
 
-/* HIDE TITLE AND METADATA ON HOMEPAGE ONLY */
-.popover-hint:has(a.internal[href="/"]) ~ .article-title, 
-.popover-hint:has(a.internal[href="/"]) ~ .content-meta {
-    display: none !important;
+// 3. EXPLORER & HOME RED THEME
+// Targets the "Home" title and Explorer text
+h1, .page-title a, .explorer-title {
+  color: var(--secondary) !important;
+  font-weight: 700;
 }
 
-/* Fallback: Direct targeting if the above selector misses */
-h1.article-title {
-  display: none !important;
+// 4. DARK MODE TOGGLE
+.darkmode-toggle {
+  color: var(--secondary);
 }
 
-.content-meta {
-  display: none !important;
+// 5. EXPLORER ITEM COLORS
+// Makes the folder names/file names Mahogany
+.explorer .folder-title, .explorer .file-title {
+  color: var(--secondary);
+}
+
+// 6. WHITE TEXT IN DARK MODE
+// Ensures the main note text is crisp white
+[saved-theme="dark"] p, 
+[saved-theme="dark"] li, 
+[saved-theme="dark"] h2, 
+[saved-theme="dark"] h3 {
+  color: #ffffff;
 }

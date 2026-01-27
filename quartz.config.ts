@@ -1,37 +1,23 @@
 import { QuartzConfig } from "./quartz/cfg"
 import * as Plugin from "./quartz/plugins"
 
-/**
- * Quartz 4 Configuration
- *
- * See https://quartz.jzhao.xyz/configuration for more information.
- */
 const config: QuartzConfig = {
   configuration: {
-    pageTitle: "Betrguy is writing...",
-    pageTitleSuffix: "",
+    pageTitle: "Pegasus Garden",
     enableSPA: true,
     enablePopovers: true,
-    analytics: {
-      provider: "plausible",
-    },
+    analytics: { provider: "plausible" },
     locale: "en-US",
-    
-    // CHANGE 1: Update the URL to your GitHub Pages address
     baseUrl: "betrguy.github.io",
-    
     ignorePatterns: ["private", "templates", ".obsidian"],
-    defaultDateType: "created", // I switched this to "created" so your numbered notes stay in order
+    defaultDateType: "created",
     theme: {
       fontOrigin: "googleFonts",
       cdnCaching: true,
       typography: {
-        // CHANGE 2: Set Header Font to "Libre Baskerville" (Premium Book Look)
-        header: "Libre Baskerville", 
-        
-        // CHANGE 3: Set Body Font to "Merriweather" (Premium Reading Look)
-        body: "Merriweather",
-        
+        // STYLIZED FONTS
+        header: "Playfair Display", 
+        body: "Crimson Pro",
         code: "IBM Plex Mono",
       },
       colors: {
@@ -41,20 +27,20 @@ const config: QuartzConfig = {
           gray: "#b8b8b8",
           darkgray: "#4e4e4e",
           dark: "#2b2b2b",
-          secondary: "#284b63",
+          secondary: "#660000", // Mahogany Red (Light Mode)
           tertiary: "#84a59d",
-          highlight: "rgba(143, 159, 169, 0.15)",
+          highlight: "rgba(102, 0, 0, 0.15)",
           textHighlight: "#fff23688",
         },
         darkMode: {
-          light: "#161618",
+          light: "#121212",      // Deep Black background
           lightgray: "#393639",
           gray: "#646464",
           darkgray: "#d4d4d4",
-          dark: "#ebebec",
-          secondary: "#7b97aa",
+          dark: "#ffffff",       // Pure White text
+          secondary: "#ff4d4d",  // Bright Red for links (Dark Mode)
           tertiary: "#84a59d",
-          highlight: "rgba(143, 159, 169, 0.15)",
+          highlight: "rgba(255, 77, 77, 0.15)",
           textHighlight: "#b3aa0288",
         },
       },
@@ -63,14 +49,9 @@ const config: QuartzConfig = {
   plugins: {
     transformers: [
       Plugin.FrontMatter(),
-      Plugin.CreatedModifiedDate({
-        priority: ["frontmatter", "git", "filesystem"],
-      }),
+      Plugin.CreatedModifiedDate({ priority: ["frontmatter", "git", "filesystem"] }),
       Plugin.SyntaxHighlighting({
-        theme: {
-          light: "github-light",
-          dark: "github-dark",
-        },
+        theme: { light: "github-light", dark: "github-dark" },
         keepBackground: false,
       }),
       Plugin.ObsidianFlavoredMarkdown({ enableInHtmlEmbed: false }),
@@ -87,16 +68,11 @@ const config: QuartzConfig = {
       Plugin.ContentPage(),
       Plugin.FolderPage(),
       Plugin.TagPage(),
-      Plugin.ContentIndex({
-        enableSiteMap: true,
-        enableRSS: true,
-      }),
+      Plugin.ContentIndex({ enableSiteMap: true, enableRSS: true }),
       Plugin.Assets(),
       Plugin.Static(),
       Plugin.Favicon(),
       Plugin.NotFoundPage(),
-      // Comment out CustomOgImages to speed up build time
-      Plugin.CustomOgImages(),
     ],
   },
 }
