@@ -1,3 +1,4 @@
+// FORCE
 import { PageLayout, SharedLayout } from "./quartz/cfg"
 import * as Component from "./quartz/components"
 
@@ -40,24 +41,20 @@ export const defaultPageLayout: PageLayout = {
 // 3. THIS PREVENTS THE BUILD CRASH
 export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
-// 4. HOMEPAGE LAYOUT (THE CLEAN VERSION)
-// This applies ONLY to your Home/Index page.
+// 4. HOMEPAGE LAYOUT
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // STRIPPED: No ArticleTitle (Removes "Betrguy is writing...")
-    // STRIPPED: No ContentMeta (Removes "Jan 27, 1 min read")
-    Component.Content(), // Only shows your manual "# Home" text
+    Component.Content(), 
   ],
   left: [
-    // STRIPPED: No PageTitle (Removes "Pegasus Garden" from sidebar)
+    // IF THIS LINE EXISTS, DELETE IT: Component.PageTitle(),
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
-  right: [], // STRIPPED: Empty Array = No Graph View
+  right: [], 
   afterBody: [
-    // LIST: Shows your notes in reverse order
     Component.RecentNotes({ 
       title: "Latest Notes", 
       limit: 10, 
