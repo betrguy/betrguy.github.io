@@ -16,10 +16,7 @@ export const sharedPageComponents: SharedLayout = {
 
 // 2. STANDARD NOTE LAYOUT (For pages 1, 2, 3...)
 export const defaultPageLayout: PageLayout = {
-  beforeBody: [
-    // 1. The "Home" Button (Clickable link back to index)
-    Component.PageTitle(), 
-    
+  beforeBody: [    
     // 2. Standard Note Elements (Breadcrumbs, Title, Date)
     Component.Breadcrumbs(),
     Component.ArticleTitle(),
