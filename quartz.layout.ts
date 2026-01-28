@@ -17,23 +17,23 @@ export const sharedPageComponents: SharedLayout = {
 // 2. STANDARD NOTE LAYOUT (For pages 1, 2, 3...)
 export const defaultPageLayout: PageLayout = {
   beforeBody: [
-    // THIS IS YOUR CLICKABLE "HOME" BUTTON
+    // 1. The "Home" Button (Clickable link back to index)
     Component.PageTitle(), 
     
-    // Standard elements for notes
+    // 2. Standard Note Elements (Breadcrumbs, Title, Date)
     Component.Breadcrumbs(),
-    Component.ArticleTitle(), // Keeps the note name (e.g. "7 - New World Grid")
+    Component.ArticleTitle(),
     Component.ContentMeta(),
     Component.TagList(),
   ],
   left: [
-    // REMOVED: PageTitle from sidebar (It's at the top now)
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
   right: [
+    Component.Graph(), // Keeps graph on notes only
     Component.DesktopOnly(Component.TableOfContents()),
     Component.Backlinks(),
   ],
@@ -42,14 +42,14 @@ export const defaultPageLayout: PageLayout = {
 // 3. EXPORT CONTENT LAYOUT
 export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
-// 4. HOMEPAGE LAYOUT (Cleaned Up)
+// 4. HOMEPAGE LAYOUT (THE CLEAN FIX)
+// This is the layout your index.md WILL use once you delete "layout: page"
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // 1. CLICKABLE "HOME" BUTTON (Replaces your manual text)
+    // 1. The "Home" Button (Big, Red, Clickable)
     Component.PageTitle(), 
     
-    // 2. CONTENT (Your body text)
-    // REMOVED: Breadcrumbs, ArticleTitle ("Betrguy is writing"), ContentMeta (Date)
+    // 2. Your Content (No Title, No Date, No Metadata)
     Component.Content(), 
   ],
   left: [
@@ -58,7 +58,7 @@ export const defaultIndexPageLayout: PageLayout = {
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
-  right: [], 
+  right: [], // Empty = No Graph View
   afterBody: [
     Component.RecentNotes({ 
       title: "Latest Notes", 
