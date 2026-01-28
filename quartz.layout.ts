@@ -14,7 +14,8 @@ export const sharedPageComponents: SharedLayout = {
   }),
 }
 
-// 2. STANDARD NOTE LAYOUT (For pages 1, 2, 3...)
+// 2. STANDARD PAGE LAYOUT (For Notes 1, 2, 3...)
+// We keep navigation here so your inner notes are easy to read.
 export const defaultPageLayout: PageLayout = {
   beforeBody: [
     Component.Breadcrumbs(),
@@ -23,43 +24,44 @@ export const defaultPageLayout: PageLayout = {
     Component.TagList(),
   ],
   left: [
-    Component.PageTitle(), // Keep Title on inner notes for navigation context
+    Component.PageTitle(), // Keeps "Pegasus Garden" context on inner notes
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
   right: [
-    // Graph is kept for NOTES only.
-    Component.Graph(), 
+    Component.Graph(),
     Component.DesktopOnly(Component.TableOfContents()),
     Component.Backlinks(),
   ],
 }
 
-// 3. CONTENT PAGE LAYOUT
+// 3. THIS PREVENTS THE BUILD CRASH
 export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
-// 4. HOMEPAGE LAYOUT (THE CLEAN VERSION + LIST)
+// 4. HOMEPAGE LAYOUT (THE CLEAN VERSION)
+// This applies ONLY to your Home/Index page.
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // No Title, No Meta. Just your manual # Home text.
-    Component.Content(), 
+    // STRIPPED: No ArticleTitle (Removes "Betrguy is writing...")
+    // STRIPPED: No ContentMeta (Removes "Jan 27, 1 min read")
+    Component.Content(), // Only shows your manual "# Home" text
   ],
   left: [
-    // REMOVED: Component.PageTitle() -> This kills "Pegasus Garden" on the left
+    // STRIPPED: No PageTitle (Removes "Pegasus Garden" from sidebar)
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
-  right: [], // REMOVED: Graph -> This ensures the right side is empty
+  right: [], // STRIPPED: Empty Array = No Graph View
   afterBody: [
-    // ADDED: This creates the list of notes you wanted!
+    // LIST: Shows your notes in reverse order
     Component.RecentNotes({ 
       title: "Latest Notes", 
-      limit: 10,
-      showTags: false,
+      limit: 10, 
+      showTags: false 
     }),
   ],
 }
