@@ -3,7 +3,7 @@ import * as Plugin from "./quartz/plugins"
 
 const config: QuartzConfig = {
   configuration: {
-    pageTitle: "Pegasus Garden",
+    pageTitle: "Home",
     enableSPA: true,
     enablePopovers: true,
     analytics: { provider: "plausible" },

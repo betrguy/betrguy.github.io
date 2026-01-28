@@ -14,48 +14,51 @@ export const sharedPageComponents: SharedLayout = {
   }),
 }
 
-// 2. STANDARD CONTENT LAYOUT (Used for Notes 1, 2, 3...)
-// I have REMOVED PageTitle (Sidebar) and Graph (Right) from here too.
-const standardLayout: PageLayout = {
+// 2. STANDARD NOTE LAYOUT (For pages 1, 2, 3...)
+export const defaultPageLayout: PageLayout = {
   beforeBody: [
+    // THIS IS YOUR CLICKABLE "HOME" BUTTON
+    Component.PageTitle(), 
+    
+    // Standard elements for notes
     Component.Breadcrumbs(),
-    Component.ArticleTitle(), // Keeps "3 - 3D Printing..." title on notes
+    Component.ArticleTitle(), // Keeps the note name (e.g. "7 - New World Grid")
     Component.ContentMeta(),
     Component.TagList(),
   ],
   left: [
-    // REMOVED: Component.PageTitle(), 
+    // REMOVED: PageTitle from sidebar (It's at the top now)
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
   right: [
-    // REMOVED: Component.Graph(), 
     Component.DesktopOnly(Component.TableOfContents()),
     Component.Backlinks(),
   ],
 }
 
-// 3. EXPORT THE CONTENT LAYOUT
-// This tells Quartz: "Use this layout for all standard notes"
-export const defaultContentPageLayout: PageLayout = standardLayout
+// 3. EXPORT CONTENT LAYOUT
+export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
-// 4. HOMEPAGE LAYOUT (The Clean Version)
-// This tells Quartz: "Use this layout ONLY for the Index/Home"
+// 4. HOMEPAGE LAYOUT (Cleaned Up)
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // CLEAN: No ArticleTitle, No Meta.
+    // 1. CLICKABLE "HOME" BUTTON (Replaces your manual text)
+    Component.PageTitle(), 
+    
+    // 2. CONTENT (Your body text)
+    // REMOVED: Breadcrumbs, ArticleTitle ("Betrguy is writing"), ContentMeta (Date)
     Component.Content(), 
   ],
   left: [
-    // REMOVED: Component.PageTitle(),
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
-  right: [], // Empty = No Graph
+  right: [], 
   afterBody: [
     Component.RecentNotes({ 
       title: "Latest Notes", 
@@ -67,9 +70,9 @@ export const defaultIndexPageLayout: PageLayout = {
 
 // 5. LIST LAYOUT
 export const defaultListPageLayout: PageLayout = {
-  beforeBody: [Component.Breadcrumbs(), Component.ArticleTitle(), Component.ContentMeta()],
+  beforeBody: [Component.PageTitle(), Component.Breadcrumbs(), Component.ArticleTitle(), Component.ContentMeta()],
   left: [
-    Component.MobileOnly(Component.Spacer()), // REMOVED PageTitle here too
+    Component.MobileOnly(Component.Spacer()),
     Component.Flex({
       components: [
         {
