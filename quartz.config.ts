@@ -13,7 +13,7 @@ const config: QuartzConfig = {
     defaultDateType: "created",
     theme: {
       fontOrigin: "googleFonts",
-      cdnCaching: true,
+      cdnCaching: false,
       typography: {
         // HEAVY SERIF for Headers
         header: "Tinos", 
