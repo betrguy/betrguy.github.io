@@ -1,7 +1,7 @@
 ---
 title: Betrguy is writing...
 ---
-# Home
+
 Welcome to my library of notes written using pegasus writer! 
 
 

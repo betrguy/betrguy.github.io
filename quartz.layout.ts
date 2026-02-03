@@ -14,13 +14,13 @@ export const sharedPageComponents: SharedLayout = {
   }),
 }
 
-// 2. STANDARD NOTE LAYOUT (For pages 1, 2, 3...)
+// 2. STANDARD PAGE LAYOUT (For Notes 1, 2, 3...)
 export const defaultPageLayout: PageLayout = {
-  beforeBody: [    
-    // 2. Standard Note Elements (Breadcrumbs, Title, Date)
+  beforeBody: [
+    Component.PageTitle(),    // The "Home" button
     Component.Breadcrumbs(),
-    Component.ArticleTitle(),
-    Component.ContentMeta(),
+    Component.ArticleTitle(), // Title of the note
+    Component.ContentMeta(),  // Date/Read time
     Component.TagList(),
   ],
   left: [
@@ -30,24 +30,22 @@ export const defaultPageLayout: PageLayout = {
     Component.DesktopOnly(Component.Explorer()),
   ],
   right: [
-    Component.Graph(), // Keeps graph on notes only
+    // GRAPH REMOVED FROM HERE
     Component.DesktopOnly(Component.TableOfContents()),
     Component.Backlinks(),
   ],
 }
 
-// 3. EXPORT CONTENT LAYOUT
+// 3. FORCE CONTENT LAYOUT TO MATCH
 export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
 // 4. HOMEPAGE LAYOUT (THE CLEAN FIX)
-// This is the layout your index.md WILL use once you delete "layout: page"
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    // 1. The "Home" Button (Big, Red, Clickable)
-    Component.PageTitle(), 
-    
-    // 2. Your Content (No Title, No Date, No Metadata)
-    Component.Content(), 
+    Component.PageTitle(), // The Red "Home" Button
+    // REMOVED: ArticleTitle ("Betrguy is writing...")
+    // REMOVED: ContentMeta (Date/Time)
+    Component.Content(),   // Your text
   ],
   left: [
     Component.MobileOnly(Component.Spacer()),
@@ -55,7 +53,7 @@ export const defaultIndexPageLayout: PageLayout = {
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
-  right: [], // Empty = No Graph View
+  right: [], // GRAPH REMOVED FROM HERE
   afterBody: [
     Component.RecentNotes({ 
       title: "Latest Notes", 
