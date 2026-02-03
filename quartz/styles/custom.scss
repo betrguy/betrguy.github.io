@@ -60,3 +60,27 @@ body::after {
 .explorer {
   font-size: 0.95rem !important; 
 }
+
+/* --- HOMEPAGE CLEANUP (The "CSS Hammer") --- */
+/* This specifically targets ONLY the index page (data-slug="index") */
+
+/* 1. Hide "Betrguy is writing..." (The Article Title) */
+body[data-slug="index"] h1.article-title {
+  display: none !important;
+}
+
+/* 2. Hide "Jan 28, 1 min read" (The Metadata) */
+body[data-slug="index"] .content-meta {
+  display: none !important;
+}
+
+/* 3. Hide any stray Breadcrumbs (The small "Home" link) */
+body[data-slug="index"] .breadcrumb-container {
+  display: none !important;
+}
+
+/* 4. Ensure the Main "Home" Button (PageTitle) remains visible */
+/* This ensures we didn't accidentally hide the big red button we want */
+body[data-slug="index"] .page-title {
+  display: block !important;
+}
