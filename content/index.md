@@ -2,6 +2,8 @@
 title: Betrguy is writing...
 ---
 
+Hey! 
+
 Welcome to my library of notes written using pegasus writer! 
 
 
@@ -25,7 +27,7 @@ The E.A.T. tool is designed to track the 'acceleration of energy' by monitoring 
 It also tracks the movement of projects through key regulatory pipelines, which creates a picture of what the energy grid will look like, 6-36 months out.
 
 
-🦄 pegasus writer is my own local writer agent equipped with llama 3.1 uncensored and aider chat. 
+🦄 pegasus writer is my own local writer agent equipped with llama 3.1 uncensored and aider chat. 
 
 
 Pegasus writes the notes on these pages and I sometimes edit them!
@@ -34,7 +36,7 @@ Pegasus writes the notes on these pages and I sometimes edit them!
 🥩 MeatNet - A 'human curation' layer on NOSTR. A place to curate your own notes/ideas and find meaningful new ideas to connect with! Use salt+pepper web extension to start curating your own version of the internet today. 
 
 
-🧂/🌶️ - salt+pepper is a web browser extension that helps you document and organize your own meaningful corner of the legacy web. Works specifically well with Twitter. There are lots of great ideas on Twitter, some of my favorite accounts are on there, but at the same time, there are a lot of posts that read like copy pasted chatbot messages. salt+pepper enables you to use OCR to archive the posts you find noteworthy and post them on the MeatNet layer on NOSTR, with the option to add your own seasoning (meaning) to the post. After all, you are the one who sees the meaning in it! And I love adding salt to food. 
+🧂/🌶️ - salt+pepper is a web browser extension that helps you document and organize your own meaningful corner of the legacy web. Works specifically well with Twitter. There are lots of great ideas on Twitter, some of my favorite accounts are there, but at the same time, there are a lot of posts that read like copy pasted chatbot messages. salt+pepper enables you to use OCR to archive the posts you find noteworthy and post them on the MeatNet layer on NOSTR, with the option to add your own seasoning (meaning) to the post. After all, you are the one who sees the meaning in it! And I love adding salt to food.
 
 
 As you click around, you'll see notes on my projects, predictive analysis of world events, and hobbies and interests like music, art, and self-hosted systems.
