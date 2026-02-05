@@ -1,86 +1,56 @@
 @use "./base.scss";
 
-/* --- 1. THE RED "HOME" BUTTON --- */
-// Targets the PageTitle component (which is a link)
-.page-title a {
-  font-family: "Tinos", serif; /* Ensure it uses your fancy font */
-  font-size: 3.5rem !important; 
+/* --- GLOBAL STYLES --- */
+h1.article-title {
+  font-family: "Tinos", serif;
+  font-size: 3.5rem !important;
   font-weight: 700;
   color: #8A1800 !important;
-  text-decoration: none; /* No underline */
-  display: block;
   margin-bottom: 1rem;
 }
 
-/* --- 2. DARK MODE RED --- */
-[saved-theme="dark"] .page-title a {
-  color: #D32F2F !important; 
+[saved-theme="dark"] h1.article-title { color: #D32F2F !important; }
+
+/* The "Home" Button */
+.page-title a {
+  font-size: 3.5rem !important; 
+  font-weight: 700;
+  color: #8A1800 !important;
+  text-decoration: none;
 }
+[saved-theme="dark"] .page-title a { color: #D32F2F !important; }
 
-
-[saved-theme="dark"] h1.article-title {
-  color: #D32F2F !important;
-}
-
-/* --- 4. EXPLORER --- */
-.explorer .explorer-title, 
-.explorer .folder-outer a,
-.explorer .folder-outer .file-title,
-.explorer ul li a,
-.explorer .file-title {
+/* Explorer Red */
+.explorer .explorer-title, .explorer a, .explorer .file-title {
   color: #8A1800 !important;
 }
-[saved-theme="dark"] .explorer .explorer-title,
-[saved-theme="dark"] .explorer .folder-outer a,
-[saved-theme="dark"] .explorer .folder-outer .file-title,
-[saved-theme="dark"] .explorer ul li a,
-[saved-theme="dark"] .explorer .file-title {
+[saved-theme="dark"] .explorer .explorer-title, [saved-theme="dark"] .explorer a {
   color: #D32F2F !important;
 }
 
-/* --- 5. GENERAL --- */
-article p, article li {
-  font-size: 1.4rem !important; 
-  line-height: 1.8;
-  color: var(--dark); 
-}
+/* --- THE NUCLEAR HOME PAGE FIX --- */
+/* We target the index page by slug AND by title AND by url path */
 
-body::after {
-  content: "";
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 150px; 
-  pointer-events: none; 
-  background: linear-gradient(to bottom, transparent, var(--light));
-  z-index: 100;
-}
-
-.explorer {
-  font-size: 0.95rem !important; 
-}
-
-/* --- HOMEPAGE CLEANUP (The "CSS Hammer") --- */
-/* This specifically targets ONLY the index page (data-slug="index") */
-
-/* 1. Hide "Betrguy is writing..." (The Article Title) */
-body[data-slug="index"] h1.article-title {
+/* 1. Hide "Betrguy is writing..." (The Note Title) */
+body[data-slug="index"] h1.article-title,
+body[data-slug="/"] h1.article-title {
   display: none !important;
 }
 
-/* 2. Hide "Jan 28, 1 min read" (The Metadata) */
-body[data-slug="index"] .content-meta {
+/* 2. Hide "Jan 27, 1 min read" (The Metadata) */
+body[data-slug="index"] .content-meta,
+body[data-slug="/"] .content-meta {
   display: none !important;
 }
 
-/* 3. Hide any stray Breadcrumbs (The small "Home" link) */
-body[data-slug="index"] .breadcrumb-container {
+/* 3. Hide the Breadcrumbs "Home >" path */
+body[data-slug="index"] .breadcrumb-container,
+body[data-slug="/"] .breadcrumb-container {
   display: none !important;
 }
 
-/* 4. Ensure the Main "Home" Button (PageTitle) remains visible */
-/* This ensures we didn't accidentally hide the big red button we want */
-body[data-slug="index"] .page-title {
+/* 4. Ensure the Red Home Button stays visible */
+body[data-slug="index"] .page-title,
+body[data-slug="/"] .page-title {
   display: block !important;
 }
