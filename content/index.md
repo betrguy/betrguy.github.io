@@ -1,5 +1,5 @@
 ---
-title: betrguy.github.io/
+title: Betrguy is writing...
 ---
 
 > [!quote] I like to study the self, and the intentional use of attention!
