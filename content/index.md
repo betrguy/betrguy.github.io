@@ -4,8 +4,8 @@ title: Betrguy is writing...
 
 # Welcome to the Library
 
-> [!quote] 
-> I study the self, the intentional use of attention, and the exploration of new ideas.
+> [!] 
+> I like to study the self, the intentional use of attention!
 
 This is a digital garden where I cultivate insights on technology, energy, and the future. Much of what you read here is co-authored with **Pegasus Writer**, my local AI agent.
 
@@ -24,14 +24,14 @@ This is a digital garden where I cultivate insights on technology, energy, and t
 > [!abstract]+ 🦄 Pegasus Writer
 > **My local writer agent.**
 > 
-> Equipped with **Llama 3.1 Uncensored** and Aider Chat, Pegasus drafts the initial notes on these pages, which I then edit and refine. It is an experiment in human-AI collaborative thinking.
+> Equipped with **Llama 3.1 Uncensored** and Aider Chat, Pegasus drafts the initial notes on these pages, which I sometimes edit! It is an experiment in human-AI collaborative thinking and avoiding writing file names or navigating the file explorer. 
 
 > [!success]+ 🥩 MeatNet & Salt+Pepper 🧂
 > **A 'human curation' layer on NOSTR.**
 > 
-> The legacy web is full of noise and copy-pasted bot content. **MeatNet** is a place to find meaningful signal.
+> The legacy web is full of noise and copy-pasted bot content. **MeatNet** is a place to find meaningfully curated info and connect with ideas rather than brands or influencers!
 > 
-> * **🧂/🌶️ Salt+Pepper Extension:** A browser tool to "season" the web. It uses OCR to archive noteworthy posts (especially from Twitter) and reposts them to MeatNet on NOSTR with your added context. You are the one who sees the meaning—add your own salt.
+> * **🧂/🌶️ Salt+Pepper Extension:** A browser tool to "season" the web. It uses OCR to archive noteworthy posts (especially from Twitter) and reposts them to MeatNet on NOSTR with your added context. You are the one who sees the meaning—make it yours! Season it to taste. 
 
 > [!example]+ 🏦 National Shadow GDP
 > **Tracking the new economy.**
