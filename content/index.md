@@ -2,47 +2,49 @@
 title: Betrguy is writing...
 ---
 
-Hey! -betrguy
+# Welcome to the Library
 
-Welcome to my library of notes written using pegasus writer! 
+> [!quote] 
+> I study the self, the intentional use of attention, and the exploration of new ideas.
 
+This is a digital garden where I cultivate insights on technology, energy, and the future. Much of what you read here is co-authored with **Pegasus Writer**, my local AI agent.
 
-This is where I'll share my thoughts and insights on an array of topics. 
+---
 
+## 🏗️ Active Projects
 
-I like to study the self, being mindful with how we spend our attention, and exploring new ideas.
+> [!danger]+ ☢️ E.A.T. (Energy Acceleration Tracker)
+> **A monitoring tool for the American energy sector.**
+> 
+> The E.A.T. tracks the 'acceleration of energy' by monitoring job listings, loan approvals, and regulatory signals for breakthroughs that trigger massive hiring waves in tech/defense (e.g., SpaceX, Anduril, Helion, Oklo).
+> 
+> It creates a 6-36 month predictive picture of the energy grid.
+> * **Interact with the data:** [thenewworldgrid.com](https://thenewworldgrid.com)
 
+> [!abstract]+ 🦄 Pegasus Writer
+> **My local writer agent.**
+> 
+> Equipped with **Llama 3.1 Uncensored** and Aider Chat, Pegasus drafts the initial notes on these pages, which I then edit and refine. It is an experiment in human-AI collaborative thinking.
 
+> [!success]+ 🥩 MeatNet & Salt+Pepper 🧂
+> **A 'human curation' layer on NOSTR.**
+> 
+> The legacy web is full of noise and copy-pasted bot content. **MeatNet** is a place to find meaningful signal.
+> 
+> * **🧂/🌶️ Salt+Pepper Extension:** A browser tool to "season" the web. It uses OCR to archive noteworthy posts (especially from Twitter) and reposts them to MeatNet on NOSTR with your added context. You are the one who sees the meaning—add your own salt.
 
-Some of my current projects:
+> [!example]+ 🏦 National Shadow GDP
+> **Tracking the new economy.**
+> 
+> A tool for monitoring the "Shadow GDP"—the economy growing as automation consumes legacy profit pools. 
+> * **Metrics:** Energy consumption, compute power, stock sector performance, and independent project launches.
 
+---
 
-☢️ E.A.T. (Energy Acceleration Tracker) - A new tool for the American energy sector. 
+### 🧭 Explore the Garden
+As you click around, you will find notes on:
+* **🔮 Predictive Analysis** of world events.
+* **🤖 Self-Hosted Systems** and local AI.
+* **🎨 Hobbies** including music and art.
 
-
-The E.A.T. tool is designed to track the 'acceleration of energy' by monitoring job listings, loan approvals, and other signals of breakthroughs that would necessitate sudden + massive hiring waves for companies at the forefront of tech/defense. 
-(SpaceX, Anduril, Helion Energy, Oklo, Radiant, Kairos Power, Commonwealth Fusion, etc.) 
-
-
-It also tracks the movement of projects through key regulatory pipelines, which creates a picture of what the energy grid will look like, 6-36 months out. You can interact with the E.A.T. on thenewworldgrid.com.
-
-
-🦄 pegasus writer is my own local writer agent equipped with llama 3.1 uncensored and aider chat. 
-
-
-Pegasus writes the notes on these pages and I sometimes edit them!
-
-
-🥩 MeatNet - A 'human curation' layer on NOSTR. A place to curate your own notes/ideas and find meaningful new ideas to connect with! Use salt+pepper web extension to start curating your own version of the internet today. 
-
-
-🧂/🌶️ - salt+pepper is a web browser extension that helps you document and organize your own meaningful corner of the legacy web. Works specifically well with Twitter. There are lots of great ideas on Twitter, some of my favorite accounts are there, but at the same time, there are a lot of posts that read like copy pasted chatbot messages. salt+pepper enables you to use OCR to archive the posts you find noteworthy and post them on the MeatNet layer on NOSTR, with the option to add your own seasoning (meaning) to the post. After all, you are the one who sees the meaning in it! And I love adding salt to food.
-
-
-🏦🌑 - National Shadow GDP - A tool for tracking the state of the American Shadow GDP, the new economy that grows as automation consumes the profit pools of the legacy system. Based on energy, compute, stock sector performance, and self-hosted/independent project launches. 
-
-As you click around, you'll see notes on my projects, predictive analysis of world events, and hobbies and interests like music, art, and self-hosted systems.
-
-
-I hope you find something interesting or thought-provoking here!
-
+*I hope you find something interesting or thought-provoking here!*
