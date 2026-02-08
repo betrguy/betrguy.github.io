@@ -4,10 +4,10 @@ title: Betrguy is writing...
 
 # Welcome to the Library
 
-> [!] 
+> [!quote] 
 > I like to study the self, the intentional use of attention!
 
-This is a digital garden where I cultivate insights on technology, energy, and the future. Much of what you read here is co-authored with **Pegasus Writer**, my local AI agent.
+This is a digital garden where I cultivate thoughts on technology, energy, and the future. Much of what you read here is co-authored with **Pegasus Writer**, my local AI agent.
 
 ---
 
@@ -46,5 +46,6 @@ As you click around, you will find notes on:
 * **🔮 Predictive Analysis** of world events.
 * **🤖 Self-Hosted Systems** and local AI.
 * **🎨 Hobbies** including music and art.
+* **🗯️ Ideas** that gradually turn into files and programs! 
 
 *I hope you find something interesting or thought-provoking here!*
