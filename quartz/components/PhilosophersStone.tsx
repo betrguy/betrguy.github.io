@@ -1,5 +1,7 @@
 import { QuartzComponent, QuartzComponentConstructor, QuartzComponentProps } from "./types"
 import style from "./styles/philosophersStone.scss"
+// @ts-ignore
+import script from "./scripts/philosophersStone.inline"
 import { classNames } from "../util/lang"
 import { resolveRelative } from "../util/path"
 
@@ -272,7 +274,7 @@ export default (() => {
     const noteEntries = generatePlacements(notes)
 
     return (
-      <section class={classNames(displayClass, "ps-shell")}>
+      <section class={classNames(displayClass, "ps-shell")} data-active-reveal="none">
         <div class="ps-backdrop">
           <div class="ps-backdrop-ring ps-backdrop-ring-left" />
           <div class="ps-backdrop-ring ps-backdrop-ring-right" />
@@ -284,17 +286,40 @@ export default (() => {
           <div class="ps-stage-orb ps-stage-orb-right" />
 
           <div class="ps-map-frame">
-            <div class="ps-titleblock">
+            <button class="ps-titleblock" type="button" aria-label="Reveal all notes">
               <h1 class="ps-title">Perfect Loop</h1>
               <p class="ps-subtitle">"Man becomes the reality that he engenders"</p>
-            </div>
+            </button>
             <div class="ps-map">
               <div class="ps-core-glow" />
               <svg class="ps-symbol" viewBox="0 0 1000 1000" aria-hidden="true">
-                <circle class="world-circle" cx="500" cy="500" r="420" />
-                <polygon class="mind-triangle" points="500,80 136.27,710 863.73,710" />
-                <rect class="material-square" x="331.2" y="372.4" width="337.6" height="337.6" />
-                <circle class="soul-circle" cx="500" cy="541.2" r="168.8" />
+                <circle
+                  class="world-circle"
+                  data-shape-hover="world-circle"
+                  cx="500"
+                  cy="500"
+                  r="420"
+                />
+                <polygon
+                  class="mind-triangle"
+                  data-shape-hover="mind-triangle"
+                  points="500,80 136.27,710 863.73,710"
+                />
+                <rect
+                  class="material-square"
+                  data-shape-hover="material-square"
+                  x="331.2"
+                  y="372.4"
+                  width="337.6"
+                  height="337.6"
+                />
+                <circle
+                  class="soul-circle"
+                  data-shape-hover="soul-circle"
+                  cx="500"
+                  cy="541.2"
+                  r="168.8"
+                />
               </svg>
 
               <div class="ps-note-layer">
@@ -323,5 +348,6 @@ export default (() => {
   }
 
   PhilosophersStone.css = style
+  PhilosophersStone.afterDOMLoaded = script
   return PhilosophersStone
 }) satisfies QuartzComponentConstructor

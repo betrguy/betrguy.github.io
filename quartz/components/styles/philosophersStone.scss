@@ -105,6 +105,10 @@
 }
 
 .ps-titleblock {
+  appearance: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
   position: relative;
   display: grid;
   gap: 0.2rem;
@@ -142,6 +146,12 @@
   text-shadow: 1px 1px 0 color-mix(in srgb, var(--light) 70%, transparent);
 }
 
+.ps-titleblock:hover .ps-title,
+.ps-titleblock:focus-visible .ps-title,
+.ps-titleblock.is-active .ps-title {
+  color: color-mix(in srgb, var(--secondary) 100%, var(--dark));
+}
+
 .ps-subtitle {
   margin: 0;
   color: color-mix(in srgb, var(--darkgray) 82%, var(--secondary));
@@ -152,6 +162,12 @@
   letter-spacing: 0.08em;
   line-height: 1.4;
   text-transform: none;
+}
+
+.ps-titleblock:hover .ps-subtitle,
+.ps-titleblock:focus-visible .ps-subtitle,
+.ps-titleblock.is-active .ps-subtitle {
+  color: color-mix(in srgb, var(--secondary) 70%, var(--darkgray));
 }
 
 .ps-map {
@@ -235,6 +251,13 @@
   white-space: nowrap;
   text-decoration: none;
   z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease,
+    border-color 140ms ease;
 }
 
 .ps-note:hover,
@@ -279,6 +302,15 @@
 .ps-note.shape-soul-circle {
   color: color-mix(in srgb, var(--note-accent) 92%, var(--dark));
   border-color: color-mix(in srgb, var(--note-accent) 25%, transparent);
+}
+
+.ps-shell[data-active-reveal="all"] .ps-note,
+.ps-shell[data-active-reveal="world-circle"] .ps-note[data-shape="world-circle"],
+.ps-shell[data-active-reveal="mind-triangle"] .ps-note[data-shape="mind-triangle"],
+.ps-shell[data-active-reveal="material-square"] .ps-note[data-shape="material-square"],
+.ps-shell[data-active-reveal="soul-circle"] .ps-note[data-shape="soul-circle"] {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 @keyframes psFloat {

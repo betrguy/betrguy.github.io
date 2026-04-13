@@ -2,41 +2,43 @@ document.addEventListener("nav", () => {
   const shell = document.querySelector(".ps-shell") as HTMLElement | null
   if (!shell) return
 
-  const notes = Array.from(shell.querySelectorAll("[data-note-slug]")) as HTMLElement[]
-  const previews = Array.from(shell.querySelectorAll("[data-preview-slug]")) as HTMLElement[]
-  const closeButton = shell.querySelector(".ps-detail-close") as HTMLButtonElement | null
-  const defaultNote = shell.dataset.defaultNote
+  const shapeTargets = Array.from(shell.querySelectorAll("[data-shape-hover]")) as HTMLElement[]
+  const titleToggle = shell.querySelector(".ps-titleblock") as HTMLButtonElement | null
 
-  const activateNote = (slug?: string | null, open = true) => {
-    shell.dataset.detailOpen = open && slug ? "true" : "false"
-    shell.dataset.activeNote = slug ?? ""
-    notes.forEach((note) => {
-      note.classList.toggle("is-active", note.dataset.noteSlug === slug)
-    })
-    previews.forEach((preview) => {
-      preview.classList.toggle("is-active", preview.dataset.previewSlug === slug)
-    })
+  const setReveal = (shape: string) => {
+    shell.dataset.activeReveal = shape
   }
 
-  const handleNote = (event: Event) => {
+  const handleEnter = (event: Event) => {
+    if (shell.dataset.lockedReveal === "all") return
     const target = event.currentTarget as HTMLElement
-    const slug = target.dataset.noteSlug
-    const isActive = shell.dataset.activeNote === slug && shell.dataset.detailOpen === "true"
-    activateNote(slug, !isActive)
+    setReveal(target.dataset.shapeHover ?? "none")
   }
 
-  const closeDetail = () => activateNote(shell.dataset.activeNote ?? defaultNote ?? null, false)
+  const handleLeave = () => {
+    if (shell.dataset.lockedReveal === "all") return
+    setReveal("none")
+  }
 
-  notes.forEach((note) => {
-    note.addEventListener("click", handleNote)
+  const handleToggleAll = () => {
+    const locked = shell.dataset.lockedReveal === "all"
+    shell.dataset.lockedReveal = locked ? "none" : "all"
+    setReveal(locked ? "none" : "all")
+    titleToggle?.classList.toggle("is-active", !locked)
+  }
+
+  shapeTargets.forEach((shape) => {
+    shape.addEventListener("pointerenter", handleEnter)
+    shape.addEventListener("pointerleave", handleLeave)
   })
-  closeButton?.addEventListener("click", closeDetail)
-  activateNote(defaultNote ?? previews[0]?.dataset.previewSlug ?? null, false)
+  titleToggle?.addEventListener("click", handleToggleAll)
+  setReveal("none")
 
   window.addCleanup(() => {
-    notes.forEach((note) => {
-      note.removeEventListener("click", handleNote)
+    shapeTargets.forEach((shape) => {
+      shape.removeEventListener("pointerenter", handleEnter)
+      shape.removeEventListener("pointerleave", handleLeave)
     })
-    closeButton?.removeEventListener("click", closeDetail)
+    titleToggle?.removeEventListener("click", handleToggleAll)
   })
 })
