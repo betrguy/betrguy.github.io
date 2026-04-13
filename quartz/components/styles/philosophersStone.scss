@@ -160,8 +160,14 @@
   aspect-ratio: 1;
 }
 
+.ps-note-layer {
+  position: absolute;
+  inset: 0;
+}
+
 .ps-symbol,
-.ps-core-glow {
+.ps-core-glow,
+.ps-note {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -211,6 +217,45 @@
   opacity: 0.8;
 }
 
+.ps-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.18rem 0.34rem;
+  border: 1px solid color-mix(in srgb, var(--dark) 12%, transparent);
+  background: color-mix(in srgb, var(--light) 94%, transparent);
+  box-shadow:
+    1px 1px 0 rgba(24, 18, 20, 0.14),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.55);
+  color: color-mix(in srgb, var(--secondary) 92%, var(--dark));
+  font-family: var(--bodyFont);
+  font-size: 0.58rem;
+  line-height: 1.15;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.ps-note:hover,
+.ps-note:focus-visible {
+  background: color-mix(in srgb, var(--light) 88%, var(--secondary) 5%);
+  color: var(--secondary);
+}
+
+.ps-note-dot {
+  width: 0.28rem;
+  height: 0.28rem;
+  flex: 0 0 auto;
+  background: color-mix(in srgb, var(--secondary) 90%, var(--dark));
+}
+
+.ps-note-label {
+  display: inline-block;
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 @keyframes psFloat {
   0%,
   100% {
@@ -236,5 +281,11 @@
 
   .ps-titleblock {
     padding-top: 0;
+  }
+
+  .ps-note {
+    max-width: 6.5rem;
+    font-size: 0.5rem;
+    padding: 0.14rem 0.28rem;
   }
 }
