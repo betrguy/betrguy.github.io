@@ -2,16 +2,24 @@
 
 :root {
   --site-radius-xl: 2rem;
-  --site-radius-lg: 1.35rem;
-  --site-radius-md: 1rem;
-  --site-surface: color-mix(in srgb, var(--light) 90%, transparent);
-  --site-surface-strong: color-mix(in srgb, var(--light) 96%, transparent);
-  --site-border: color-mix(in srgb, var(--dark) 10%, transparent);
-  --site-shadow: 0 22px 70px rgba(24, 18, 20, 0.08);
+  --site-radius-lg: 0.4rem;
+  --site-radius-md: 0.2rem;
+  --site-surface: color-mix(in srgb, var(--light) 98%, transparent);
+  --site-surface-strong: color-mix(in srgb, var(--light) 100%, transparent);
+  --site-border: color-mix(in srgb, var(--dark) 16%, transparent);
+  --site-shadow: 1px 1px 0 rgba(24, 18, 20, 0.16);
+  --site-inset: inset 1px 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 body {
   background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(138, 24, 0, 0.018) 0,
+      rgba(138, 24, 0, 0.018) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
     radial-gradient(circle at top left, rgba(138, 24, 0, 0.08), transparent 32%),
     radial-gradient(circle at top right, rgba(77, 132, 122, 0.08), transparent 26%),
     linear-gradient(180deg, #f8f3ef 0%, #f3eee8 100%);
@@ -23,6 +31,13 @@ body {
 
 [saved-theme="dark"] body {
   background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 77, 77, 0.02) 0,
+      rgba(255, 77, 77, 0.02) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
     radial-gradient(circle at top left, rgba(255, 77, 77, 0.12), transparent 28%),
     radial-gradient(circle at top right, rgba(132, 165, 157, 0.08), transparent 30%),
     linear-gradient(180deg, #161415 0%, #111011 100%);
@@ -64,12 +79,12 @@ footer,
 .backlinks {
   background: var(--site-surface);
   border: 1px solid var(--site-border);
-  box-shadow: var(--site-shadow);
-  backdrop-filter: blur(18px);
+  box-shadow: var(--site-shadow), var(--site-inset);
+  backdrop-filter: none;
 }
 
 .center > article {
-  border-radius: var(--site-radius-xl);
+  border-radius: 0.6rem;
   padding: 1.75rem 2rem 2rem;
 }
 
@@ -88,6 +103,18 @@ footer {
 .search > .search-button {
   min-height: 3.4rem;
   padding-inline: 1rem;
+  box-shadow: var(--site-shadow), var(--site-inset);
+}
+
+[saved-theme="dark"] .center > article,
+[saved-theme="dark"] footer,
+[saved-theme="dark"] .search > *,
+[saved-theme="dark"] .explorer,
+[saved-theme="dark"] .toc,
+[saved-theme="dark"] .backlinks {
+  box-shadow:
+    1px 1px 0 rgba(0, 0, 0, 0.45),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .explorer,
@@ -118,14 +145,14 @@ a.internal:hover {
 blockquote {
   border-left-width: 2px;
   background: color-mix(in srgb, var(--secondary) 5%, transparent);
-  border-radius: 0 1rem 1rem 0;
+  border-radius: 0 0.2rem 0.2rem 0;
   padding: 1rem 1rem 1rem 1.1rem;
 }
 
 pre,
 code,
 figure[data-rehype-pretty-code-figure] > [data-rehype-pretty-code-title] {
-  border-radius: 0.9rem !important;
+  border-radius: 0.15rem !important;
 }
 
 body[data-slug="index"] .page-header,
@@ -174,7 +201,7 @@ body[data-slug="/"] footer li {
   font-family: "Merriweather", serif;
   font-size: 0.72rem;
   font-weight: 300;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
 }
 
 body[data-slug="index"] footer p,
@@ -196,7 +223,7 @@ body[data-slug="/"] footer a:hover {
 @media all and (max-width: 720px) {
   .center > article {
     padding: 1.2rem 1rem 1.5rem;
-    border-radius: 1.25rem;
+    border-radius: 0.45rem;
   }
 
   footer,

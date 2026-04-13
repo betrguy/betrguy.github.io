@@ -15,8 +15,13 @@ const config: QuartzConfig = {
       fontOrigin: "googleFonts",
       cdnCaching: false,
       typography: {
+        title: {
+          name: "Cormorant Garamond",
+          weights: [500, 600],
+          includeItalic: true,
+        },
         // HEAVY SERIF for Headers
-        header: "Tinos", 
+        header: "Tinos",
         // Readable Serif for Body
         body: "Merriweather",
         code: "IBM Plex Mono",
@@ -29,7 +34,7 @@ const config: QuartzConfig = {
           darkgray: "#4e4e4e",
           dark: "#2b2b2b",
           // YOUR DEEP RED (Applied to links/headers)
-          secondary: "#8A1800", 
+          secondary: "#8A1800",
           tertiary: "#84a59d",
           highlight: "rgba(138, 24, 0, 0.15)",
           textHighlight: "#fff23688",
@@ -41,7 +46,7 @@ const config: QuartzConfig = {
           darkgray: "#d4d4d4",
           dark: "#ebebec",
           // Bright Red for contrast in dark mode (or keep #8A1800 if you prefer dark-on-dark)
-          secondary: "#ff4d4d", 
+          secondary: "#ff4d4d",
           tertiary: "#84a59d",
           highlight: "rgba(255, 77, 77, 0.15)",
           textHighlight: "#b3aa0288",
