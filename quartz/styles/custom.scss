@@ -54,3 +54,37 @@ body[data-slug="index"] .page-title,
 body[data-slug="/"] .page-title {
   display: block !important;
 }
+
+/* --- RE-DESIGN ENHANCEMENTS --- */
+body {
+  background-attachment: fixed;
+  transition: background-color 0.5s ease;
+}
+
+[saved-theme="dark"] body {
+  background-image: radial-gradient(circle at center, #1a1a1a 0%, #121212 100%);
+}
+
+[saved-theme="light"] body {
+  background-image: radial-gradient(circle at center, #ffffff 0%, #faf8f8 100%);
+}
+
+.philosophers-stone-container {
+  &::before {
+    content: '';
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: var(--secondary);
+    filter: blur(150px);
+    opacity: 0.05;
+    z-index: -1;
+  }
+}
+
+a.internal {
+  transition: all 0.2s ease;
+  &:hover {
+    text-shadow: 0 0 5px var(--secondary);
+  }
+}

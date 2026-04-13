@@ -1,0 +1,114 @@
+.philosophers-stone-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 700px;
+  position: relative;
+  overflow: visible;
+  margin: 4rem 0;
+}
+
+.ps-svg {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 0 15px rgba(var(--secondary), 0.1));
+}
+
+.ps-shape {
+  fill: none;
+  stroke: var(--secondary);
+  stroke-width: 1.5;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+
+  &:hover {
+    stroke-width: 3;
+    filter: drop-shadow(0 0 12px var(--secondary));
+  }
+}
+
+.ps-label {
+  font-family: var(--headerFont);
+  font-size: 14px;
+  fill: var(--darkgray);
+  pointer-events: none;
+  text-anchor: middle;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.small-label {
+  font-size: 11px;
+  fill: var(--gray);
+  pointer-events: auto;
+  cursor: pointer;
+
+  &:hover {
+    fill: var(--secondary);
+    font-weight: bold;
+    font-size: 13px;
+  }
+}
+
+.ps-node {
+  transition: all 0.5s ease;
+  
+  &:hover {
+    .ps-shape {
+      stroke-width: 3;
+    }
+    .ps-label:not(.small-label) {
+      fill: var(--secondary);
+      font-weight: bold;
+      transform: scale(1.1);
+    }
+  }
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.ps-animate-rotate {
+  animation: rotate-slow 120s linear infinite;
+  transform-origin: center;
+}
+
+.ps-animate-pulse {
+  animation: pulse 6s ease-in-out infinite;
+  transform-origin: center;
+}
+
+// Dark/Light mode specific tweaks
+[saved-theme="dark"] {
+  .ps-label:not(.small-label) {
+    fill: var(--lightgray);
+  }
+  .small-label {
+    fill: var(--darkgray);
+  }
+}
+
+// Responsive adjustments
+@media all and (max-width: 600px) {
+  .philosophers-stone-container {
+    min-height: 500px;
+    margin: 2rem 0;
+  }
+  .ps-label {
+    font-size: 12px;
+  }
+  .small-label {
+    font-size: 9px;
+  }
+}

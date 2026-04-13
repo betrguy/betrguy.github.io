@@ -30,7 +30,6 @@ export const defaultPageLayout: PageLayout = {
     Component.DesktopOnly(Component.Explorer()),
   ],
   right: [
-    // GRAPH REMOVED FROM HERE
     Component.DesktopOnly(Component.TableOfContents()),
     Component.Backlinks(),
   ],
@@ -42,25 +41,17 @@ export const defaultContentPageLayout: PageLayout = defaultPageLayout
 // 4. HOMEPAGE LAYOUT (THE CLEAN FIX)
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    Component.PageTitle(), // The Red "Home" Button
-    // REMOVED: ArticleTitle ("Betrguy is writing...")
-    // REMOVED: ContentMeta (Date/Time)
+    Component.PageTitle(),
+    Component.PhilosophersStone(),
     Component.Content(),   // Your text
   ],
   left: [
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
-    Component.DesktopOnly(Component.Explorer()),
   ],
-  right: [], // GRAPH REMOVED FROM HERE
-  afterBody: [
-    Component.RecentNotes({ 
-      title: "Latest Notes", 
-      limit: 10, 
-      showTags: false 
-    }),
-  ],
+  right: [],
+  afterBody: [],
 }
 
 // 5. LIST LAYOUT
