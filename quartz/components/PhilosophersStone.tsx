@@ -26,14 +26,7 @@ export default (() => {
               <svg class="ps-symbol" viewBox="0 0 1000 1000" aria-hidden="true">
                 <circle class="ps-outer-circle" cx="500" cy="500" r="420" />
                 <polygon class="ps-triangle" points="500,80 136.27,710 863.73,710" />
-                <rect
-                  class="ps-inner-square"
-                  x="331.2"
-                  y="372.4"
-                  width="337.6"
-                  height="337.6"
-                  rx="18"
-                />
+                <rect class="ps-inner-square" x="331.2" y="372.4" width="337.6" height="337.6" />
                 <circle class="ps-core-circle" cx="500" cy="541.2" r="168.8" />
               </svg>
             </div>
