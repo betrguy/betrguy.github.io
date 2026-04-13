@@ -6,7 +6,11 @@ import BodyConstructor from "../../components/Body"
 import { pageResources, renderPage } from "../../components/renderPage"
 import { FullPageLayout } from "../../cfg"
 import { pathToRoot } from "../../util/path"
-import { defaultContentPageLayout, defaultIndexPageLayout, sharedPageComponents } from "../../../quartz.layout"
+import {
+  defaultContentPageLayout,
+  defaultIndexPageLayout,
+  sharedPageComponents,
+} from "../../../quartz.layout"
 import { Content } from "../../components"
 import { styleText } from "util"
 import { write } from "./helpers"
@@ -36,7 +40,10 @@ async function processContent(
     allFiles,
   }
 
-  const layout = slug === "index" ? { ...sharedPageComponents, ...defaultIndexPageLayout, pageBody: Content() } : opts
+  const layout =
+    slug === "index"
+      ? { ...sharedPageComponents, ...defaultIndexPageLayout, pageBody: Content() }
+      : opts
   const content = renderPage(cfg, slug, componentData, layout, externalResources)
   return write({
     ctx,
@@ -53,8 +60,14 @@ export const ContentPage: QuartzEmitterPlugin<Partial<FullPageLayout>> = (userOp
     pageBody: Content(),
     ...userOpts,
   }
+  const indexOpts: FullPageLayout = {
+    ...sharedPageComponents,
+    ...defaultIndexPageLayout,
+    pageBody: Content(),
+  }
 
   const { head: Head, header, beforeBody, pageBody, afterBody, left, right, footer: Footer } = opts
+  const { beforeBody: indexBeforeBody, left: indexLeft, right: indexRight } = indexOpts
   const Header = HeaderConstructor()
   const Body = BodyConstructor()
 
@@ -67,10 +80,13 @@ export const ContentPage: QuartzEmitterPlugin<Partial<FullPageLayout>> = (userOp
         Body,
         ...header,
         ...beforeBody,
+        ...indexBeforeBody,
         pageBody,
         ...afterBody,
         ...left,
+        ...indexLeft,
         ...right,
+        ...indexRight,
         Footer,
       ]
     },
