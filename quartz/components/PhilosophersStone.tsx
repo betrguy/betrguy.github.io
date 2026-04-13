@@ -242,29 +242,6 @@ export default (() => {
         </div>
 
         <div class="ps-hero-stage">
-          <div class="ps-hero-meta">
-            <div class="ps-hero-chip">Squared circle atlas</div>
-            <div class="ps-hero-chip ps-hero-chip-count">{noteEntries.length} notes</div>
-          </div>
-
-          <div class="ps-hero-titleblock">
-            <h1 class="ps-title">Reality, arranged as a shape.</h1>
-            <p class="ps-lede">
-              Conceptual to physical. Inner life to outer life. The map is the homepage.
-            </p>
-          </div>
-
-          <div class="ps-controls" role="tablist" aria-label="Filter note map">
-            <button class="ps-filter is-active" data-ps-quadrant="all" type="button">
-              All notes
-            </button>
-            {Object.entries(quadrantMeta).map(([id, meta]) => (
-              <button class="ps-filter" data-ps-quadrant={id} type="button">
-                {meta.label}
-              </button>
-            ))}
-          </div>
-
           <div class="ps-main-grid">
             <div class="ps-stage-orb ps-stage-orb-left" />
             <div class="ps-stage-orb ps-stage-orb-right" />
@@ -275,11 +252,6 @@ export default (() => {
 
             <div class="ps-map-panel">
               <div class="ps-map-frame">
-                <div class="ps-axis-label ps-axis-label-top">Inner life</div>
-                <div class="ps-axis-label ps-axis-label-bottom">Outer life</div>
-                <div class="ps-axis-label ps-axis-label-left">Conceptual</div>
-                <div class="ps-axis-label ps-axis-label-right">Physical</div>
-
                 <div class="ps-map">
                   <div class="ps-map-square" />
                   <div class="ps-map-circle" />
@@ -288,10 +260,11 @@ export default (() => {
                   <div class="ps-map-center" />
 
                   {noteEntries.map((entry, index) => (
-                    <a
-                      href={entry.href}
+                    <button
+                      type="button"
                       class={`ps-node accent-${entry.accent} size-${entry.size}`}
                       data-note-slug={entry.slug}
+                      data-note-href={entry.href}
                       data-quadrant={entry.quadrant}
                       style={
                         {
@@ -303,7 +276,7 @@ export default (() => {
                     >
                       <span class="ps-node-core" />
                       <span class="ps-node-label">{entry.title}</span>
-                    </a>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -312,13 +285,9 @@ export default (() => {
             <div class="ps-detail-panel">
               <div class="ps-detail-card">
                 <div class="ps-detail-header">
-                  <div>
-                    <div class="ps-summary-label">Focused note</div>
-                    <h2>Read the garden by orientation.</h2>
-                  </div>
-                  <p>
-                    Hover or focus any point on the map to preview it here before opening the note.
-                  </p>
+                  <button class="ps-detail-close" type="button" aria-label="Close note preview">
+                    Close
+                  </button>
                 </div>
 
                 <div class="ps-previews">
@@ -343,38 +312,6 @@ export default (() => {
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="ps-quadrants">
-          {Object.entries(quadrantMeta).map(([id, meta]) => {
-            const notes = noteEntries.filter((entry) => entry.quadrant === id)
-
-            return (
-              <section class="ps-quadrant-card" data-quadrant-card={id}>
-                <div class="ps-quadrant-head">
-                  <div>
-                    <div class="ps-summary-label">{meta.label}</div>
-                    <h3>{meta.kicker}</h3>
-                  </div>
-                  <span class="ps-count-pill">{notes.length}</span>
-                </div>
-                <p class="ps-quadrant-blurb">{meta.blurb}</p>
-                <div class="ps-note-list">
-                  {notes.map((entry) => (
-                    <a
-                      href={entry.href}
-                      class={`ps-note-card accent-${entry.accent}`}
-                      data-note-slug={entry.slug}
-                      data-quadrant={entry.quadrant}
-                    >
-                      <div class="ps-note-card-title">{entry.title}</div>
-                      <div class="ps-note-card-copy">{entry.description}</div>
-                    </a>
-                  ))}
-                </div>
-              </section>
-            )
-          })}
         </div>
       </section>
     )

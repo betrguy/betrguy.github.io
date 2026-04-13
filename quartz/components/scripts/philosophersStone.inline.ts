@@ -2,15 +2,14 @@ document.addEventListener("nav", () => {
   const shell = document.querySelector(".ps-shell") as HTMLElement | null
   if (!shell) return
 
-  const filters = Array.from(shell.querySelectorAll("[data-ps-quadrant]")) as HTMLButtonElement[]
   const notes = Array.from(shell.querySelectorAll("[data-note-slug]")) as HTMLElement[]
   const previews = Array.from(shell.querySelectorAll("[data-preview-slug]")) as HTMLElement[]
+  const closeButton = shell.querySelector(".ps-detail-close") as HTMLButtonElement | null
   const defaultNote = shell.dataset.defaultNote
 
-  const activateNote = (slug?: string | null) => {
-    if (!slug) return
-
-    shell.dataset.activeNote = slug
+  const activateNote = (slug?: string | null, open = true) => {
+    shell.dataset.detailOpen = open && slug ? "true" : "false"
+    shell.dataset.activeNote = slug ?? ""
     notes.forEach((note) => {
       note.classList.toggle("is-active", note.dataset.noteSlug === slug)
     })
@@ -19,37 +18,25 @@ document.addEventListener("nav", () => {
     })
   }
 
-  const activateQuadrant = (quadrant: string) => {
-    shell.dataset.activeQuadrant = quadrant
-    filters.forEach((filter) => {
-      filter.classList.toggle("is-active", filter.dataset.psQuadrant === quadrant)
-    })
-  }
-
-  const handleQuadrant = (event: Event) => {
-    const target = event.currentTarget as HTMLButtonElement
-    activateQuadrant(target.dataset.psQuadrant ?? "all")
-  }
-
   const handleNote = (event: Event) => {
     const target = event.currentTarget as HTMLElement
-    activateNote(target.dataset.noteSlug)
+    const slug = target.dataset.noteSlug
+    const isActive = shell.dataset.activeNote === slug && shell.dataset.detailOpen === "true"
+    activateNote(slug, !isActive)
   }
 
-  filters.forEach((filter) => filter.addEventListener("click", handleQuadrant))
-  notes.forEach((note) => {
-    note.addEventListener("pointerenter", handleNote)
-    note.addEventListener("focus", handleNote)
-  })
+  const closeDetail = () => activateNote(shell.dataset.activeNote ?? defaultNote ?? null, false)
 
-  activateQuadrant(shell.dataset.activeQuadrant ?? "all")
-  activateNote(defaultNote ?? previews[0]?.dataset.previewSlug ?? null)
+  notes.forEach((note) => {
+    note.addEventListener("click", handleNote)
+  })
+  closeButton?.addEventListener("click", closeDetail)
+  activateNote(defaultNote ?? previews[0]?.dataset.previewSlug ?? null, false)
 
   window.addCleanup(() => {
-    filters.forEach((filter) => filter.removeEventListener("click", handleQuadrant))
     notes.forEach((note) => {
-      note.removeEventListener("pointerenter", handleNote)
-      note.removeEventListener("focus", handleNote)
+      note.removeEventListener("click", handleNote)
     })
+    closeButton?.removeEventListener("click", closeDetail)
   })
 })
