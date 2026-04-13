@@ -1,7 +1,180 @@
 import { QuartzComponent, QuartzComponentConstructor, QuartzComponentProps } from "./types"
 import { resolveRelative } from "../util/path"
 import style from "./styles/philosophersStone.scss"
+// @ts-ignore
+import script from "./scripts/philosophersStone.inline"
 import { classNames } from "../util/lang"
+
+type QuadrantId = "inner-conceptual" | "outer-conceptual" | "inner-physical" | "outer-physical"
+
+type LayoutSeed = {
+  match: string
+  x: number
+  y: number
+  accent: string
+  size?: "sm" | "md" | "lg"
+}
+
+type NoteEntry = {
+  slug: string
+  title: string
+  href: string
+  description: string
+  x: number
+  y: number
+  xPct: string
+  yPct: string
+  accent: string
+  size: "sm" | "md" | "lg"
+  quadrant: QuadrantId
+}
+
+const layoutSeeds: LayoutSeed[] = [
+  { match: "know-yourself", x: -0.58, y: -0.58, accent: "amber", size: "lg" },
+  { match: "change-yourself", x: -0.34, y: -0.18, accent: "amber" },
+  { match: "being-a-freak", x: -0.72, y: -0.1, accent: "crimson" },
+  { match: "william-donahue", x: -0.44, y: -0.72, accent: "violet" },
+  { match: "brain-blast", x: -0.16, y: -0.54, accent: "violet" },
+  { match: "goals", x: 0.14, y: -0.44, accent: "teal" },
+  { match: "what-to-do-if-you-lose-your-job", x: 0.58, y: -0.32, accent: "teal" },
+  { match: "3d-printing-houses", x: 0.82, y: -0.08, accent: "teal", size: "lg" },
+  { match: "building-self-hosted-systems-with-ai", x: 0.34, y: -0.06, accent: "teal", size: "lg" },
+  { match: "local-ai-is-super-important-and-useful", x: 0.74, y: 0.22, accent: "teal" },
+  { match: "building-small-and-local", x: 0.38, y: 0.22, accent: "jade" },
+  { match: "local-info-you-can-trust", x: 0.22, y: 0.58, accent: "jade" },
+  { match: "troubleshooting-my-pegasus-writer", x: 0.82, y: 0.52, accent: "jade" },
+  { match: "new-world-grid", x: -0.24, y: 0.18, accent: "crimson", size: "lg" },
+  { match: "meaningful-human-version-of-the-internet", x: -0.48, y: 0.28, accent: "violet" },
+  { match: "nuclear-fusion-breakthrough-tracker", x: -0.18, y: 0.66, accent: "crimson" },
+  { match: "age-of-aquarius", x: -0.72, y: 0.52, accent: "violet" },
+  { match: "canada-and-china-trade", x: -0.52, y: 0.78, accent: "crimson" },
+  { match: "iran-vs-israel-war-", x: -0.08, y: 0.84, accent: "crimson" },
+]
+
+const quadrantMeta: Record<
+  QuadrantId,
+  {
+    label: string
+    kicker: string
+    blurb: string
+  }
+> = {
+  "inner-conceptual": {
+    label: "Inner / Conceptual",
+    kicker: "Identity, myth, private cognition",
+    blurb: "Notes concerned with self-interpretation, private meaning, and internal orientation.",
+  },
+  "outer-conceptual": {
+    label: "Outer / Conceptual",
+    kicker: "Systems, narratives, world models",
+    blurb: "Ideas about culture, media, geopolitics, and the symbolic architecture of reality.",
+  },
+  "inner-physical": {
+    label: "Inner / Physical",
+    kicker: "Embodied practice, personal infrastructure",
+    blurb: "Work tied to lived habits, personal tools, and the material side of self-direction.",
+  },
+  "outer-physical": {
+    label: "Outer / Physical",
+    kicker: "Local execution, buildable reality",
+    blurb: "Projects, local systems, and tangible interventions in the world around you.",
+  },
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function quadrantFor(x: number, y: number): QuadrantId {
+  if (x < 0 && y < 0) return "inner-conceptual"
+  if (x < 0 && y >= 0) return "outer-conceptual"
+  if (x >= 0 && y < 0) return "inner-physical"
+  return "outer-physical"
+}
+
+function titleFromSlug(slug: string) {
+  return slug
+    .split("/")
+    .at(-1)!
+    .replace(/^\d+-/, "")
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function excerptFor(file: QuartzComponentProps["allFiles"][number]) {
+  const frontmatterDescription = String(file.frontmatter?.description ?? "").trim()
+  const pluginDescription = String((file as Record<string, unknown>).description ?? "").trim()
+  const text = frontmatterDescription || pluginDescription
+  if (!text) {
+    return "A note in the garden."
+  }
+
+  return text.length > 170 ? `${text.slice(0, 167).trimEnd()}...` : text
+}
+
+function scoreTerms(text: string, terms: string[]) {
+  return terms.reduce((sum, term) => sum + (text.includes(term) ? 1 : 0), 0)
+}
+
+function fallbackPlacement(slug: string, text: string) {
+  const conceptualScore = scoreTerms(text, [
+    "meaning",
+    "consciousness",
+    "myth",
+    "spiritual",
+    "world",
+    "internet",
+    "trade",
+    "war",
+    "truth",
+    "belief",
+  ])
+  const physicalScore = scoreTerms(text, [
+    "build",
+    "printer",
+    "local",
+    "system",
+    "job",
+    "house",
+    "tool",
+    "track",
+    "hosting",
+    "grid",
+  ])
+  const innerScore = scoreTerms(text, [
+    "self",
+    "identity",
+    "mind",
+    "habit",
+    "soul",
+    "meditation",
+    "procrastination",
+    "taste",
+    "yourself",
+  ])
+  const outerScore = scoreTerms(text, [
+    "community",
+    "market",
+    "country",
+    "energy",
+    "network",
+    "economy",
+    "people",
+    "companies",
+    "world",
+  ])
+
+  const x = clamp((physicalScore - conceptualScore) / 5, -0.85, 0.85)
+  const y = clamp((outerScore - innerScore) / 5, -0.85, 0.85)
+  const accent = x >= 0 ? (y >= 0 ? "jade" : "teal") : y >= 0 ? "crimson" : "violet"
+
+  return {
+    x: x || (slug.length % 6) / 10 - 0.25,
+    y: y || ((slug.length + 3) % 6) / 10 - 0.25,
+    accent,
+    size: "md" as const,
+  }
+}
 
 export default (() => {
   const PhilosophersStone: QuartzComponent = ({
@@ -13,139 +186,231 @@ export default (() => {
       return null
     }
 
-    const categories = {
-      universe: allFiles.filter(f => 
-        f.slug?.includes("Iran") || 
-        f.slug?.includes("Canada") || 
-        f.slug?.includes("Nuclear") || 
-        f.slug?.includes("Aquarius") ||
-        f.slug?.includes("Trade") ||
-        f.slug?.includes("War")
-      ),
-      mind: allFiles.filter(f => 
-        f.slug?.includes("self-hosted") || 
-        f.slug?.includes("Building-small") || 
-        f.slug?.includes("Local-AI") || 
-        f.slug?.includes("meaningful") ||
-        f.slug?.includes("brain-blast") ||
-        f.slug?.includes("Goals") ||
-        f.slug?.includes("What-to-do")
-      ),
-      material: allFiles.filter(f => 
-        f.slug?.includes("New-World-Grid") || 
-        f.slug?.includes("Local-info") || 
-        f.slug?.includes("3D-Printing") ||
-        f.slug?.includes("Troubleshooting") ||
-        f.slug?.includes("Shadow-GDP") ||
-        f.slug?.includes("Building-self")
-      ),
-      soul: allFiles.filter(f => 
-        f.slug?.includes("Know-Yourself") || 
-        f.slug?.includes("Change-Yourself") || 
-        f.slug?.includes("Being-A-Freak") || 
-        f.slug?.includes("William-Donahue") ||
-        f.slug?.includes("context") ||
-        f.slug?.includes("reflections")
-      ),
-    }
+    const noteEntries = allFiles
+      .filter((file) => {
+        const slug = file.slug
+        return (
+          typeof slug === "string" &&
+          slug !== "index" &&
+          !slug.startsWith(".") &&
+          !slug.startsWith("tags/") &&
+          !slug.endsWith("/index") &&
+          !file.frontmatter?.draft
+        )
+      })
+      .map((file) => {
+        const slug = file.slug!
+        const normalized = slug.toLowerCase()
+        const seed = layoutSeeds.find((entry) => normalized.includes(entry.match))
+        const title = String(file.frontmatter?.title ?? titleFromSlug(slug))
+        const description = excerptFor(file)
+        const fallback = fallbackPlacement(
+          slug,
+          `${title.toLowerCase()} ${description.toLowerCase()}`,
+        )
+        const x = clamp(seed?.x ?? fallback.x, -0.9, 0.9)
+        const y = clamp(seed?.y ?? fallback.y, -0.9, 0.9)
 
-    const center = { x: 250, y: 250 }
-    const circleRadius = 240
-    const triangleRadius = 200
-    const t1 = { x: 250, y: 250 - triangleRadius }
-    const t2 = { x: 250 + triangleRadius * 0.866, y: 250 + triangleRadius * 0.5 }
-    const t3 = { x: 250 - triangleRadius * 0.866, y: 250 + triangleRadius * 0.5 }
-    const squareSide = 120
-    const s_top = 250 - squareSide / 2
-    const s_left = 250 - squareSide / 2
-    const innerCircleRadius = 50
+        return {
+          slug,
+          title,
+          href: resolveRelative(fileData.slug!, slug),
+          description,
+          x,
+          y,
+          xPct: `${((x + 1) / 2) * 100}%`,
+          yPct: `${((y + 1) / 2) * 100}%`,
+          accent: seed?.accent ?? fallback.accent,
+          size: seed?.size ?? fallback.size,
+          quadrant: quadrantFor(x, y),
+        } satisfies NoteEntry
+      })
+      .sort((left, right) => left.title.localeCompare(right.title))
+
+    const quadrantCounts = Object.entries(quadrantMeta).map(([id, meta]) => ({
+      id: id as QuadrantId,
+      label: meta.label,
+      count: noteEntries.filter((entry) => entry.quadrant === id).length,
+    }))
+
+    const dominantQuadrant = quadrantCounts
+      .slice()
+      .sort((left, right) => right.count - left.count)[0]?.label
+
+    const defaultNote = noteEntries.find((entry) => entry.size === "lg") ?? noteEntries[0]
 
     return (
-      <div class={classNames(displayClass, "philosophers-stone-container")}>
-        <svg viewBox="0 0 500 500" class="ps-svg">
-          <g class="ps-node universe">
-            <circle cx={center.x} cy={center.y} r={circleRadius} class="ps-shape ps-animate-rotate" />
-            <text x={center.x} y={center.y - circleRadius - 10} class="ps-label">The Universe</text>
-            {categories.universe.map((f, i) => {
-              const angle = (i / categories.universe.length) * 2 * Math.PI - Math.PI / 2
-              const x = center.x + (circleRadius + 25) * Math.cos(angle)
-              const y = center.y + (circleRadius + 25) * Math.sin(angle)
-              const title = f.frontmatter?.title ?? f.name
-              const textAnchor = x > center.x ? "start" : "end"
-              return (
-                <a href={resolveRelative(fileData.slug!, f.slug!)}>
-                  <text x={x} y={y} class="ps-label small-label" style={{ textAnchor }}>
-                    {title.length > 20 ? title.substring(0, 17) + "..." : title}
-                  </text>
-                </a>
-              )
-            })}
-          </g>
+      <section
+        class={classNames(displayClass, "ps-shell")}
+        data-default-note={defaultNote?.slug}
+        data-active-quadrant="all"
+      >
+        <div class="ps-backdrop">
+          <div class="ps-backdrop-ring ps-backdrop-ring-left" />
+          <div class="ps-backdrop-ring ps-backdrop-ring-right" />
+          <div class="ps-noise" />
+        </div>
 
-          <g class="ps-node mind">
-            <path d={"M " + t1.x + " " + t1.y + " L " + t2.x + " " + t2.y + " L " + t3.x + " " + t3.y + " Z"} class="ps-shape" />
-            <text x={center.x} y={t1.y - 10} class="ps-label">The Mind</text>
-            {categories.mind.map((f, i) => {
-              let x, y;
-              if (i === 0) { x = (t1.x + t2.x) / 2; y = (t1.y + t2.y) / 2 }
-              else if (i === 1) { x = (t2.x + t3.x) / 2; y = (t2.y + t3.y) / 2 }
-              else if (i === 2) { x = (t3.x + t1.x) / 2; y = (t3.y + t1.y) / 2 }
-              else { x = center.x; y = t2.y + 15 + (i * 15) }
-              const title = f.frontmatter?.title ?? f.name
-              const textAnchor = x > center.x ? "start" : x === center.x ? "middle" : "end"
-              return (
-                <a href={resolveRelative(fileData.slug!, f.slug!)}>
-                  <text x={x + (x > center.x ? 15 : -15)} y={y} class="ps-label small-label" style={{ textAnchor }}>
-                    {title.length > 20 ? title.substring(0, 17) + "..." : title}
-                  </text>
-                </a>
-              )
-            })}
-          </g>
+        <div class="ps-hero">
+          <div class="ps-eyebrow">Personal garden / mapped reality</div>
+          <div class="ps-hero-grid">
+            <div class="ps-intro">
+              <h1 class="ps-title">A squared circle for ideas, notes, and buildable life.</h1>
+              <p class="ps-lede">
+                This homepage treats the garden like a navigable field instead of a flat feed. Notes
+                are placed between <strong>conceptual and physical reality</strong>, and between{" "}
+                <strong>inner and outer life</strong>, so the archive reads like a worldview rather
+                than a pile of posts.
+              </p>
+            </div>
 
-          <g class="ps-node material">
-            <rect x={s_left} y={s_top} width={squareSide} height={squareSide} class="ps-shape" />
-            <text x={center.x} y={s_top - 5} class="ps-label">The Material</text>
-            {categories.material.map((f, i) => {
-              let x, y;
-              if (i === 0) { x = s_left - 10; y = 250 }
-              else if (i === 1) { x = s_left + squareSide + 10; y = 250 }
-              else if (i === 2) { x = 250; y = s_top + squareSide + 15 }
-              else { x = 250; y = s_top + squareSide + 30 + (i * 15) }
-              const title = f.frontmatter?.title ?? f.name
-              const textAnchor = x > center.x ? "start" : x === center.x ? "middle" : "end"
-              return (
-                <a href={resolveRelative(fileData.slug!, f.slug!)}>
-                  <text x={x} y={y} class="ps-label small-label" style={{ textAnchor }}>
-                    {title.length > 20 ? title.substring(0, 17) + "..." : title}
-                  </text>
-                </a>
-              )
-            })}
-          </g>
+            <div class="ps-summary-card">
+              <div class="ps-summary-label">Current terrain</div>
+              <div class="ps-summary-count">{noteEntries.length}</div>
+              <p>Published notes currently arranged across the squared circle.</p>
+              <div class="ps-summary-meta">Most populated region: {dominantQuadrant}</div>
+            </div>
+          </div>
 
-          <g class="ps-node soul">
-            <circle cx={center.x} cy={center.y} r={innerCircleRadius} class="ps-shape ps-animate-pulse" />
-            <text x={center.x} y={center.y + 5} class="ps-label">The Soul</text>
-             {categories.soul.map((f, i) => {
-              const angle = (i / categories.soul.length) * 2 * Math.PI - Math.PI / 2
-              const x = center.x + (innerCircleRadius - 15) * Math.cos(angle)
-              const y = center.y + (innerCircleRadius - 15) * Math.sin(angle)
-              const title = f.frontmatter?.title ?? f.name
-              return (
-                <a href={resolveRelative(fileData.slug!, f.slug!)}>
-                  <text x={x} y={y} class="ps-label small-label" style={{ fontSize: "7px", textAnchor: "middle" }}>
-                    {title.length > 10 ? title.substring(0, 8) + "..." : title}
-                  </text>
-                </a>
-              )
-            })}
-          </g>
-        </svg>
-      </div>
+          <div class="ps-legend">
+            <div class="ps-legend-item">
+              <span class="ps-dot accent-violet" />
+              <span>Inner conceptual</span>
+            </div>
+            <div class="ps-legend-item">
+              <span class="ps-dot accent-crimson" />
+              <span>Outer conceptual</span>
+            </div>
+            <div class="ps-legend-item">
+              <span class="ps-dot accent-teal" />
+              <span>Inner physical</span>
+            </div>
+            <div class="ps-legend-item">
+              <span class="ps-dot accent-jade" />
+              <span>Outer physical</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ps-controls" role="tablist" aria-label="Filter note map">
+          <button class="ps-filter is-active" data-ps-quadrant="all" type="button">
+            All notes
+          </button>
+          {Object.entries(quadrantMeta).map(([id, meta]) => (
+            <button class="ps-filter" data-ps-quadrant={id} type="button">
+              {meta.label}
+            </button>
+          ))}
+        </div>
+
+        <div class="ps-main-grid">
+          <div class="ps-map-panel">
+            <div class="ps-map-frame">
+              <div class="ps-axis-label ps-axis-label-top">Inner life</div>
+              <div class="ps-axis-label ps-axis-label-bottom">Outer life</div>
+              <div class="ps-axis-label ps-axis-label-left">Conceptual</div>
+              <div class="ps-axis-label ps-axis-label-right">Physical</div>
+
+              <div class="ps-map">
+                <div class="ps-map-square" />
+                <div class="ps-map-circle" />
+                <div class="ps-map-cross ps-map-cross-x" />
+                <div class="ps-map-cross ps-map-cross-y" />
+                <div class="ps-map-center" />
+
+                {noteEntries.map((entry, index) => (
+                  <a
+                    href={entry.href}
+                    class={`ps-node accent-${entry.accent} size-${entry.size}`}
+                    data-note-slug={entry.slug}
+                    data-quadrant={entry.quadrant}
+                    style={
+                      {
+                        left: entry.xPct,
+                        top: entry.yPct,
+                        "--delay": `${index * 40}ms`,
+                      } as never
+                    }
+                  >
+                    <span class="ps-node-core" />
+                    <span class="ps-node-label">{entry.title}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div class="ps-detail-panel">
+            <div class="ps-detail-card">
+              <div class="ps-detail-header">
+                <div>
+                  <div class="ps-summary-label">Focused note</div>
+                  <h2>Read the garden by orientation.</h2>
+                </div>
+                <p>
+                  Hover or focus any point on the map to preview it here before opening the note.
+                </p>
+              </div>
+
+              <div class="ps-previews">
+                {noteEntries.map((entry) => (
+                  <article
+                    class="ps-preview"
+                    data-preview-slug={entry.slug}
+                    data-quadrant={entry.quadrant}
+                  >
+                    <div class={`ps-preview-badge accent-${entry.accent}`}>
+                      {quadrantMeta[entry.quadrant].label}
+                    </div>
+                    <h3>{entry.title}</h3>
+                    <p>{entry.description}</p>
+                    <div class="ps-preview-meta">{quadrantMeta[entry.quadrant].kicker}</div>
+                    <a href={entry.href} class="ps-preview-link">
+                      Open note
+                    </a>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ps-quadrants">
+          {Object.entries(quadrantMeta).map(([id, meta]) => {
+            const notes = noteEntries.filter((entry) => entry.quadrant === id)
+
+            return (
+              <section class="ps-quadrant-card" data-quadrant-card={id}>
+                <div class="ps-quadrant-head">
+                  <div>
+                    <div class="ps-summary-label">{meta.label}</div>
+                    <h3>{meta.kicker}</h3>
+                  </div>
+                  <span class="ps-count-pill">{notes.length}</span>
+                </div>
+                <p class="ps-quadrant-blurb">{meta.blurb}</p>
+                <div class="ps-note-list">
+                  {notes.map((entry) => (
+                    <a
+                      href={entry.href}
+                      class={`ps-note-card accent-${entry.accent}`}
+                      data-note-slug={entry.slug}
+                      data-quadrant={entry.quadrant}
+                    >
+                      <div class="ps-note-card-title">{entry.title}</div>
+                      <div class="ps-note-card-copy">{entry.description}</div>
+                    </a>
+                  ))}
+                </div>
+              </section>
+            )
+          })}
+        </div>
+      </section>
     )
   }
 
   PhilosophersStone.css = style
+  PhilosophersStone.afterDOMLoaded = script
   return PhilosophersStone
 }) satisfies QuartzComponentConstructor

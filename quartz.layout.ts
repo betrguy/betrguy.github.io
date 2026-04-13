@@ -29,10 +29,7 @@ export const defaultPageLayout: PageLayout = {
     Component.Darkmode(),
     Component.DesktopOnly(Component.Explorer()),
   ],
-  right: [
-    Component.DesktopOnly(Component.TableOfContents()),
-    Component.Backlinks(),
-  ],
+  right: [Component.DesktopOnly(Component.TableOfContents()), Component.Backlinks()],
 }
 
 // 3. FORCE CONTENT LAYOUT TO MATCH
@@ -40,18 +37,19 @@ export const defaultContentPageLayout: PageLayout = defaultPageLayout
 
 // 4. HOMEPAGE LAYOUT (THE CLEAN FIX)
 export const defaultIndexPageLayout: PageLayout = {
-  beforeBody: [
-    Component.PhilosophersStone(),
-    Component.Content(),
-  ],
+  beforeBody: [Component.PhilosophersStone()],
   left: [],
   right: [],
-  afterBody: [],
 }
 
 // 5. LIST LAYOUT
 export const defaultListPageLayout: PageLayout = {
-  beforeBody: [Component.PageTitle(), Component.Breadcrumbs(), Component.ArticleTitle(), Component.ContentMeta()],
+  beforeBody: [
+    Component.PageTitle(),
+    Component.Breadcrumbs(),
+    Component.ArticleTitle(),
+    Component.ContentMeta(),
+  ],
   left: [
     Component.MobileOnly(Component.Spacer()),
     Component.Flex({
