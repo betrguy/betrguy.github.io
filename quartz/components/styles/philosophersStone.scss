@@ -180,27 +180,27 @@
   overflow: visible;
 }
 
-.ps-outer-circle {
+.world-circle {
   fill: none;
-  stroke: color-mix(in srgb, var(--secondary) 30%, transparent);
+  stroke: color-mix(in srgb, #7d2114 42%, transparent);
   stroke-width: 1.2;
 }
 
-.ps-triangle {
+.mind-triangle {
   fill: none;
-  stroke: color-mix(in srgb, var(--dark) 20%, transparent);
+  stroke: color-mix(in srgb, #7b6a2a 48%, transparent);
   stroke-width: 1.2;
 }
 
-.ps-inner-square {
+.material-square {
   fill: none;
-  stroke: color-mix(in srgb, var(--secondary) 26%, transparent);
+  stroke: color-mix(in srgb, #285f63 50%, transparent);
   stroke-width: 1.2;
 }
 
-.ps-core-circle {
+.soul-circle {
   fill: color-mix(in srgb, var(--light) 86%, transparent);
-  stroke: color-mix(in srgb, var(--dark) 28%, transparent);
+  stroke: color-mix(in srgb, #6e274e 50%, transparent);
   stroke-width: 1.2;
 }
 
@@ -234,19 +234,20 @@
   letter-spacing: 0.03em;
   white-space: nowrap;
   text-decoration: none;
+  z-index: 2;
 }
 
 .ps-note:hover,
 .ps-note:focus-visible {
-  background: color-mix(in srgb, var(--light) 88%, var(--secondary) 5%);
-  color: var(--secondary);
+  background: color-mix(in srgb, var(--light) 90%, var(--note-accent) 10%);
+  color: var(--note-accent);
 }
 
 .ps-note-dot {
   width: 0.28rem;
   height: 0.28rem;
   flex: 0 0 auto;
-  background: color-mix(in srgb, var(--secondary) 90%, var(--dark));
+  background: var(--note-accent);
 }
 
 .ps-note-label {
@@ -254,6 +255,30 @@
   max-width: 10rem;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.shape-world-circle {
+  --note-accent: #7d2114;
+}
+
+.shape-mind-triangle {
+  --note-accent: #7b6a2a;
+}
+
+.shape-material-square {
+  --note-accent: #285f63;
+}
+
+.shape-soul-circle {
+  --note-accent: #6e274e;
+}
+
+.ps-note.shape-world-circle,
+.ps-note.shape-mind-triangle,
+.ps-note.shape-material-square,
+.ps-note.shape-soul-circle {
+  color: color-mix(in srgb, var(--note-accent) 92%, var(--dark));
+  border-color: color-mix(in srgb, var(--note-accent) 25%, transparent);
 }
 
 @keyframes psFloat {

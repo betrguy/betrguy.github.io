@@ -3,10 +3,13 @@ import style from "./styles/philosophersStone.scss"
 import { classNames } from "../util/lang"
 import { resolveRelative } from "../util/path"
 
+type ShapeKind = "world-circle" | "mind-triangle" | "material-square" | "soul-circle"
+
 type NoteEntry = {
   slug: string
   title: string
   href: string
+  shape: ShapeKind
   x: number
   y: number
 }
@@ -37,46 +40,190 @@ function createRandom(seed: number) {
   }
 }
 
+function scoreTerms(text: string, terms: string[]) {
+  return terms.reduce((sum, term) => sum + (text.includes(term) ? 1 : 0), 0)
+}
+
+function inferShape(text: string, slug: string): ShapeKind {
+  const soul = scoreTerms(text, [
+    "know yourself",
+    "change yourself",
+    "william donahue",
+    "self",
+    "identity",
+    "spiritual",
+    "consciousness",
+    "inner",
+    "soul",
+    "freak",
+    "aquarius",
+    "bible",
+  ])
+  const material = scoreTerms(text, [
+    "build",
+    "system",
+    "local ai",
+    "self hosted",
+    "printing",
+    "house",
+    "tool",
+    "infrastructure",
+    "grid",
+    "tracker",
+    "app",
+    "python",
+  ])
+  const mind = scoreTerms(text, [
+    "brain",
+    "idea",
+    "thought",
+    "meaning",
+    "human version",
+    "internet",
+    "goals",
+    "procrastination",
+    "creative",
+    "frame",
+    "taste",
+  ])
+  const world = scoreTerms(text, [
+    "war",
+    "trade",
+    "canada",
+    "iran",
+    "israel",
+    "world",
+    "country",
+    "economy",
+    "energy",
+    "community",
+    "neighborhood",
+    "news",
+  ])
+
+  const ranked = [
+    { shape: "soul-circle" as const, score: soul },
+    { shape: "material-square" as const, score: material },
+    { shape: "mind-triangle" as const, score: mind },
+    { shape: "world-circle" as const, score: world },
+  ].sort((left, right) => right.score - left.score)
+
+  if (ranked[0].score > 0) return ranked[0].shape
+
+  if (slug.includes("local") || slug.includes("build") || slug.includes("system")) {
+    return "material-square"
+  }
+  if (slug.includes("yourself") || slug.includes("freak") || slug.includes("donahue")) {
+    return "soul-circle"
+  }
+  if (slug.includes("world") || slug.includes("trade") || slug.includes("war")) {
+    return "world-circle"
+  }
+
+  return "mind-triangle"
+}
+
+function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
+  return Math.hypot(a.x - b.x, a.y - b.y)
+}
+
+function inTriangle(x: number, y: number) {
+  const x1 = 500
+  const y1 = 80
+  const x2 = 136.27
+  const y2 = 710
+  const x3 = 863.73
+  const y3 = 710
+
+  const denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3)
+  const a = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / denominator
+  const b = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / denominator
+  const c = 1 - a - b
+  return a >= 0 && b >= 0 && c >= 0
+}
+
+function inSquare(x: number, y: number) {
+  return x >= 331.2 && x <= 668.8 && y >= 372.4 && y <= 710
+}
+
+function inSoulCircle(x: number, y: number) {
+  return distance({ x, y }, { x: 500, y: 541.2 }) <= 168.8
+}
+
+function generatePoint(shape: ShapeKind, random: () => number) {
+  if (shape === "soul-circle") {
+    const angle = random() * Math.PI * 2
+    const radius = Math.sqrt(random()) * 120
+    return {
+      x: 500 + Math.cos(angle) * radius,
+      y: 541.2 + Math.sin(angle) * radius,
+    }
+  }
+
+  if (shape === "material-square") {
+    return {
+      x: 360 + random() * 280,
+      y: 400 + random() * 280,
+    }
+  }
+
+  if (shape === "mind-triangle") {
+    const r1 = Math.sqrt(random())
+    const r2 = random()
+    const x = (1 - r1) * 500 + r1 * (1 - r2) * 136.27 + r1 * r2 * 863.73
+    const y = (1 - r1) * 120 + r1 * (1 - r2) * 690 + r1 * r2 * 690
+    return { x, y }
+  }
+
+  const angle = random() * Math.PI * 2
+  const radius = 320 + random() * 78
+  return {
+    x: 500 + Math.cos(angle) * radius,
+    y: 500 + Math.sin(angle) * radius,
+  }
+}
+
+function validForShape(shape: ShapeKind, x: number, y: number) {
+  if (shape === "soul-circle") return inSoulCircle(x, y)
+  if (shape === "material-square") return inSquare(x, y)
+  if (shape === "mind-triangle") return inTriangle(x, y) && !inSquare(x, y)
+  return distance({ x, y }, { x: 500, y: 500 }) <= 420 && !inTriangle(x, y)
+}
+
 function generatePlacements(notes: Omit<NoteEntry, "x" | "y">[]) {
   const placed: NoteEntry[] = []
-  const minDistance = 92
-  const centerX = 500
-  const centerY = 500
-  const maxRadius = 392
 
   for (const note of notes) {
     const random = createRandom(hashString(note.slug))
+    const minDistance =
+      note.shape === "soul-circle" ? 66 : note.shape === "material-square" ? 82 : 90
     let best: { x: number; y: number; clearance: number } | null = null
 
-    for (let attempt = 0; attempt < 240; attempt++) {
-      const angle = random() * Math.PI * 2
-      const radius = Math.sqrt(random()) * maxRadius
-      const x = centerX + Math.cos(angle) * radius
-      const y = centerY + Math.sin(angle) * radius
-      const edgeDistance = Math.hypot(x - centerX, y - centerY)
-
-      if (edgeDistance > maxRadius) continue
+    for (let attempt = 0; attempt < 280; attempt++) {
+      const point = generatePoint(note.shape, random)
+      if (!validForShape(note.shape, point.x, point.y)) continue
 
       let clearance = Infinity
       for (const existing of placed) {
-        const distance = Math.hypot(existing.x - x, existing.y - y)
-        clearance = Math.min(clearance, distance)
+        const required = existing.shape === note.shape ? minDistance : minDistance - 16
+        const current = distance(existing, point) - required
+        clearance = Math.min(clearance, current)
       }
 
-      if (clearance >= minDistance || placed.length === 0) {
-        best = { x, y, clearance }
+      if (clearance >= 0 || placed.length === 0) {
+        best = { ...point, clearance }
         break
       }
 
       if (!best || clearance > best.clearance) {
-        best = { x, y, clearance }
+        best = { ...point, clearance }
       }
     }
 
     placed.push({
       ...note,
-      x: best?.x ?? centerX,
-      y: best?.y ?? centerY,
+      x: best?.x ?? 500,
+      y: best?.y ?? 500,
     })
   }
 
@@ -105,11 +252,21 @@ export default (() => {
           !file.frontmatter?.draft
         )
       })
-      .map((file) => ({
-        slug: file.slug!,
-        title: String(file.frontmatter?.title ?? titleFromSlug(file.slug!)),
-        href: resolveRelative(fileData.slug!, file.slug!),
-      }))
+      .map((file) => {
+        const slug = file.slug!
+        const title = String(file.frontmatter?.title ?? titleFromSlug(slug))
+        const description = String(
+          (file as Record<string, unknown>).description ?? "",
+        ).toLowerCase()
+        const text = `${title.toLowerCase()} ${slug.toLowerCase()} ${description}`
+
+        return {
+          slug,
+          title,
+          href: resolveRelative(fileData.slug!, slug),
+          shape: inferShape(text, slug.toLowerCase()),
+        }
+      })
       .sort((left, right) => left.title.localeCompare(right.title))
 
     const noteEntries = generatePlacements(notes)
@@ -134,17 +291,18 @@ export default (() => {
             <div class="ps-map">
               <div class="ps-core-glow" />
               <svg class="ps-symbol" viewBox="0 0 1000 1000" aria-hidden="true">
-                <circle class="ps-outer-circle" cx="500" cy="500" r="420" />
-                <polygon class="ps-triangle" points="500,80 136.27,710 863.73,710" />
-                <rect class="ps-inner-square" x="331.2" y="372.4" width="337.6" height="337.6" />
-                <circle class="ps-core-circle" cx="500" cy="541.2" r="168.8" />
+                <circle class="world-circle" cx="500" cy="500" r="420" />
+                <polygon class="mind-triangle" points="500,80 136.27,710 863.73,710" />
+                <rect class="material-square" x="331.2" y="372.4" width="337.6" height="337.6" />
+                <circle class="soul-circle" cx="500" cy="541.2" r="168.8" />
               </svg>
 
               <div class="ps-note-layer">
                 {noteEntries.map((note) => (
                   <a
                     href={note.href}
-                    class="ps-note"
+                    class={`ps-note shape-${note.shape}`}
+                    data-shape={note.shape}
                     style={
                       {
                         left: `${(note.x / 1000) * 100}%`,
