@@ -89,14 +89,10 @@
   justify-content: center;
   padding: 2rem;
   border-radius: 2.8rem;
-  border: 1px solid color-mix(in srgb, var(--dark) 10%, transparent);
-  background: linear-gradient(
-    160deg,
-    color-mix(in srgb, var(--light) 92%, transparent),
-    color-mix(in srgb, var(--secondary) 5%, transparent)
-  );
-  box-shadow: 0 24px 80px rgba(28, 18, 18, 0.12);
-  backdrop-filter: blur(22px);
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .ps-map {
@@ -164,10 +160,6 @@
   50% {
     transform: translateY(1.4rem) rotate(18deg);
   }
-}
-
-[saved-theme="dark"] .ps-map-frame {
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
 }
 
 @media all and (max-width: 720px) {
