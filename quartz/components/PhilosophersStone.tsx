@@ -227,16 +227,6 @@ export default (() => {
       })
       .sort((left, right) => left.title.localeCompare(right.title))
 
-    const quadrantCounts = Object.entries(quadrantMeta).map(([id, meta]) => ({
-      id: id as QuadrantId,
-      label: meta.label,
-      count: noteEntries.filter((entry) => entry.quadrant === id).length,
-    }))
-
-    const dominantQuadrant = quadrantCounts
-      .slice()
-      .sort((left, right) => right.count - left.count)[0]?.label
-
     const defaultNote = noteEntries.find((entry) => entry.size === "lg") ?? noteEntries[0]
 
     return (
@@ -251,125 +241,105 @@ export default (() => {
           <div class="ps-noise" />
         </div>
 
-        <div class="ps-hero">
-          <div class="ps-eyebrow">Personal garden / mapped reality</div>
-          <div class="ps-hero-grid">
-            <div class="ps-intro">
-              <h1 class="ps-title">A squared circle for ideas, notes, and buildable life.</h1>
-              <p class="ps-lede">
-                This homepage treats the garden like a navigable field instead of a flat feed. Notes
-                are placed between <strong>conceptual and physical reality</strong>, and between{" "}
-                <strong>inner and outer life</strong>, so the archive reads like a worldview rather
-                than a pile of posts.
-              </p>
-            </div>
-
-            <div class="ps-summary-card">
-              <div class="ps-summary-label">Current terrain</div>
-              <div class="ps-summary-count">{noteEntries.length}</div>
-              <p>Published notes currently arranged across the squared circle.</p>
-              <div class="ps-summary-meta">Most populated region: {dominantQuadrant}</div>
-            </div>
+        <div class="ps-hero-stage">
+          <div class="ps-hero-meta">
+            <div class="ps-hero-chip">Squared circle atlas</div>
+            <div class="ps-hero-chip ps-hero-chip-count">{noteEntries.length} notes</div>
           </div>
 
-          <div class="ps-legend">
-            <div class="ps-legend-item">
-              <span class="ps-dot accent-violet" />
-              <span>Inner conceptual</span>
-            </div>
-            <div class="ps-legend-item">
-              <span class="ps-dot accent-crimson" />
-              <span>Outer conceptual</span>
-            </div>
-            <div class="ps-legend-item">
-              <span class="ps-dot accent-teal" />
-              <span>Inner physical</span>
-            </div>
-            <div class="ps-legend-item">
-              <span class="ps-dot accent-jade" />
-              <span>Outer physical</span>
-            </div>
+          <div class="ps-hero-titleblock">
+            <h1 class="ps-title">Reality, arranged as a shape.</h1>
+            <p class="ps-lede">
+              Conceptual to physical. Inner life to outer life. The map is the homepage.
+            </p>
           </div>
-        </div>
 
-        <div class="ps-controls" role="tablist" aria-label="Filter note map">
-          <button class="ps-filter is-active" data-ps-quadrant="all" type="button">
-            All notes
-          </button>
-          {Object.entries(quadrantMeta).map(([id, meta]) => (
-            <button class="ps-filter" data-ps-quadrant={id} type="button">
-              {meta.label}
+          <div class="ps-controls" role="tablist" aria-label="Filter note map">
+            <button class="ps-filter is-active" data-ps-quadrant="all" type="button">
+              All notes
             </button>
-          ))}
-        </div>
-
-        <div class="ps-main-grid">
-          <div class="ps-map-panel">
-            <div class="ps-map-frame">
-              <div class="ps-axis-label ps-axis-label-top">Inner life</div>
-              <div class="ps-axis-label ps-axis-label-bottom">Outer life</div>
-              <div class="ps-axis-label ps-axis-label-left">Conceptual</div>
-              <div class="ps-axis-label ps-axis-label-right">Physical</div>
-
-              <div class="ps-map">
-                <div class="ps-map-square" />
-                <div class="ps-map-circle" />
-                <div class="ps-map-cross ps-map-cross-x" />
-                <div class="ps-map-cross ps-map-cross-y" />
-                <div class="ps-map-center" />
-
-                {noteEntries.map((entry, index) => (
-                  <a
-                    href={entry.href}
-                    class={`ps-node accent-${entry.accent} size-${entry.size}`}
-                    data-note-slug={entry.slug}
-                    data-quadrant={entry.quadrant}
-                    style={
-                      {
-                        left: entry.xPct,
-                        top: entry.yPct,
-                        "--delay": `${index * 40}ms`,
-                      } as never
-                    }
-                  >
-                    <span class="ps-node-core" />
-                    <span class="ps-node-label">{entry.title}</span>
-                  </a>
-                ))}
-              </div>
-            </div>
+            {Object.entries(quadrantMeta).map(([id, meta]) => (
+              <button class="ps-filter" data-ps-quadrant={id} type="button">
+                {meta.label}
+              </button>
+            ))}
           </div>
 
-          <div class="ps-detail-panel">
-            <div class="ps-detail-card">
-              <div class="ps-detail-header">
-                <div>
-                  <div class="ps-summary-label">Focused note</div>
-                  <h2>Read the garden by orientation.</h2>
-                </div>
-                <p>
-                  Hover or focus any point on the map to preview it here before opening the note.
-                </p>
-              </div>
+          <div class="ps-main-grid">
+            <div class="ps-stage-orb ps-stage-orb-left" />
+            <div class="ps-stage-orb ps-stage-orb-right" />
+            <div class="ps-stage-square ps-stage-square-a" />
+            <div class="ps-stage-square ps-stage-square-b" />
+            <div class="ps-stage-circle ps-stage-circle-a" />
+            <div class="ps-stage-circle ps-stage-circle-b" />
 
-              <div class="ps-previews">
-                {noteEntries.map((entry) => (
-                  <article
-                    class="ps-preview"
-                    data-preview-slug={entry.slug}
-                    data-quadrant={entry.quadrant}
-                  >
-                    <div class={`ps-preview-badge accent-${entry.accent}`}>
-                      {quadrantMeta[entry.quadrant].label}
-                    </div>
-                    <h3>{entry.title}</h3>
-                    <p>{entry.description}</p>
-                    <div class="ps-preview-meta">{quadrantMeta[entry.quadrant].kicker}</div>
-                    <a href={entry.href} class="ps-preview-link">
-                      Open note
+            <div class="ps-map-panel">
+              <div class="ps-map-frame">
+                <div class="ps-axis-label ps-axis-label-top">Inner life</div>
+                <div class="ps-axis-label ps-axis-label-bottom">Outer life</div>
+                <div class="ps-axis-label ps-axis-label-left">Conceptual</div>
+                <div class="ps-axis-label ps-axis-label-right">Physical</div>
+
+                <div class="ps-map">
+                  <div class="ps-map-square" />
+                  <div class="ps-map-circle" />
+                  <div class="ps-map-cross ps-map-cross-x" />
+                  <div class="ps-map-cross ps-map-cross-y" />
+                  <div class="ps-map-center" />
+
+                  {noteEntries.map((entry, index) => (
+                    <a
+                      href={entry.href}
+                      class={`ps-node accent-${entry.accent} size-${entry.size}`}
+                      data-note-slug={entry.slug}
+                      data-quadrant={entry.quadrant}
+                      style={
+                        {
+                          left: entry.xPct,
+                          top: entry.yPct,
+                          "--delay": `${index * 40}ms`,
+                        } as never
+                      }
+                    >
+                      <span class="ps-node-core" />
+                      <span class="ps-node-label">{entry.title}</span>
                     </a>
-                  </article>
-                ))}
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div class="ps-detail-panel">
+              <div class="ps-detail-card">
+                <div class="ps-detail-header">
+                  <div>
+                    <div class="ps-summary-label">Focused note</div>
+                    <h2>Read the garden by orientation.</h2>
+                  </div>
+                  <p>
+                    Hover or focus any point on the map to preview it here before opening the note.
+                  </p>
+                </div>
+
+                <div class="ps-previews">
+                  {noteEntries.map((entry) => (
+                    <article
+                      class="ps-preview"
+                      data-preview-slug={entry.slug}
+                      data-quadrant={entry.quadrant}
+                    >
+                      <div class={`ps-preview-badge accent-${entry.accent}`}>
+                        {quadrantMeta[entry.quadrant].label}
+                      </div>
+                      <h3>{entry.title}</h3>
+                      <p>{entry.description}</p>
+                      <div class="ps-preview-meta">{quadrantMeta[entry.quadrant].kicker}</div>
+                      <a href={entry.href} class="ps-preview-link">
+                        Open note
+                      </a>
+                    </article>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
