@@ -17,10 +17,10 @@ export const sharedPageComponents: SharedLayout = {
 // 2. STANDARD PAGE LAYOUT (For Notes 1, 2, 3...)
 export const defaultPageLayout: PageLayout = {
   beforeBody: [
-    Component.PageTitle(),    // The "Home" button
+    Component.PageTitle(),
     Component.Breadcrumbs(),
-    Component.ArticleTitle(), // Title of the note
-    Component.ContentMeta(),  // Date/Read time
+    Component.ArticleTitle(),
+    Component.ContentMeta(),
     Component.TagList(),
   ],
   left: [
@@ -41,15 +41,10 @@ export const defaultContentPageLayout: PageLayout = defaultPageLayout
 // 4. HOMEPAGE LAYOUT (THE CLEAN FIX)
 export const defaultIndexPageLayout: PageLayout = {
   beforeBody: [
-    Component.PageTitle(),
     Component.PhilosophersStone(),
-    Component.Content(),   // Your text
+    Component.Content(),
   ],
-  left: [
-    Component.MobileOnly(Component.Spacer()),
-    Component.Search(),
-    Component.Darkmode(),
-  ],
+  left: [],
   right: [],
   afterBody: [],
 }

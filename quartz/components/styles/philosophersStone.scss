@@ -1,38 +1,40 @@
 .philosophers-stone-container {
-  display: flex;
+  display: flex !important;
   justify-content: center;
   align-items: center;
   width: 100%;
-  min-height: 700px;
+  min-height: 80vh;
   position: relative;
   overflow: visible;
-  margin: 4rem 0;
+  margin: 2rem 0;
+  z-index: 10;
 }
 
 .ps-svg {
   width: 100%;
-  max-width: 600px;
+  max-width: 800px;
   height: auto;
   overflow: visible;
-  filter: drop-shadow(0 0 15px rgba(var(--secondary), 0.1));
+  filter: drop-shadow(0 0 20px rgba(var(--secondary), 0.15));
 }
 
 .ps-shape {
   fill: none;
   stroke: var(--secondary);
-  stroke-width: 1.5;
+  stroke-width: 2;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  vector-effect: non-scaling-stroke;
 
   &:hover {
-    stroke-width: 3;
-    filter: drop-shadow(0 0 12px var(--secondary));
+    stroke-width: 4;
+    filter: drop-shadow(0 0 15px var(--secondary));
   }
 }
 
 .ps-label {
   font-family: var(--headerFont);
-  font-size: 14px;
+  font-size: 16px;
   fill: var(--darkgray);
   pointer-events: none;
   text-anchor: middle;
@@ -41,15 +43,17 @@
 }
 
 .small-label {
-  font-size: 11px;
+  font-size: 12px;
   fill: var(--gray);
   pointer-events: auto;
   cursor: pointer;
+  text-decoration: none;
 
   &:hover {
     fill: var(--secondary);
     font-weight: bold;
-    font-size: 13px;
+    font-size: 14px;
+    text-shadow: 0 0 8px var(--secondary);
   }
 }
 
@@ -58,12 +62,11 @@
   
   &:hover {
     .ps-shape {
-      stroke-width: 3;
+      stroke-width: 4;
     }
     .ps-label:not(.small-label) {
       fill: var(--secondary);
       font-weight: bold;
-      transform: scale(1.1);
     }
   }
 }
@@ -80,35 +83,32 @@
 }
 
 .ps-animate-rotate {
-  animation: rotate-slow 120s linear infinite;
-  transform-origin: center;
+  animation: rotate-slow 180s linear infinite;
+  transform-origin: 250px 250px;
 }
 
 .ps-animate-pulse {
-  animation: pulse 6s ease-in-out infinite;
-  transform-origin: center;
+  animation: pulse 8s ease-in-out infinite;
+  transform-origin: 250px 250px;
 }
 
-// Dark/Light mode specific tweaks
 [saved-theme="dark"] {
   .ps-label:not(.small-label) {
     fill: var(--lightgray);
   }
   .small-label {
-    fill: var(--darkgray);
+    fill: var(--gray);
   }
 }
 
-// Responsive adjustments
 @media all and (max-width: 600px) {
   .philosophers-stone-container {
-    min-height: 500px;
-    margin: 2rem 0;
+    min-height: 60vh;
   }
   .ps-label {
-    font-size: 12px;
+    font-size: 14px;
   }
   .small-label {
-    font-size: 9px;
+    font-size: 10px;
   }
 }
