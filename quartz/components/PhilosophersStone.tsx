@@ -21,6 +21,10 @@ export default (() => {
           <div class="ps-stage-orb ps-stage-orb-right" />
 
           <div class="ps-map-frame">
+            <div class="ps-titleblock">
+              <h1 class="ps-title">Perfect Loop</h1>
+              <p class="ps-subtitle">"Man becomes the reality that he engenders"</p>
+            </div>
             <div class="ps-map">
               <div class="ps-core-glow" />
               <svg class="ps-symbol" viewBox="0 0 1000 1000" aria-hidden="true">
