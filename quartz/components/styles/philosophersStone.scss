@@ -253,11 +253,14 @@
   z-index: 2;
   opacity: 0;
   pointer-events: none;
+  transform: translate(-50%, -50%) translateY(0.35rem);
   transition:
-    opacity 140ms ease,
+    opacity 220ms ease,
+    transform 220ms ease,
     background-color 140ms ease,
     color 140ms ease,
     border-color 140ms ease;
+  transition-delay: 0ms;
 }
 
 .ps-note:hover,
@@ -311,6 +314,8 @@
 .ps-shell[data-active-reveal="soul-circle"] .ps-note[data-shape="soul-circle"] {
   opacity: 1;
   pointer-events: auto;
+  transform: translate(-50%, -50%) translateY(0);
+  transition-delay: var(--note-delay);
 }
 
 @keyframes psFloat {

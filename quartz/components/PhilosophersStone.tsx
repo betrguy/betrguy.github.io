@@ -332,6 +332,7 @@ export default (() => {
                       {
                         left: `${(note.x / 1000) * 100}%`,
                         top: `${(note.y / 1000) * 100}%`,
+                        "--note-delay": `${(hashString(note.slug) % 9) * 35}ms`,
                       } as never
                     }
                   >
