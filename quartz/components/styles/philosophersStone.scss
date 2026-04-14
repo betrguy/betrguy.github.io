@@ -9,7 +9,6 @@
   position: absolute;
   inset: -2rem -4rem auto;
   height: 52rem;
-  pointer-events: none;
   z-index: -1;
 }
 
@@ -20,14 +19,23 @@
 
 .ps-backdrop-image {
   position: absolute;
+  appearance: none;
+  padding: 0;
+  border: none;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  opacity: 0.15;
-  filter: blur(2.5px) saturate(0.9);
+  opacity: 0.21;
+  filter: blur(2.2px) saturate(1.08);
   mix-blend-mode: multiply;
   transform-origin: center;
   box-shadow: 0 18px 50px rgba(39, 27, 21, 0.12);
+  cursor: zoom-in;
+  pointer-events: auto;
+  transition:
+    opacity 160ms ease,
+    filter 160ms ease,
+    transform 160ms ease;
 }
 
 .ps-backdrop-image::after {
@@ -37,6 +45,17 @@
   background:
     linear-gradient(180deg, rgba(248, 243, 239, 0.18), rgba(248, 243, 239, 0.55)),
     radial-gradient(circle at center, transparent 38%, rgba(248, 243, 239, 0.72) 100%);
+}
+
+.ps-backdrop-image:hover,
+.ps-backdrop-image:focus-visible {
+  opacity: 0.28;
+  filter: blur(1.6px) saturate(1.16);
+}
+
+.ps-backdrop-image:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--secondary) 24%, transparent);
+  outline-offset: 3px;
 }
 
 .ps-image-hermes {
@@ -302,6 +321,77 @@
     radial-gradient(circle at 55% 70%, rgba(61, 126, 97, 0.1), transparent 30%);
   filter: blur(30px);
   opacity: 0.65;
+}
+
+.ps-image-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.ps-shell[data-image-viewer-open="true"] .ps-image-viewer {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ps-image-viewer-backdrop {
+  position: absolute;
+  inset: 0;
+  appearance: none;
+  border: none;
+  background: rgba(20, 15, 15, 0.74);
+  backdrop-filter: blur(10px);
+  cursor: zoom-out;
+}
+
+.ps-image-viewer-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 72rem);
+  margin: 0;
+  padding: 0.9rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--light) 96%, transparent);
+  box-shadow:
+    0 20px 60px rgba(16, 12, 13, 0.3),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.55);
+  transform: translateY(0.6rem) scale(0.985);
+  transition: transform 180ms ease;
+}
+
+.ps-shell[data-image-viewer-open="true"] .ps-image-viewer-dialog {
+  transform: translateY(0) scale(1);
+}
+
+.ps-image-viewer-close {
+  appearance: none;
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--secondary) 18%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--light) 94%, transparent);
+  color: color-mix(in srgb, var(--secondary) 92%, var(--dark));
+  font: inherit;
+  font-size: 0.78rem;
+  line-height: 1;
+  padding: 0.38rem 0.62rem;
+  cursor: pointer;
+}
+
+.ps-image-viewer-full {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  max-height: 84vh;
+  object-fit: contain;
+  border-radius: 0.7rem;
+  margin: 0;
 }
 
 .ps-stage {
@@ -764,5 +854,10 @@
 
   .ps-map {
     transform: translateY(-0.6rem);
+  }
+
+  .ps-image-viewer-dialog {
+    width: min(94vw, 40rem);
+    padding: 0.7rem;
   }
 }
