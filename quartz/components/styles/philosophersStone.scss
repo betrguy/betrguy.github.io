@@ -22,11 +22,150 @@
   opacity: 0.75;
 }
 
-.ps-backdrop-ring-left {
-  top: 3rem;
+.ps-backdrop-icon-cloud {
+  position: absolute;
+  top: 2rem;
   left: -6rem;
-  transform: rotate(14deg);
-  animation: psFloat 18s ease-in-out infinite;
+  width: 25rem;
+  height: 25rem;
+  opacity: 0.95;
+  animation: psFloatTilt 22s ease-in-out infinite;
+}
+
+.ps-backdrop-icon-cloud::before {
+  content: "";
+  position: absolute;
+  inset: 12% 14% 16% 10%;
+  border-radius: 1.6rem;
+  background:
+    linear-gradient(
+      125deg,
+      color-mix(in srgb, #285f63 10%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 30% 35%,
+      color-mix(in srgb, #285f63 8%, transparent),
+      transparent 54%
+    );
+  filter: blur(10px);
+  opacity: 0.65;
+}
+
+.ps-backdrop-icon {
+  position: absolute;
+  left: var(--icon-x);
+  top: var(--icon-y);
+  width: var(--icon-size);
+  height: var(--icon-size);
+  opacity: var(--icon-opacity);
+  transform: translate(-50%, -50%) rotate(var(--icon-rotate));
+  color: color-mix(in srgb, #285f63 66%, var(--secondary));
+  animation:
+    psIconPulse 10s ease-in-out infinite,
+    psIconBreath 18s ease-in-out infinite;
+  animation-delay: var(--icon-delay), calc(var(--icon-delay) * -0.35);
+}
+
+.ps-backdrop-icon::before,
+.ps-backdrop-icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.ps-backdrop-icon-square::before {
+  border: 1px solid currentColor;
+  box-shadow: 0 0 0 0.22rem color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.ps-backdrop-icon-diamond::before {
+  inset: 14%;
+  border: 1px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.ps-backdrop-icon-triangle::before {
+  inset: auto;
+  left: 50%;
+  bottom: 10%;
+  width: 0;
+  height: 0;
+  border-left: calc(var(--icon-size) * 0.34) solid transparent;
+  border-right: calc(var(--icon-size) * 0.34) solid transparent;
+  border-bottom: calc(var(--icon-size) * 0.6) solid currentColor;
+  transform: translateX(-50%);
+}
+
+.ps-backdrop-icon-plus::before,
+.ps-backdrop-icon-plus::after {
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+
+.ps-backdrop-icon-plus::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.ps-backdrop-icon-ring::before {
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+
+.ps-backdrop-icon-bracket::before,
+.ps-backdrop-icon-bracket::after {
+  width: 42%;
+  height: 68%;
+  border-top: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+}
+
+.ps-backdrop-icon-bracket::before {
+  left: 6%;
+  border-left: 1px solid currentColor;
+}
+
+.ps-backdrop-icon-bracket::after {
+  right: 6%;
+  border-right: 1px solid currentColor;
+}
+
+.ps-backdrop-icon-grid::before {
+  background-image:
+    linear-gradient(currentColor, currentColor),
+    linear-gradient(currentColor, currentColor),
+    linear-gradient(currentColor, currentColor),
+    linear-gradient(currentColor, currentColor);
+  background-repeat: repeat-y, repeat-y, repeat-x, repeat-x;
+  background-size:
+    1px 100%,
+    1px 100%,
+    100% 1px,
+    100% 1px;
+  background-position:
+    25% 0,
+    75% 0,
+    0 25%,
+    0 75%;
+  border: 1px solid color-mix(in srgb, currentColor 72%, transparent);
+}
+
+.ps-backdrop-icon-spark::before,
+.ps-backdrop-icon-spark::after {
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.ps-backdrop-icon-spark::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
 }
 
 .ps-backdrop-ring-right {
@@ -411,6 +550,36 @@
   }
 }
 
+@keyframes psFloatTilt {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-8deg);
+  }
+  50% {
+    transform: translateY(1rem) rotate(-5deg);
+  }
+}
+
+@keyframes psIconPulse {
+  0%,
+  100% {
+    opacity: calc(var(--icon-opacity) * 0.82);
+  }
+  50% {
+    opacity: calc(var(--icon-opacity) + 0.08);
+  }
+}
+
+@keyframes psIconBreath {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--icon-rotate)) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(var(--icon-rotate)) scale(1.06);
+  }
+}
+
 @media all and (max-width: 720px) {
   .ps-map-frame {
     width: 96vw;
@@ -422,6 +591,13 @@
 
   .ps-stage-orb {
     display: none;
+  }
+
+  .ps-backdrop-icon-cloud {
+    top: 3.5rem;
+    left: -4.5rem;
+    width: 18rem;
+    height: 18rem;
   }
 
   .ps-titleblock {

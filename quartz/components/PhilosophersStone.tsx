@@ -16,6 +16,38 @@ type NoteEntry = {
   y: number
 }
 
+type BackdropIcon = {
+  kind:
+    | "square"
+    | "diamond"
+    | "triangle"
+    | "plus"
+    | "ring"
+    | "bracket"
+    | "grid"
+    | "spark"
+  x: number
+  y: number
+  size: number
+  rotate?: number
+  opacity?: number
+}
+
+const backdropIcons: BackdropIcon[] = [
+  { kind: "square", x: 8, y: 14, size: 4.8, rotate: -8, opacity: 0.18 },
+  { kind: "diamond", x: 17, y: 6, size: 2.1, rotate: 12, opacity: 0.24 },
+  { kind: "triangle", x: 22, y: 22, size: 2.6, rotate: 8, opacity: 0.18 },
+  { kind: "plus", x: 24, y: 12, size: 1.55, rotate: 0, opacity: 0.28 },
+  { kind: "ring", x: 29, y: 17, size: 2.2, rotate: 0, opacity: 0.18 },
+  { kind: "bracket", x: 6, y: 29, size: 2.8, rotate: -6, opacity: 0.22 },
+  { kind: "grid", x: 15, y: 31, size: 2.3, rotate: 0, opacity: 0.16 },
+  { kind: "spark", x: 28, y: 31, size: 1.9, rotate: 18, opacity: 0.24 },
+  { kind: "diamond", x: 33, y: 8, size: 1.5, rotate: 0, opacity: 0.22 },
+  { kind: "square", x: 35, y: 25, size: 2.8, rotate: 7, opacity: 0.14 },
+  { kind: "triangle", x: 11, y: 41, size: 1.8, rotate: -12, opacity: 0.18 },
+  { kind: "plus", x: 22, y: 42, size: 1.3, rotate: 0, opacity: 0.24 },
+]
+
 function titleFromSlug(slug: string) {
   return slug
     .split("/")
@@ -276,7 +308,23 @@ export default (() => {
     return (
       <section class={classNames(displayClass, "ps-shell")} data-active-reveal="none">
         <div class="ps-backdrop">
-          <div class="ps-backdrop-ring ps-backdrop-ring-left" />
+          <div class="ps-backdrop-icon-cloud" aria-hidden="true">
+            {backdropIcons.map((icon, index) => (
+              <span
+                class={`ps-backdrop-icon ps-backdrop-icon-${icon.kind}`}
+                style={
+                  {
+                    "--icon-x": `${icon.x}%`,
+                    "--icon-y": `${icon.y}%`,
+                    "--icon-size": `${icon.size}rem`,
+                    "--icon-rotate": `${icon.rotate ?? 0}deg`,
+                    "--icon-opacity": `${icon.opacity ?? 0.2}`,
+                    "--icon-delay": `${index * 170}ms`,
+                  } as never
+                }
+              />
+            ))}
+          </div>
           <div class="ps-backdrop-ring ps-backdrop-ring-right" />
           <div class="ps-backdrop-loop-arrows" aria-hidden="true">
             <span class="ps-loop-arrow ps-loop-arrow-upper" />
