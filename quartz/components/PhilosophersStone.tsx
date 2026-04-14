@@ -48,6 +48,24 @@ const backdropIcons: BackdropIcon[] = [
   { kind: "plus", x: 22, y: 42, size: 1.3, rotate: 0, opacity: 0.24 },
 ]
 
+const backdropImages = [
+  {
+    className: "ps-image-hermes",
+    src: "static/backgrounds/hermes.png",
+    alt: "Decorative alchemical sky illustration",
+  },
+  {
+    className: "ps-image-eye",
+    src: "static/backgrounds/1700048506977078.jpg",
+    alt: "Decorative radiant eye illustration",
+  },
+  {
+    className: "ps-image-within",
+    src: "static/backgrounds/within%20you.png",
+    alt: "Decorative futuristic sphere illustration",
+  },
+]
+
 function titleFromSlug(slug: string) {
   return slug
     .split("/")
@@ -312,6 +330,14 @@ export default (() => {
         data-word-card-open="false"
       >
         <div class="ps-backdrop">
+          <div class="ps-backdrop-image-layer" aria-hidden="true">
+            {backdropImages.map((image) => (
+              <div
+                class={`ps-backdrop-image ${image.className}`}
+                style={{ backgroundImage: `url(${image.src})` } as never}
+              />
+            ))}
+          </div>
           <div class="ps-backdrop-icon-cloud" aria-hidden="true">
             {backdropIcons.map((icon, index) => (
               <span

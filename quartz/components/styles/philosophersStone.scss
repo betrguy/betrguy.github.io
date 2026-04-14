@@ -8,9 +8,62 @@
 .ps-backdrop {
   position: absolute;
   inset: -2rem -4rem auto;
-  height: 44rem;
+  height: 52rem;
   pointer-events: none;
   z-index: -1;
+}
+
+.ps-backdrop-image-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.ps-backdrop-image {
+  position: absolute;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.15;
+  filter: blur(2.5px) saturate(0.9);
+  mix-blend-mode: multiply;
+  transform-origin: center;
+  box-shadow: 0 18px 50px rgba(39, 27, 21, 0.12);
+}
+
+.ps-backdrop-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(248, 243, 239, 0.18), rgba(248, 243, 239, 0.55)),
+    radial-gradient(circle at center, transparent 38%, rgba(248, 243, 239, 0.72) 100%);
+}
+
+.ps-image-hermes {
+  top: 8.5rem;
+  left: -2.5rem;
+  width: 19rem;
+  aspect-ratio: 1 / 1;
+  border-radius: 2rem;
+  transform: rotate(-12deg);
+}
+
+.ps-image-eye {
+  top: 4rem;
+  right: 5.5rem;
+  width: 13rem;
+  aspect-ratio: 3 / 4;
+  border-radius: 999px;
+  transform: rotate(14deg);
+}
+
+.ps-image-within {
+  right: -1.5rem;
+  top: 25rem;
+  width: 17rem;
+  aspect-ratio: 1 / 1;
+  border-radius: 1.8rem;
+  transform: rotate(9deg);
 }
 
 .ps-backdrop-ring {
@@ -675,6 +728,28 @@
     left: -4.5rem;
     width: 18rem;
     height: 18rem;
+  }
+
+  .ps-backdrop {
+    height: 46rem;
+  }
+
+  .ps-image-hermes {
+    top: 10rem;
+    left: -3rem;
+    width: 12rem;
+  }
+
+  .ps-image-eye {
+    top: 6rem;
+    right: 1rem;
+    width: 8.5rem;
+  }
+
+  .ps-image-within {
+    top: 28rem;
+    right: -2rem;
+    width: 10.5rem;
   }
 
   .ps-titleblock {
