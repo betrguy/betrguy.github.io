@@ -199,6 +199,7 @@
   fill: rgba(0, 0, 0, 0.001);
   stroke: none;
   pointer-events: all;
+  cursor: pointer;
 }
 
 .world-circle,
@@ -212,24 +213,44 @@
   fill: none;
   stroke: color-mix(in srgb, #7d2114 42%, transparent);
   stroke-width: 1.2;
+  transition:
+    stroke 180ms ease,
+    stroke-width 180ms ease,
+    fill 180ms ease,
+    opacity 180ms ease;
 }
 
 .mind-triangle {
   fill: none;
   stroke: color-mix(in srgb, #7b6a2a 48%, transparent);
   stroke-width: 1.2;
+  transition:
+    stroke 180ms ease,
+    stroke-width 180ms ease,
+    fill 180ms ease,
+    opacity 180ms ease;
 }
 
 .material-square {
   fill: none;
   stroke: color-mix(in srgb, #285f63 50%, transparent);
   stroke-width: 1.2;
+  transition:
+    stroke 180ms ease,
+    stroke-width 180ms ease,
+    fill 180ms ease,
+    opacity 180ms ease;
 }
 
 .soul-circle {
   fill: color-mix(in srgb, var(--light) 86%, transparent);
   stroke: color-mix(in srgb, #6e274e 50%, transparent);
   stroke-width: 1.2;
+  transition:
+    stroke 180ms ease,
+    stroke-width 180ms ease,
+    fill 180ms ease,
+    opacity 180ms ease;
 }
 
 .ps-core-glow {
@@ -328,6 +349,39 @@
   pointer-events: auto;
   transform: translate(-50%, -50%) translateY(0);
   transition-delay: var(--note-delay);
+}
+
+.ps-shell[data-active-reveal="world-circle"] .world-circle,
+.ps-shell[data-active-reveal="mind-triangle"] .mind-triangle,
+.ps-shell[data-active-reveal="material-square"] .material-square,
+.ps-shell[data-active-reveal="soul-circle"] .soul-circle,
+.ps-shell[data-active-reveal="all"] .world-circle,
+.ps-shell[data-active-reveal="all"] .mind-triangle,
+.ps-shell[data-active-reveal="all"] .material-square,
+.ps-shell[data-active-reveal="all"] .soul-circle {
+  opacity: 1;
+  stroke-width: 1.75;
+}
+
+.ps-shell[data-active-reveal="world-circle"] .world-circle,
+.ps-shell[data-active-reveal="all"] .world-circle {
+  stroke: color-mix(in srgb, #7d2114 74%, var(--dark));
+}
+
+.ps-shell[data-active-reveal="mind-triangle"] .mind-triangle,
+.ps-shell[data-active-reveal="all"] .mind-triangle {
+  stroke: color-mix(in srgb, #7b6a2a 78%, var(--dark));
+}
+
+.ps-shell[data-active-reveal="material-square"] .material-square,
+.ps-shell[data-active-reveal="all"] .material-square {
+  stroke: color-mix(in srgb, #285f63 78%, var(--dark));
+}
+
+.ps-shell[data-active-reveal="soul-circle"] .soul-circle,
+.ps-shell[data-active-reveal="all"] .soul-circle {
+  stroke: color-mix(in srgb, #6e274e 72%, var(--dark));
+  fill: color-mix(in srgb, var(--light) 92%, #6e274e 8%);
 }
 
 @keyframes psFloat {
