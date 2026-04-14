@@ -52,17 +52,14 @@ const backdropImages = [
   {
     className: "ps-image-hermes",
     src: "static/backgrounds/hermes.png",
-    alt: "Alchemical sky illustration",
   },
   {
     className: "ps-image-eye",
     src: "static/backgrounds/1700048506977078.jpg",
-    alt: "Radiant eye illustration",
   },
   {
     className: "ps-image-within",
     src: "static/backgrounds/within%20you.png",
-    alt: "Futuristic sphere illustration",
   },
 ]
 
@@ -328,17 +325,12 @@ export default (() => {
         class={classNames(displayClass, "ps-shell")}
         data-active-reveal="none"
         data-word-card-open="false"
-        data-image-viewer-open="false"
       >
         <div class="ps-backdrop">
-          <div class="ps-backdrop-image-layer">
+          <div class="ps-backdrop-image-layer" aria-hidden="true">
             {backdropImages.map((image) => (
-              <button
-                type="button"
+              <div
                 class={`ps-backdrop-image ${image.className}`}
-                data-full-image={image.src}
-                data-full-image-alt={image.alt}
-                aria-label={`Open ${image.alt}`}
                 style={{ backgroundImage: `url(${image.src})` } as never}
               />
             ))}
@@ -437,19 +429,6 @@ export default (() => {
               </div>
             </div>
           </div>
-        </div>
-        <div class="ps-image-viewer" aria-hidden="true">
-          <button
-            type="button"
-            class="ps-image-viewer-backdrop"
-            aria-label="Close image viewer"
-          />
-          <figure class="ps-image-viewer-dialog" role="dialog" aria-modal="true">
-            <button type="button" class="ps-image-viewer-close" aria-label="Close image viewer">
-              Close
-            </button>
-            <img class="ps-image-viewer-full" alt="" />
-          </figure>
         </div>
       </section>
     )
