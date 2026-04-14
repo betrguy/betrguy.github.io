@@ -278,6 +278,10 @@ export default (() => {
         <div class="ps-backdrop">
           <div class="ps-backdrop-ring ps-backdrop-ring-left" />
           <div class="ps-backdrop-ring ps-backdrop-ring-right" />
+          <div class="ps-backdrop-loop-arrows" aria-hidden="true">
+            <span class="ps-loop-arrow ps-loop-arrow-upper" />
+            <span class="ps-loop-arrow ps-loop-arrow-lower" />
+          </div>
           <div class="ps-noise" />
         </div>
 

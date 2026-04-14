@@ -58,9 +58,18 @@
   );
 }
 
-.ps-backdrop-ring-right::before,
-.ps-backdrop-ring-right::after {
-  content: "";
+.ps-backdrop-loop-arrows {
+  position: absolute;
+  top: 1rem;
+  right: -3rem;
+  width: 26rem;
+  height: 26rem;
+  border-radius: 50%;
+  opacity: 0.75;
+  animation: psFloat 24s ease-in-out infinite reverse;
+}
+
+.ps-loop-arrow {
   position: absolute;
   width: 1rem;
   height: 1rem;
@@ -69,13 +78,13 @@
   opacity: 0.9;
 }
 
-.ps-backdrop-ring-right::before {
+.ps-loop-arrow-upper {
   top: 3.9rem;
   right: 4.55rem;
   transform: rotate(24deg);
 }
 
-.ps-backdrop-ring-right::after {
+.ps-loop-arrow-lower {
   bottom: 3.45rem;
   left: 4.9rem;
   transform: rotate(203deg);
@@ -266,7 +275,7 @@
 }
 
 .soul-circle {
-  fill: color-mix(in srgb, var(--light) 86%, transparent);
+  fill: none;
   stroke: color-mix(in srgb, #6e274e 50%, transparent);
   stroke-width: 1.2;
   transition:
