@@ -286,10 +286,12 @@ export default (() => {
           <div class="ps-stage-orb ps-stage-orb-right" />
 
           <div class="ps-map-frame">
-            <button class="ps-titleblock" type="button" aria-label="Reveal all notes">
-              <h1 class="ps-title">Perfect Loop</h1>
+            <div class="ps-titleblock">
+              <button class="ps-title-toggle" type="button" aria-label="Reveal all notes">
+                <h1 class="ps-title">Perfect Loop</h1>
+              </button>
               <p class="ps-subtitle">"Man becomes the reality that he engenders"</p>
-            </button>
+            </div>
             <div class="ps-map">
               <div class="ps-core-glow" />
               <svg class="ps-symbol" viewBox="0 0 1000 1000" aria-hidden="true">

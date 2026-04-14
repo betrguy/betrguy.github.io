@@ -3,7 +3,7 @@ document.addEventListener("nav", () => {
   if (!shell) return
 
   const shapeTargets = Array.from(shell.querySelectorAll("[data-shape-hover]")) as HTMLElement[]
-  const titleToggle = shell.querySelector(".ps-titleblock") as HTMLButtonElement | null
+  const titleToggle = shell.querySelector(".ps-title-toggle") as HTMLButtonElement | null
 
   const setReveal = (shape: string) => {
     shell.dataset.activeReveal = shape
