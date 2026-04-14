@@ -347,6 +347,76 @@
   text-transform: none;
 }
 
+.ps-subtitle-trigger {
+  appearance: none;
+  border: none;
+  padding: 0;
+  background: none;
+  color: color-mix(in srgb, var(--secondary) 88%, var(--dark));
+  font: inherit;
+  font-style: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.14em;
+  cursor: pointer;
+  transition:
+    color 140ms ease,
+    opacity 140ms ease;
+}
+
+.ps-subtitle-trigger:hover,
+.ps-subtitle-trigger:focus-visible,
+.ps-subtitle-trigger[aria-expanded="true"] {
+  color: #8a1800;
+}
+
+.ps-word-card {
+  width: min(18rem, 72vw);
+  margin-top: 0.45rem;
+  padding: 0.75rem 0.85rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--secondary) 16%, transparent);
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--light) 96%, transparent);
+  box-shadow:
+    1px 1px 0 rgba(24, 18, 20, 0.14),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.35rem);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.ps-shell[data-word-card-open="true"] .ps-word-card {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.ps-word-card-label {
+  display: block;
+  margin-bottom: 0.18rem;
+  color: color-mix(in srgb, var(--secondary) 92%, var(--dark));
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ps-word-card-text {
+  margin: 0;
+  color: color-mix(in srgb, var(--darkgray) 90%, var(--secondary));
+  font-size: 0.82rem;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.45;
+}
+
 .ps-map {
   position: relative;
   width: min(100%, 64rem);

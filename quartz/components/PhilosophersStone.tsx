@@ -306,7 +306,11 @@ export default (() => {
     const noteEntries = generatePlacements(notes)
 
     return (
-      <section class={classNames(displayClass, "ps-shell")} data-active-reveal="none">
+      <section
+        class={classNames(displayClass, "ps-shell")}
+        data-active-reveal="none"
+        data-word-card-open="false"
+      >
         <div class="ps-backdrop">
           <div class="ps-backdrop-icon-cloud" aria-hidden="true">
             {backdropIcons.map((icon, index) => (
@@ -340,7 +344,29 @@ export default (() => {
           <div class="ps-map-frame">
             <div class="ps-titleblock">
               <h1 class="ps-title">Perfect Loop</h1>
-              <p class="ps-subtitle">"Man becomes the reality that he engenders"</p>
+              <p class="ps-subtitle">
+                <span>"Man becomes the reality that he </span>
+                <button
+                  type="button"
+                  class="ps-subtitle-trigger"
+                  aria-expanded="false"
+                  aria-controls="ps-engenders-card"
+                >
+                  engenders
+                </button>
+                <span>"</span>
+              </p>
+              <div
+                id="ps-engenders-card"
+                class="ps-word-card"
+                role="note"
+                aria-hidden="true"
+              >
+                <span class="ps-word-card-label">engenders</span>
+                <p class="ps-word-card-text">
+                  To bring something into being; to cause, produce, or give rise to it.
+                </p>
+              </div>
             </div>
             <div class="ps-map">
               <div class="ps-core-glow" />
