@@ -311,11 +311,34 @@
   color: color-mix(in srgb, var(--secondary) 88%, var(--dark));
   font-family: var(--titleFont);
   font-size: clamp(2.3rem, 4.8vw, 4.2rem);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38em;
   font-style: italic;
   font-weight: 500;
   letter-spacing: 0.03em;
   line-height: 1;
   text-shadow: 1px 1px 0 color-mix(in srgb, var(--light) 70%, transparent);
+}
+
+.ps-title-text {
+  display: inline-block;
+}
+
+.ps-title-loop-icon {
+  width: 1.1em;
+  height: auto;
+  flex: 0 0 auto;
+  overflow: visible;
+  transform: translateY(0.04em);
+}
+
+.ps-title-loop-icon path {
+  stroke: color-mix(in srgb, var(--secondary) 84%, var(--dark));
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.9;
 }
 
 .ps-subtitle {

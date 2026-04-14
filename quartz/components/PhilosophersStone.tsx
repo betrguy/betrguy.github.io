@@ -343,7 +343,15 @@ export default (() => {
 
           <div class="ps-map-frame">
             <div class="ps-titleblock">
-              <h1 class="ps-title">Perfect Loop</h1>
+              <h1 class="ps-title">
+                <span class="ps-title-text">Perfect Loop</span>
+                <svg class="ps-title-loop-icon" viewBox="0 0 64 32" aria-hidden="true">
+                  <path
+                    d="M24 8C18 8 13.4 12.2 9.8 16C13.4 19.8 18 24 24 24C30 24 34.6 19.8 38.2 16C34.6 12.2 30 8 24 8ZM40 8C34 8 29.4 12.2 25.8 16C29.4 19.8 34 24 40 24C46 24 50.6 19.8 54.2 16C50.6 12.2 46 8 40 8Z"
+                    fill="none"
+                  />
+                </svg>
+              </h1>
               <p class="ps-subtitle">
                 <span>"Man becomes the reality that he </span>
                 <button
