@@ -294,19 +294,19 @@ export default (() => {
               <div class="ps-core-glow" />
               <svg class="ps-symbol" viewBox="0 0 1000 1000" aria-hidden="true">
                 <circle
-                  class="world-circle"
+                  class="shape-hit shape-hit-world"
                   data-shape-hover="world-circle"
                   cx="500"
                   cy="500"
                   r="420"
                 />
                 <polygon
-                  class="mind-triangle"
+                  class="shape-hit shape-hit-mind"
                   data-shape-hover="mind-triangle"
                   points="500,80 136.27,710 863.73,710"
                 />
                 <rect
-                  class="material-square"
+                  class="shape-hit shape-hit-material"
                   data-shape-hover="material-square"
                   x="331.2"
                   y="372.4"
@@ -314,12 +314,16 @@ export default (() => {
                   height="337.6"
                 />
                 <circle
-                  class="soul-circle"
+                  class="shape-hit shape-hit-soul"
                   data-shape-hover="soul-circle"
                   cx="500"
                   cy="541.2"
                   r="168.8"
                 />
+                <circle class="world-circle" cx="500" cy="500" r="420" />
+                <polygon class="mind-triangle" points="500,80 136.27,710 863.73,710" />
+                <rect class="material-square" x="331.2" y="372.4" width="337.6" height="337.6" />
+                <circle class="soul-circle" cx="500" cy="541.2" r="168.8" />
               </svg>
 
               <div class="ps-note-layer">
