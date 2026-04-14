@@ -34,6 +34,28 @@
   right: -3rem;
   border-radius: 50%;
   animation: psFloat 24s ease-in-out infinite reverse;
+  border: none;
+  background: conic-gradient(
+    from -10deg,
+    color-mix(in srgb, var(--secondary) 14%, transparent) 0deg 78deg,
+    transparent 78deg 122deg,
+    color-mix(in srgb, var(--secondary) 14%, transparent) 122deg 214deg,
+    transparent 214deg 258deg,
+    color-mix(in srgb, var(--secondary) 14%, transparent) 258deg 346deg,
+    transparent 346deg 360deg
+  );
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 1.5px),
+    #000 calc(100% - 1.5px) calc(100% - 0.5px),
+    transparent calc(100% - 0.5px)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 1.5px),
+    #000 calc(100% - 1.5px) calc(100% - 0.5px),
+    transparent calc(100% - 0.5px)
+  );
 }
 
 .ps-noise {
