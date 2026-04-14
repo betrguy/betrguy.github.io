@@ -58,6 +58,29 @@
   );
 }
 
+.ps-backdrop-ring-right::before,
+.ps-backdrop-ring-right::after {
+  content: "";
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--secondary) 20%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--secondary) 20%, transparent);
+  opacity: 0.9;
+}
+
+.ps-backdrop-ring-right::before {
+  top: 3.9rem;
+  right: 4.55rem;
+  transform: rotate(24deg);
+}
+
+.ps-backdrop-ring-right::after {
+  bottom: 3.45rem;
+  left: 4.9rem;
+  transform: rotate(203deg);
+}
+
 .ps-noise {
   position: absolute;
   inset: 0;
