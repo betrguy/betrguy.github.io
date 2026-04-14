@@ -287,41 +287,12 @@ export default (() => {
 
           <div class="ps-map-frame">
             <div class="ps-titleblock">
-              <button class="ps-title-toggle" type="button" aria-label="Show or hide all notes">
-                <h1 class="ps-title">Perfect Loop</h1>
-              </button>
+              <h1 class="ps-title">Perfect Loop</h1>
               <p class="ps-subtitle">"Man becomes the reality that he engenders"</p>
             </div>
             <div class="ps-map">
               <div class="ps-core-glow" />
               <svg class="ps-symbol" viewBox="0 0 1000 1000" aria-hidden="true">
-                <circle
-                  class="shape-hit shape-hit-world"
-                  data-shape-select="world-circle"
-                  cx="500"
-                  cy="500"
-                  r="420"
-                />
-                <polygon
-                  class="shape-hit shape-hit-mind"
-                  data-shape-select="mind-triangle"
-                  points="500,80 136.27,710 863.73,710"
-                />
-                <rect
-                  class="shape-hit shape-hit-material"
-                  data-shape-select="material-square"
-                  x="331.2"
-                  y="372.4"
-                  width="337.6"
-                  height="337.6"
-                />
-                <circle
-                  class="shape-hit shape-hit-soul"
-                  data-shape-select="soul-circle"
-                  cx="500"
-                  cy="541.2"
-                  r="168.8"
-                />
                 <circle class="world-circle" cx="500" cy="500" r="420" />
                 <polygon class="mind-triangle" points="500,80 136.27,710 863.73,710" />
                 <rect class="material-square" x="331.2" y="372.4" width="337.6" height="337.6" />

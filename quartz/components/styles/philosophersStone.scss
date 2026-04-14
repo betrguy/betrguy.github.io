@@ -113,15 +113,6 @@
   padding: 0.55rem 1.4rem 0.8rem;
 }
 
-.ps-title-toggle {
-  appearance: none;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  font: inherit;
-}
-
 .ps-titleblock::before,
 .ps-titleblock::after {
   content: "";
@@ -149,12 +140,6 @@
   letter-spacing: 0.03em;
   line-height: 1;
   text-shadow: 1px 1px 0 color-mix(in srgb, var(--light) 70%, transparent);
-}
-
-.ps-title-toggle:hover .ps-title,
-.ps-title-toggle:focus-visible .ps-title,
-.ps-title-toggle.is-active .ps-title {
-  color: color-mix(in srgb, var(--secondary) 100%, var(--dark));
 }
 
 .ps-subtitle {
@@ -193,13 +178,6 @@
   width: 100%;
   height: 100%;
   overflow: visible;
-}
-
-.shape-hit {
-  fill: rgba(0, 0, 0, 0.001);
-  stroke: none;
-  pointer-events: all;
-  cursor: pointer;
 }
 
 .world-circle,
@@ -286,14 +264,11 @@
   z-index: 2;
   opacity: 0;
   pointer-events: none;
-  transform: translate(-50%, -50%) translateY(0.35rem);
+  transform: translate(-50%, -50%) translateY(0.45rem);
   transition:
-    opacity 220ms ease,
-    transform 220ms ease,
     background-color 140ms ease,
     color 140ms ease,
     border-color 140ms ease;
-  transition-delay: 0ms;
 }
 
 .ps-note:hover,
@@ -340,48 +315,36 @@
   border-color: color-mix(in srgb, var(--note-accent) 25%, transparent);
 }
 
-.ps-shell[data-active-reveal="all"] .ps-note,
-.ps-shell[data-active-reveal="world-circle"] .ps-note[data-shape="world-circle"],
-.ps-shell[data-active-reveal="mind-triangle"] .ps-note[data-shape="mind-triangle"],
-.ps-shell[data-active-reveal="material-square"] .ps-note[data-shape="material-square"],
-.ps-shell[data-active-reveal="soul-circle"] .ps-note[data-shape="soul-circle"] {
-  opacity: 1;
+.ps-shell[data-notes-ready="true"] .ps-note {
   pointer-events: auto;
-  transform: translate(-50%, -50%) translateY(0);
-  transition-delay: var(--note-delay);
+  animation-name: psNoteReveal;
+  animation-duration: calc(780ms + var(--note-duration, 0ms));
+  animation-timing-function: cubic-bezier(0.2, 0.75, 0.2, 1);
+  animation-delay: calc(220ms + var(--note-delay));
+  animation-fill-mode: forwards;
 }
 
-.ps-shell[data-active-reveal="world-circle"] .world-circle,
-.ps-shell[data-active-reveal="mind-triangle"] .mind-triangle,
-.ps-shell[data-active-reveal="material-square"] .material-square,
-.ps-shell[data-active-reveal="soul-circle"] .soul-circle,
-.ps-shell[data-active-reveal="all"] .world-circle,
-.ps-shell[data-active-reveal="all"] .mind-triangle,
-.ps-shell[data-active-reveal="all"] .material-square,
-.ps-shell[data-active-reveal="all"] .soul-circle {
-  opacity: 1;
-  stroke-width: 1.75;
+.ps-shell[data-notes-ready="true"] .ps-note:nth-child(3n) {
+  --note-duration: 220ms;
 }
 
-.ps-shell[data-active-reveal="world-circle"] .world-circle,
-.ps-shell[data-active-reveal="all"] .world-circle {
-  stroke: color-mix(in srgb, #7d2114 74%, var(--dark));
+.ps-shell[data-notes-ready="true"] .ps-note:nth-child(4n) {
+  --note-duration: 420ms;
 }
 
-.ps-shell[data-active-reveal="mind-triangle"] .mind-triangle,
-.ps-shell[data-active-reveal="all"] .mind-triangle {
-  stroke: color-mix(in srgb, #7b6a2a 78%, var(--dark));
+.ps-shell[data-notes-ready="true"] .ps-note:nth-child(5n) {
+  --note-duration: 120ms;
 }
 
-.ps-shell[data-active-reveal="material-square"] .material-square,
-.ps-shell[data-active-reveal="all"] .material-square {
-  stroke: color-mix(in srgb, #285f63 78%, var(--dark));
-}
-
-.ps-shell[data-active-reveal="soul-circle"] .soul-circle,
-.ps-shell[data-active-reveal="all"] .soul-circle {
-  stroke: color-mix(in srgb, #6e274e 72%, var(--dark));
-  fill: color-mix(in srgb, var(--light) 92%, #6e274e 8%);
+@keyframes psNoteReveal {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(0.45rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0);
+  }
 }
 
 @keyframes psFloat {
