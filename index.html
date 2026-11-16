@@ -178,11 +178,11 @@
   </header>
 
   <div id="cfg-pop" class="cfg-pop">
-    <span class="sub">Laptop / Tunnel URL:</span>
-    <input id="backend-url-input" type="text" placeholder="https://terminal.yourdomain.com or http://127.0.0.1:5090" style="min-width:290px;flex:1;max-width:460px;">
+    <span class="sub">Override Server URL:</span>
+    <input id="backend-url-input" type="text" placeholder="Auto (localhost + tunnel)" style="min-width:290px;flex:1;max-width:460px;">
     <button type="button" id="save-backend-btn" class="btn-accent">Save &amp; Connect</button>
-    <button type="button" id="reset-backend-btn">Reset Localhost</button>
-    <span class="sub">Saved privately in this browser's localStorage.</span>
+    <button type="button" id="reset-backend-btn">Use Auto Discovery</button>
+    <span class="sub">Leave blank for zero-setup auto-discovery.</span>
   </div>
 
   <main class="frame-wrap">
@@ -205,7 +205,9 @@
   var state = {
     ticker: (params.get("ticker") || "NVDA").toUpperCase(),
     tf: (params.get("tf") || "weekly").toLowerCase(),
-    backendUrl: (localStorage.getItem("mc_backend_url") || DEFAULT_LOCAL).replace(/\/+$/, ""),
+    customUrl: (localStorage.getItem("mc_backend_url") || "").replace(/\/+$/, ""),
+    tunnelUrl: "",
+    backendUrl: "",
     mode: "checking",
     manifest: { items: [] }
   };
@@ -224,7 +226,7 @@
 
   tickerInput.value = state.ticker;
   tfSelect.value = state.tf;
-  backendInput.value = state.backendUrl;
+  backendInput.value = state.customUrl;
 
   function setStatus(cls, text, meta) {
     statusPill.className = "status-pill " + cls;
@@ -252,34 +254,55 @@
     });
   }
 
-  async function loadManifest() {
-    try {
-      var res = await fetch("./snapshots/manifest.json?ts=" + Date.now(), { cache: "no-store" });
-      if (res.ok) {
-        state.manifest = await res.json();
-      }
-    } catch (_) {
-      state.manifest = { items: [] };
-    }
+  async function loadMetadata() {
+    var mReq = fetch("./snapshots/manifest.json?ts=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : { items: [] }; })
+      .catch(function () { return { items: [] }; });
+    var lReq = fetch("./snapshots/live_endpoint.json?ts=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : {}; })
+      .catch(function () { return {}; });
+    var res = await Promise.all([mReq, lReq]);
+    state.manifest = res[0] || { items: [] };
+    state.tunnelUrl = String((res[1] && res[1].live_url) || "").replace(/\/+$/, "");
     populateTickerSelect();
   }
 
-  async function checkBackendHealth() {
+  async function probeEndpoint(baseUrl) {
+    if (!baseUrl) return null;
     var ctrl = new AbortController();
-    var timer = setTimeout(function () { ctrl.abort(); }, 2500);
+    var timer = setTimeout(function () { ctrl.abort(); }, 3200);
     try {
-      var res = await fetch(state.backendUrl + "/api/health", {
+      var res = await fetch(baseUrl + "/api/health", {
         mode: "cors",
         cache: "no-store",
         signal: ctrl.signal
       });
       clearTimeout(timer);
       if (!res.ok) return null;
-      return await res.json();
+      var data = await res.json();
+      if (data && data.ok) {
+        return { url: baseUrl, health: data };
+      }
+      return null;
     } catch (_) {
       clearTimeout(timer);
       return null;
     }
+  }
+
+  async function discoverBackend() {
+    var candidates = [];
+    function addCand(u) {
+      if (u && candidates.indexOf(u) === -1) candidates.push(u);
+    }
+    addCand(state.customUrl);
+    addCand(DEFAULT_LOCAL);
+    addCand(state.tunnelUrl);
+    var results = await Promise.all(candidates.map(probeEndpoint));
+    for (var i = 0; i < results.length; i++) {
+      if (results[i]) return results[i];
+    }
+    return null;
   }
 
   function findOfflineItem(sym, tf) {
@@ -291,44 +314,9 @@
       || null;
   }
 
-  function wireOfflineFrameLinks() {
-    if (state.mode !== "offline") return;
-    try {
-      var doc = frame.contentDocument;
-      if (!doc) return;
-      doc.addEventListener("click", function (ev) {
-        var a = ev.target && ev.target.closest ? ev.target.closest("a") : null;
-        if (!a) return;
-        var href = a.getAttribute("href") || "";
-        if (href.startsWith("/?")) {
-          ev.preventDefault();
-          var q = new URLSearchParams(href.slice(2));
-          state.ticker = (q.get("ticker") || state.ticker).toUpperCase();
-          state.tf = (q.get("tf") || state.tf).toLowerCase();
-          tickerInput.value = state.ticker;
-          tfSelect.value = state.tf;
-          populateTickerSelect();
-          renderTarget();
-        }
-      });
-    } catch (_) {}
-  }
-
-  frame.addEventListener("load", wireOfflineFrameLinks);
-
-  async function renderTarget() {
-    setStatus("", "CHECKING LAPTOP...", state.backendUrl);
-    var health = await checkBackendHealth();
-    if (health && health.ok) {
-      state.mode = "live";
-      emptyState.classList.remove("open");
-      setStatus("live", "LIVE \u2022 LAPTOP CONNECTED", state.backendUrl + " (" + (health.snapshot_slot || "LIVE") + ")");
-      frame.src = state.backendUrl + "/?ticker=" + encodeURIComponent(state.ticker) + "&tf=" + encodeURIComponent(state.tf);
-      return;
-    }
-
+  function loadOfflineSnapshot(sym, tf) {
     state.mode = "offline";
-    var item = findOfflineItem(state.ticker, state.tf);
+    var item = findOfflineItem(sym, tf);
     if (item && item.file_html) {
       emptyState.classList.remove("open");
       state.ticker = item.ticker;
@@ -341,19 +329,134 @@
         "OFFLINE \u2022 " + (item.snapshot_slot || "SNAPSHOT"),
         item.ticker + " (" + (item.session_date || "") + " \u2022 " + (item.fetched_at || "") + ")"
       );
+      frame.removeAttribute("srcdoc");
       frame.src = "./" + item.file_html + "?ts=" + encodeURIComponent(item.fetched_at || "");
     } else {
+      frame.removeAttribute("srcdoc");
       frame.removeAttribute("src");
       setStatus("error", "OFFLINE \u2022 NO SNAPSHOT", "No cached snapshot available");
-      emptyDetail.textContent = "Start market_context.py on your laptop or push snapshots via --export-site.";
+      emptyDetail.textContent = "Start market_context.py on your laptop to stream live or export snapshots.";
       emptyState.classList.add("open");
     }
+  }
+
+  async function fetchLivePath(pathAndQuery) {
+    if (!state.backendUrl) {
+      loadOfflineSnapshot(state.ticker, state.tf);
+      return;
+    }
+    setStatus("live", "LIVE \u2022 LOADING...", state.backendUrl);
+    try {
+      var res = await fetch(state.backendUrl + pathAndQuery, {
+        mode: "cors",
+        cache: "no-store",
+        redirect: "follow"
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      var htmlText = await res.text();
+      if (htmlText.indexOf("Market Intelligence Terminal") === -1) {
+        throw new Error("Unexpected response");
+      }
+      var qp = new URLSearchParams((pathAndQuery.split("?")[1] || ""));
+      if (qp.get("ticker")) {
+        state.ticker = qp.get("ticker").toUpperCase();
+        tickerInput.value = state.ticker;
+      }
+      if (qp.get("tf")) {
+        state.tf = qp.get("tf").toLowerCase();
+        tfSelect.value = state.tf;
+      }
+      populateTickerSelect();
+      emptyState.classList.remove("open");
+      state.mode = "live";
+      var labelHost = state.backendUrl.indexOf("127.0.0.1") !== -1 ? "LOCALHOST" : "LIVE TUNNEL";
+      setStatus("live", "LIVE \u2022 " + labelHost, state.ticker + " (" + state.tf + ")");
+      frame.removeAttribute("src");
+      frame.srcdoc = htmlText;
+    } catch (_) {
+      state.backendUrl = "";
+      loadOfflineSnapshot(state.ticker, state.tf);
+    }
+  }
+
+  function wireFrameInteractions() {
+    try {
+      var doc = frame.contentDocument;
+      if (!doc) return;
+
+      if (state.mode === "live" && state.backendUrl) {
+        doc.querySelectorAll('a[href^="/api/"]').forEach(function (a) {
+          var rawHref = a.getAttribute("href");
+          if (rawHref) a.setAttribute("href", state.backendUrl + rawHref);
+        });
+      }
+
+      doc.addEventListener("click", function (ev) {
+        var a = ev.target && ev.target.closest ? ev.target.closest("a") : null;
+        if (!a) return;
+        var href = a.getAttribute("href") || "";
+        if (href.startsWith("/?") || href.startsWith("/poll_intel")) {
+          ev.preventDefault();
+          var q = new URLSearchParams(href.split("?")[1] || "");
+          if (q.get("ticker")) state.ticker = q.get("ticker").toUpperCase();
+          if (q.get("tf")) state.tf = q.get("tf").toLowerCase();
+          tickerInput.value = state.ticker;
+          tfSelect.value = state.tf;
+          populateTickerSelect();
+          if (state.mode === "live") {
+            fetchLivePath(href);
+          } else {
+            loadOfflineSnapshot(state.ticker, state.tf);
+          }
+        }
+      });
+
+      doc.addEventListener("submit", function (ev) {
+        var form = ev.target;
+        if (!form || !form.getAttribute) return;
+        var act = form.getAttribute("action") || "/";
+        if (act === "/" || act.startsWith("/add_tranche")) {
+          ev.preventDefault();
+          var fd = new FormData(form);
+          var qs = new URLSearchParams(fd).toString();
+          if (fd.get("ticker")) state.ticker = String(fd.get("ticker")).toUpperCase();
+          if (fd.get("tf")) state.tf = String(fd.get("tf")).toLowerCase();
+          tickerInput.value = state.ticker;
+          tfSelect.value = state.tf;
+          populateTickerSelect();
+          if (state.mode === "live") {
+            fetchLivePath(act + "?" + qs);
+          } else {
+            loadOfflineSnapshot(state.ticker, state.tf);
+          }
+        }
+      });
+    } catch (_) {}
+  }
+
+  frame.addEventListener("load", wireFrameInteractions);
+
+  async function renderTarget() {
+    setStatus("", "CONNECTING TO LAPTOP...", "Checking localhost & live tunnel...");
+    await loadMetadata();
+    var found = await discoverBackend();
+    if (found) {
+      state.backendUrl = found.url;
+      state.mode = "live";
+      await fetchLivePath("/?ticker=" + encodeURIComponent(state.ticker) + "&tf=" + encodeURIComponent(state.tf));
+      return;
+    }
+    loadOfflineSnapshot(state.ticker, state.tf);
   }
 
   tickerSelect.addEventListener("change", function () {
     state.ticker = tickerSelect.value.toUpperCase();
     tickerInput.value = state.ticker;
-    renderTarget();
+    if (state.mode === "live") {
+      fetchLivePath("/?ticker=" + encodeURIComponent(state.ticker) + "&tf=" + encodeURIComponent(state.tf));
+    } else {
+      renderTarget();
+    }
   });
 
   document.getElementById("go-btn").addEventListener("click", function () {
@@ -361,7 +464,11 @@
     if (val) state.ticker = val;
     state.tf = tfSelect.value;
     populateTickerSelect();
-    renderTarget();
+    if (state.mode === "live") {
+      fetchLivePath("/?ticker=" + encodeURIComponent(state.ticker) + "&tf=" + encodeURIComponent(state.tf));
+    } else {
+      renderTarget();
+    }
   });
 
   tickerInput.addEventListener("keydown", function (e) {
@@ -374,23 +481,26 @@
   });
 
   document.getElementById("save-backend-btn").addEventListener("click", function () {
-    var raw = (backendInput.value || DEFAULT_LOCAL).trim().replace(/\/+$/, "");
-    if (!raw) raw = DEFAULT_LOCAL;
-    state.backendUrl = raw;
-    localStorage.setItem("mc_backend_url", raw);
+    var raw = (backendInput.value || "").trim().replace(/\/+$/, "");
+    state.customUrl = raw;
+    if (raw) {
+      localStorage.setItem("mc_backend_url", raw);
+    } else {
+      localStorage.removeItem("mc_backend_url");
+    }
     cfgPop.classList.remove("open");
     renderTarget();
   });
 
   document.getElementById("reset-backend-btn").addEventListener("click", function () {
-    state.backendUrl = DEFAULT_LOCAL;
-    backendInput.value = DEFAULT_LOCAL;
-    localStorage.setItem("mc_backend_url", DEFAULT_LOCAL);
+    state.customUrl = "";
+    backendInput.value = "";
+    localStorage.removeItem("mc_backend_url");
     cfgPop.classList.remove("open");
     renderTarget();
   });
 
-  loadManifest().then(renderTarget);
+  renderTarget();
 })();
 </script>
 </body>
