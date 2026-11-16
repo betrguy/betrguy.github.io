@@ -1,11 +1,6 @@
-# BetrGuy's Digital Garden
+# Market Intelligence Terminal (Hybrid Live + Snapshot Fallback)
 
-This is the source code for my personal digital garden, hosted at [betrguy.github.io](https://betrguy.github.io).
+Zero-build frontend for the local `market_context.py` server:
 
-## Built With
-* **Engine:** Quartz v4
-* **Editor:** Obsidian
-* **Hosting:** GitHub Pages
-
-## About
-This repository contains my personal notes on geopolitics, tech, and my sovereign systems projects.
+- **Online (Laptop Awake):** Connects to the configured backend server (`http://127.0.0.1:5090` locally, or your Cloudflare Tunnel / Tailscale HTTPS URL via `?backend=https://...` or the **Server** button) and streams the live interactive terminal.
+- **Offline (Laptop Asleep / Unreachable):** Automatically falls back to the latest `PRE_OPEN` / `POST_CLOSE` watchlist HTML snapshots under `snapshots/` built directly from the local `market_context.py` snapshot engine.

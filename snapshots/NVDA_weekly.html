@@ -1,0 +1,1202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NVDA Market Intelligence Terminal</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg-canvas: #0b0f14;
+    --bg-card: #11161d;
+    --bg-elevated: #161d26;
+    --border: #1e293b;
+    --border-hi: #334155;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --accent: #06b6d4;
+    --cyan: #22d3ee;
+    --up: #10b981;
+    --dn: #ef4444;
+    --sem-emerald: #34d399;
+    --sem-crimson: #f87171;
+    --sem-cyan: #22d3ee;
+    --sem-slate: #94a3b8;
+    --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "JetBrains Mono", "Cascadia Code", "SF Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--border-hi) var(--bg-canvas); }
+  html { scroll-behavior: smooth; color-scheme: dark; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-canvas); }
+  ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 4px; border: 2px solid var(--bg-canvas); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
+  ::-webkit-scrollbar-corner { background: var(--bg-canvas); }
+  body {
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    background-color: var(--bg-canvas);
+    color: var(--text);
+    margin: 0;
+    padding: 18px 28px 40px 28px;
+    font-size: 13px;
+    line-height: 1.38;
+  }
+  #nav-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    width: 0;
+    background: linear-gradient(90deg, var(--cyan), var(--accent));
+    z-index: 99;
+    transition: width 0.35s ease;
+    pointer-events: none;
+  }
+  #page-loading-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(11, 15, 20, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.14s ease;
+  }
+  #page-loading-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .loading-spinner {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3.5px solid rgba(34, 211, 238, 0.22);
+    border-top-color: #22d3ee;
+    animation: mc-spin 0.75s linear infinite;
+  }
+  @keyframes mc-spin {
+    to { transform: rotate(360deg); }
+  }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .chain-table { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13.5px; }
+  .chain-table th { font-family: var(--font-sans); font-size: 11.5px; }
+  .wrap { max-width: 1440px; margin: 0 auto; padding: 0 6px; }
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-card);
+    padding: 12px 16px;
+    border: 1px solid var(--border-hi);
+    border-radius: 6px;
+    margin-bottom: 10px;
+  }
+  .brand-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--up);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: pulse-ring 2.2s infinite;
+    display: inline-block;
+  }
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.65); }
+    70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  }
+  .live-dot.closed { background: #94a3b8; animation: none; box-shadow: none; }
+  .clock-pill {
+    background: #161d26;
+    color: #f1f5f9;
+    border: 1px solid var(--border-hi);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .past-row td { opacity: 0.58; }
+  .tk-pill {
+    background: rgba(6, 182, 212, 0.14);
+    color: #22d3ee;
+    border: 1px solid rgba(34, 211, 238, 0.42);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+  }
+  input[type=text], input[type=number] {
+    background: #0b0f14;
+    color: #f1f5f9;
+    border: 1px solid var(--border-hi);
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 12.5px;
+    font-family: var(--font-sans);
+  }
+  #sec-audit input { font-family: var(--font-mono); }
+  input:focus { outline: none; border-color: var(--cyan); }
+  button, .qbtn {
+    background: #161d26;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+  button:hover, .qbtn:hover { background: #1e293b; border-color: var(--border-hi); }
+  .qbtn.active {
+    background: linear-gradient(135deg, #06b6d4, #22d3ee);
+    color: #0b0f14;
+    border-color: #22d3ee;
+    font-weight: 700;
+  }
+  .qbtn-accent {
+    background: #161d26;
+    border-color: #1e3a4c;
+    color: #22d3ee;
+  }
+  .qbtn-accent:hover { background: #1e293b; border-color: var(--cyan); }
+  .sticky-dock {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: rgba(11, 15, 20, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 14px;
+    margin-bottom: 14px;
+  }
+  .jump-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+  .jump-bar a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 11.5px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: #161d26;
+    border: 1px solid var(--border);
+  }
+  .jump-bar a:hover { color: #22d3ee; border-color: var(--cyan); }
+  .pillar-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 16px 0 8px 0;
+    padding: 0 4px;
+  }
+  .pillar-title {
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: #e5e5e5;
+  }
+  .pillar-sub { font-size: 11px; color: var(--muted); }
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; align-items: stretch; }
+  .kpi-grid > .box { padding: 16px 18px; display: flex; flex-direction: column; }
+  #sec-today ul { font-size: 13.5px; line-height: 1.5; margin: 6px 0 10px 0; }
+  #sec-cal table th, #sec-cal table td { padding: 6px 9px; font-size: 13px; }
+  .micro-gauge { position: relative; background: #1f1f1f; height: 5px; border-radius: 3px; margin-top: 5px; }
+  .gauge-dot {
+    position: absolute;
+    top: -3px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid var(--cyan);
+    transform: translateX(-50%);
+    box-shadow: 0 0 6px rgba(56, 189, 248, 0.55);
+  }
+  .gauge-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .expected-range-blk { padding: 12px 14px; margin-top: 10px; }
+  .expected-range-blk .er-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; margin-bottom: 10px; }
+  .expected-range-blk .micro-gauge { height: 7px; margin-top: 8px; margin-bottom: 10px; }
+  .expected-range-blk .gauge-dot { top: -3px; width: 13px; height: 13px; }
+  .expected-range-blk .gauge-labels { font-size: 11.5px; font-family: var(--font-mono); margin-top: 8px; padding-top: 2px; }
+  .box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 13px 16px;
+    margin-bottom: 12px;
+  }
+  .lazy-sec { content-visibility: auto; contain-intrinsic-size: 400px; }
+  h1 { font-size: 18px; margin: 0; display: inline; }
+  h2 { font-size: 12.5px; margin: 0 0 6px 0; color: #22d3ee; text-transform: uppercase; letter-spacing: 0.4px; }
+  ul { margin: 3px 0 0 0; padding-left: 16px; }
+  li { margin-bottom: 3px; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  th, td { border: 1px solid var(--border); padding: 4px 7px; text-align: left; vertical-align: top; }
+  th { background: var(--bg-elevated); color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.3px; }
+  tbody tr:hover td { background: #161d26; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .sub { color: var(--muted); font-size: 11.5px; }
+  .hot { background: rgba(239, 68, 68, 0.10); }
+  .up { color: #34d399; font-weight: 700; }
+  .dn { color: #f87171; font-weight: 700; }
+  .sem-emerald { color: #34d399; font-weight: 700; }
+  .sem-crimson { color: #f87171; font-weight: 700; }
+  .sem-cyan { color: #22d3ee; font-weight: 700; }
+  .sem-slate { color: #94a3b8; font-weight: 600; }
+  .sem-z-intact { color: #22d3ee; font-weight: 800; }
+  .sem-z-breach { color: #fb923c; font-weight: 800; }
+  .sem-z-reset { color: #f43f5e; font-weight: 800; }
+  .z-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.45px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    text-transform: uppercase;
+    line-height: 1.2;
+  }
+  .z-badge.z-badge-sm { font-size: 12.5px; padding: 2px 8px; }
+  .z-badge.z-intact {
+    color: #22d3ee;
+    background: rgba(34, 211, 238, 0.14);
+    border: 1px solid rgba(34, 211, 238, 0.55);
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.14);
+  }
+  .z-badge.z-breach {
+    color: #fb923c;
+    background: rgba(251, 146, 60, 0.16);
+    border: 1px solid rgba(251, 146, 60, 0.6);
+    box-shadow: 0 0 10px rgba(251, 146, 60, 0.14);
+  }
+  .z-badge.z-reset {
+    color: #f43f5e;
+    background: rgba(244, 63, 94, 0.18);
+    border: 1.5px solid #f43f5e;
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.24);
+  }
+  .z-context-note {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.32;
+    margin: 3px 0 6px 0;
+  }
+  .edge-pill {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+    padding: 7px 11px;
+    border-radius: 6px;
+    background: #161d26;
+    border: 1px solid var(--border-hi);
+    margin: 0 0 10px 0;
+  }
+  .edge-pill.edge-prime {
+    border-color: rgba(16, 185, 129, 0.6);
+    background: rgba(16, 185, 129, 0.10);
+  }
+  .edge-pill.edge-selective {
+    border-color: rgba(34, 211, 238, 0.55);
+    background: rgba(34, 211, 238, 0.10);
+  }
+  .edge-pill.edge-wait {
+    border-color: rgba(244, 63, 94, 0.65);
+    background: rgba(244, 63, 94, 0.12);
+  }
+  .edge-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.35px;
+  }
+  .edge-prime .edge-head { color: #10b981; }
+  .edge-selective .edge-head { color: #22d3ee; }
+  .edge-wait .edge-head { color: #f43f5e; }
+  .edge-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #cbd5e1;
+  }
+  .edge-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .edge-row-lbl {
+    min-width: 98px;
+    white-space: nowrap;
+  }
+  .edge-seg-track {
+    flex: 1;
+    background: #0b0f14;
+    border-radius: 3px;
+    overflow: hidden;
+    height: 6px;
+  }
+  .edge-seg-fill {
+    width: 100%;
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #ef4444 0%, #fb923c 45%, #10b981 100%);
+  }
+  .alert { background: rgba(239, 68, 68, 0.14); border: 1px solid #ef4444; border-radius: 5px; padding: 6px 9px; margin-bottom: 7px; font-weight: 700; color: #fecaca; }
+  .stat-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .stat { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 5px; padding: 6px 8px; flex: 1; min-width: 140px; }
+  .stat-label { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
+  .stat-val { font-size: 15px; font-weight: 700; margin-top: 1px; font-variant-numeric: tabular-nums; }
+  #sec-walls .stat-val { font-family: var(--font-mono); }
+  .viz-strip.viz-strip-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 4px 0 8px 0; }
+  #sec-walls .viz-v { font-family: var(--font-mono); font-size: 13px; }
+  .pill { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.2px; }
+  .pill-red { background: rgba(239, 68, 68, 0.16); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.45); }
+  .pill-amber { background: rgba(6, 182, 212, 0.15); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.42); }
+  .pill-green { background: rgba(16, 185, 129, 0.16); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.45); }
+  .pill-blue { background: rgba(6, 182, 212, 0.14); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.42); }
+  .pill-muted { background: #161d26; color: #cbd5e1; border: 1px solid #334155; }
+  .bar-track { background: #1e293b; height: 5px; border-radius: 3px; margin-top: 4px; overflow: hidden; display: flex; }
+  .bar-track.sm { height: 4px; margin-top: 3px; }
+  .bar-fill { background: var(--cyan); height: 100%; }
+  .bar-fill.pin { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+  .bar-fill.up-bg { background: var(--up); }
+  .bar-fill.dn-bg { background: var(--dn); }
+  .fld { display: flex; flex-direction: column; gap: 2px; font-size: 10.5px; color: var(--muted); }
+  .lnk { color: var(--cyan); text-decoration: none; }
+  .lnk:hover, .lnk-plain:hover { text-decoration: underline; }
+  .lnk-plain { color: var(--text); text-decoration: none; }
+  code { font-family: var(--font-sans); font-size: 10.5px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.3px; background: #111111; padding: 1px 4px; border-radius: 3px; border: 1px solid var(--border); }
+  .viz-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    background: #0d0d0d;
+    border: 1px solid #2e2e2e;
+    border-radius: 6px;
+    margin: 6px 0 8px 0;
+    overflow: hidden;
+  }
+  .viz-item {
+    display: grid;
+    grid-template-rows: auto minmax(34px, auto) 1fr;
+    justify-items: stretch;
+    align-items: center;
+    text-align: center;
+    padding: 0;
+    min-width: 0;
+  }
+  .viz-item:not(:last-child) { border-right: 1px solid #2e2e2e; }
+  .viz-k {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 700;
+    padding: 6px 10px 5px 10px;
+    background: #121212;
+    border-bottom: 1px solid #222222;
+    text-align: center;
+  }
+  .viz-v {
+    font-size: 12.5px;
+    line-height: 1.3;
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 12px;
+  }
+  .viz-v .pill { font-size: 12.5px; padding: 2px 8px; line-height: 1.2; }
+  .viz-sub {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.35;
+    padding: 6px 12px 8px 12px;
+    border-top: 1px solid #222222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    height: 100%;
+    box-sizing: border-box;
+  }
+  .viz-foot {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    background: #0d0d0d;
+    border: 1px solid #2e2e2e;
+    border-radius: 6px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .viz-foot-item {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    justify-items: stretch;
+    align-items: center;
+    text-align: center;
+    min-width: 0;
+  }
+  .viz-foot-item:not(:last-child) { border-right: 1px solid #2e2e2e; }
+  .viz-foot-body {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+    padding: 8px 14px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 3px;
+    height: 100%;
+    box-sizing: border-box;
+  }
+  .legend-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .lpill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 999px;
+    background: #121212;
+    border: 1px solid #2b2b2b;
+    color: #d4d4d4;
+  }
+  .lpill.active { border-color: #4b5563; color: #ffffff; background: #1a1a1a; }
+  .lpill:not(.active) { opacity: 0.45; }
+  .ldot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .regime-stack { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .regime-metrics { display: grid; grid-template-columns: 1fr; gap: 9px; }
+  .metric-blk { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 5px; padding: 9px 12px; font-size: 13.5px; }
+  /* Unified Diverging Strike Ladder */
+  .strike-ladder { background: #0b0f14; border: 1px solid var(--border); border-radius: 5px; padding: 8px; font-size: 14px; }
+  .strike-ladder .sub { font-size: 12.5px; }
+  .strike-ladder .qbtn { font-size: 13px; }
+  .ladder-hdr { display: grid; grid-template-columns: 1fr 124px 1fr; text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); padding: 4px 0; border-bottom: 1px solid rgba(34, 211, 238, 0.45); margin-bottom: 3px; }
+  .ladder-pane { display: none; }
+  .ladder-pane.active { display: block; }
+  .ladder-row { display: grid; grid-template-columns: 1fr 124px 1fr; align-items: center; gap: 4px; padding: 4px 2px; border-bottom: 1px solid rgba(34, 211, 238, 0.34); }
+  .ladder-row.pin-row { background: rgba(6, 182, 212, 0.12); border-bottom: 1px solid rgba(34, 211, 238, 0.48); }
+  .ladder-row.spike-row-call { background: rgba(16, 185, 129, 0.08); border-bottom: 1px solid rgba(34, 211, 238, 0.48); }
+  .ladder-row.spike-row-put { background: rgba(239, 68, 68, 0.08); border-bottom: 1px solid rgba(34, 211, 238, 0.48); }
+  .ladder-row.spike-row-both { background: linear-gradient(90deg, rgba(239, 68, 68, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%); border-bottom: 1px solid rgba(34, 211, 238, 0.48); }
+  .ladder-ref { text-align: center; font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: #22d3ee; padding: 2px 0; border-top: 1px dashed #22d3ee; border-bottom: 1px dashed #22d3ee; background: rgba(6, 182, 212, 0.08); margin: 2px 0; }
+  .ladder-side { display: flex; align-items: center; gap: 5px; min-width: 0; }
+  .ladder-side.left { justify-content: flex-end; }
+  .ladder-side.right { justify-content: flex-start; }
+  .ladder-num { font-family: var(--font-mono); font-size: 11.5px; color: #cbd5e1; white-space: nowrap; min-width: 62px; }
+  .lnum-sep { color: #64748b; }
+  .ladder-side.left .lnum-vol, .ladder-hdr > span:first-child .lnum-vol { color: #f87171; font-weight: 700; }
+  .ladder-side.left .lnum-oi, .ladder-hdr > span:first-child .lnum-oi { color: rgba(252, 165, 165, 0.62); font-weight: 600; }
+  .ladder-side.right .lnum-vol, .ladder-hdr > span:last-child .lnum-vol { color: #34d399; font-weight: 700; }
+  .ladder-side.right .lnum-oi, .ladder-hdr > span:last-child .lnum-oi { color: rgba(110, 231, 183, 0.62); font-weight: 600; }
+  .ladder-side.left .ladder-num { text-align: right; }
+  .ladder-side.right .ladder-num { text-align: left; }
+  .ladder-bar-wrap { position: relative; flex: 1; height: 12px; background: #11161d; border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 2px; overflow: hidden; }
+  .lbar-oi { position: absolute; top: 0; bottom: 0; }
+  .lbar-vol { position: absolute; top: 4px; bottom: 4px; border-radius: 1px; }
+  .ladder-bar-wrap.left .lbar-oi, .ladder-bar-wrap.left .lbar-vol { right: 0; }
+  .ladder-bar-wrap.right .lbar-oi, .ladder-bar-wrap.right .lbar-vol { left: 0; }
+  .lbar-oi.put { background: rgba(239, 68, 68, 0.28); }
+  .lbar-vol.put { background: #f87171; box-shadow: 0 0 6px rgba(248, 113, 113, 0.45); }
+  .lbar-oi.call { background: rgba(16, 185, 129, 0.28); }
+  .lbar-vol.call { background: #34d399; box-shadow: 0 0 6px rgba(52, 211, 153, 0.45); }
+  .ladder-mid { text-align: center; font-size: 12.5px; line-height: 1.2; border-left: 1px solid rgba(34, 211, 238, 0.28); border-right: 1px solid rgba(34, 211, 238, 0.28); padding: 1px 4px; }
+  .sweet-spot-box { background: #0b0f14; border: 1px solid var(--border); border-radius: 5px; padding: 7px 8px; }
+  .sweet-spot-table { margin-top: 0; }
+  .sweet-spot-table th, .sweet-spot-table td { padding: 2px 6px; font-size: 12px; line-height: 1.15; vertical-align: middle; border-color: rgba(34, 211, 238, 0.26); }
+  .sweet-spot-table .pill { font-size: 9.5px; padding: 0 4px; line-height: 1.1; }
+  .sweet-tot-cell { display: flex; align-items: center; gap: 8px; }
+  .sweet-tot-val { min-width: 52px; display: inline-block; }
+  .sweet-bar { flex: 1; margin-top: 0; height: 5px; min-width: 50px; }
+  .otm-chain-box { margin-top: 8px; background: #0b0f14; border: 1px solid var(--border); border-radius: 5px; padding: 7px 8px; }
+  .otm-chain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 8px; margin-top: 4px; }
+  .otm-sub-table { margin-top: 0; font-size: 11.5px; line-height: 1.15; }
+  .otm-sub-table th, .otm-sub-table td { padding: 2px 4px; vertical-align: middle; white-space: nowrap; border-color: rgba(34, 211, 238, 0.26); }
+  .otm-sub-table tr.otm-best-row td { background: rgba(16, 185, 129, 0.08); border-color: rgba(34, 211, 238, 0.40); }
+  .otm-sub-table tr.otm-best-row td:first-child { border-left: 3px solid #10b981; }
+  .otm-badge { display: inline-block; padding: 0 3px; border-radius: 3px; font-size: 9.5px; font-weight: 800; letter-spacing: 0.02em; line-height: 1.25; border: 1px solid rgba(148, 163, 184, 0.35); vertical-align: baseline; }
+  .otm-badge-emerald { color: #10b981; background: rgba(16, 185, 129, 0.14); border-color: rgba(16, 185, 129, 0.5); }
+  .spike-foot {
+    background: #0d0d0d;
+    border: 1px solid #2e2e2e;
+    border-radius: 6px;
+    margin-top: 8px;
+    overflow: hidden;
+    font-size: 12.5px;
+  }
+  .spike-foot-hdr {
+    font-size: 12.5px;
+    color: var(--muted);
+    font-weight: 700;
+    padding: 5px 10px;
+    background: #121212;
+    border-bottom: 1px solid #222222;
+  }
+  .spike-foot-row {
+    display: grid;
+    grid-template-columns: 1.35fr 0.65fr 0.85fr 0.75fr;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+    border-top: 1px solid #222222;
+  }
+  .spike-foot-hdr + .spike-foot-row { border-top: none; }
+  .spike-foot-cell {
+    padding: 4px 8px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .spike-foot-cell:not(:last-child) { border-right: 1px solid #2e2e2e; }
+  /* Right-Bound Slide-Over Drawer */
+  #drawer-edge-tab {
+    position: fixed;
+    right: 0;
+    left: auto;
+    top: 50%;
+    width: auto;
+    min-height: 96px;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #11161d;
+    color: #22d3ee;
+    border: 1px solid #06b6d4;
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+    padding: 28px 10px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    z-index: 80;
+    box-shadow: -3px 0 14px rgba(0, 0, 0, 0.7);
+  }
+  #drawer-edge-tab:hover { background: #161d26; color: #f1f5f9; }
+  .drawer-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: #161d26;
+    color: #22d3ee;
+    border: 1px solid #06b6d4;
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  #drawer-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .tk-watchlist {
+    margin-bottom: 10px;
+    padding: 9px 10px;
+    background: #0b0f14;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .tk-grid-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  .tk-hdr-lbl {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+  }
+  .cyan-txt { color: #22d3ee; }
+  .amber-txt { color: #34d399; }
+  .tk-grid4 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .tk-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 7px 4px;
+    border-radius: 5px;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: border-color 0.14s, background 0.14s;
+  }
+  .tk-card.tk-stock {
+    border-color: rgba(34, 211, 238, 0.30);
+    background: rgba(6, 182, 212, 0.12);
+    color: #cffafe;
+  }
+  .tk-card.tk-stock:hover {
+    border-color: rgba(34, 211, 238, 0.72);
+    background: rgba(6, 182, 212, 0.26);
+    color: #ffffff;
+  }
+  .tk-card.tk-stock.active {
+    border-color: #22d3ee;
+    background: rgba(6, 182, 212, 0.34);
+    color: #ffffff;
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.45);
+  }
+  .tk-card.tk-idx {
+    border-color: rgba(16, 185, 129, 0.32);
+    background: rgba(16, 185, 129, 0.12);
+    color: #d1fae5;
+  }
+  .tk-card.tk-idx:hover {
+    border-color: rgba(52, 211, 153, 0.75);
+    background: rgba(16, 185, 129, 0.26);
+    color: #ffffff;
+  }
+  .tk-card.tk-idx.active {
+    border-color: #34d399;
+    background: rgba(16, 185, 129, 0.34);
+    color: #ffffff;
+    box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.45);
+  }
+  .tk-sym {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    line-height: 1.1;
+  }
+  .tk-tag {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    opacity: 0.78;
+    line-height: 1;
+  }
+  #drawer-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(2px);
+    z-index: 88;
+  }
+  #drawer-backdrop.open { display: block; }
+  #lab-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(740px, 95vw);
+    height: 100vh;
+    background: #0b0f14;
+    border-left: 1px solid #334155;
+    z-index: 90;
+    transform: translateX(100%);
+    transition: transform 0.22s ease;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -12px 0 36px rgba(0, 0, 0, 0.9);
+  }
+  #lab-drawer.open { transform: translateX(0); }
+  .drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #11161d;
+    border-bottom: 1px solid var(--border-hi);
+  }
+  .drawer-body { overflow-y: auto; padding: 12px; flex: 1; color-scheme: dark; scrollbar-width: thin; scrollbar-color: var(--border-hi) var(--bg-canvas); }
+  .drawer-body::-webkit-scrollbar { width: 8px; }
+  .drawer-body::-webkit-scrollbar-track { background: var(--bg-canvas); }
+  .drawer-body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 4px; border: 2px solid var(--bg-canvas); }
+  .drawer-body::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
+  @media (max-width: 1080px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+    .regime-stack { grid-template-columns: 1fr; }
+    .grid2 { grid-template-columns: 1fr; }
+    .viz-strip, .viz-strip.viz-strip-2 { grid-template-columns: 1fr; }
+    .viz-item:not(:last-child) { border-right: none; border-bottom: 1px solid var(--border); }
+    .viz-foot { grid-template-columns: 1fr; }
+    .viz-foot-item:not(:last-child) { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+  @media (max-width: 680px) {
+    body { padding: 12px 14px 28px 14px; }
+    .topbar { flex-direction: column; align-items: stretch; }
+    .nav-lbl { min-width: 100%; margin-bottom: 2px; }
+    .ladder-hdr, .ladder-row { grid-template-columns: 1fr 94px 1fr; }
+    .ladder-num { min-width: 44px; font-size: 10.5px; }
+  }
+</style>
+</head>
+<body>
+<div id="nav-loader"></div>
+<div id="page-loading-overlay" aria-hidden="true" role="status" aria-label="Loading market data"><div class="loading-spinner"></div></div>
+<div id="drawer-backdrop" onclick="toggleLabDrawer(false)"></div>
+
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <div class="brand-row">
+        <span class="live-dot closed" title="WEEKEND (MARKET CLOSED)"></span>
+        <span class="tk-pill">NVDA</span>
+        <h1><span class="sem-crimson">$162.85</span> <span style="font-size:16px;">(<span class="sem-crimson">-2.01%</span>)</span></h1>
+        <span class="clock-pill" id="live-et-clock" title="Live Eastern Time (US Market Clock)">SUN NOV 15, 2026 • 11:01:37 PM ET</span>
+      </div>
+      <div class="sub" style="margin-top:3px;">Snapshot: 2026-11-15 11:01 PM ET | Feed: finnhub | Run #261 (195 dates)</div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+      <form method="GET" action="/" style="display:flex;gap:4px;">
+        <input type="hidden" name="tf" value="weekly">
+        <input type="text" name="ticker" value="NVDA" style="width:82px;text-transform:uppercase;" placeholder="Ticker">
+        <button type="submit" id="ticker-lookup-btn" aria-label="Lookup ticker" title="Lookup ticker" style="display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+      </form>
+      <a class="qbtn" id="refresh-live-btn" href="/?ticker=NVDA&tf=weekly&refresh=1" aria-label="Refresh live data" title="Refresh live data (bypass 45s cache)" style="display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></a>
+      <a class="qbtn" target="_blank" href="/api/readout?ticker=NVDA&tf=weekly">Raw Data</a>
+    </div>
+  </div>
+
+  <div class="sticky-dock">
+    <div class="jump-bar">
+      <span class="sub" style="align-self:center;">Jump:</span>
+      <a href="#sec-today">1. Entry Check</a>
+      <a href="#sec-cal">Catalysts</a>
+      <a href="#sec-viz">2. Price Map</a>
+      <a href="#sec-walls">Walls &amp; Pin</a>
+      <a href="#sec-trend">SD Channels</a>
+      <a href="#sec-intel">3. News Filter</a>
+    </div>
+  </div>
+
+  
+
+  <div class="kpi-grid" id="sec-today">
+    <div class="box" style="margin-bottom:0; border-top: 2px solid var(--accent);">
+      <h2>TODAY'S PLAY <span class="pill pill-muted" style="margin-left:4px;">Sunday (Closed) (Weekend — Monday Setup) &bull; 11:01 PM ET</span></h2>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-bottom:4px;">
+        <span class="z-badge z-reset" title="Chain Reset (Z > 1.5x): price broke far outside expected move; legacy OI walls lost grip.">&#9888;&#65039; CHAIN RESET &bull; Z = 1.73x</span>
+        <span class="pill pill-red">48H LANDMINE: 1 EVENT(S)</span>
+        <span class="pill pill-muted">This Friday Pin <span class="sem-cyan">$190.0</span> (<span class="sem-emerald">+16.7%</span>)</span>
+      </div>
+      <div class="z-context-note">Z measures how far price broke past expected bounds&mdash;above 1.5x means old levels broke and the setup needs reassessment.</div>
+      <div style="margin-bottom:5px;"><b>Market is closed. Futures open at 6:00 PM ET.</b></div>
+      
+      <ul><li>Monday often starts with a quick VIX pop that fades.</li><li>Weekly option magnets reset on Monday.</li></ul>
+      <div class="metric-blk expected-range-blk">
+        <div class="er-head">
+          <span class="stat-label">EXPECTED RANGE</span>
+          <span class="mono"><span class="sem-cyan">$162.85</span> in <span class="sem-crimson">$147.15</span> &ndash; <span class="sem-emerald">$178.55</span></span>
+        </div>
+        <div class="micro-gauge" title="Spot inside Expected Move"><div class="gauge-dot" style="left:50.0%;"></div></div>
+        <div class="gauge-labels"><span class="sem-crimson">$147 Exp Low</span><span class="sem-cyan">ATM $162.5</span><span class="sem-emerald">$179 Exp High</span></div>
+      </div>
+      <div id="sec-cal" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);flex:1;display:flex;flex-direction:column;">
+        <h2>LANDMINES</h2>
+        <div class="table-wrap" style="flex:1;">
+          <table>
+            <thead><tr><th>Day &amp; Date</th><th>Time</th><th>Event</th><th>What It Means</th></tr></thead>
+            <tbody><tr class='hot'><td><b>Tue Nov 17</b> <span class='pill pill-red'>SOON</span><br><span class='sub'>2026-11-17</span></td><td>After Close</td><td><b>NVDA Earnings (Your Stock)</b></td><td class='sub'>NVDA reports earnings (After Close, Est. EPS $2.52, Range $2.26-$2.70). Big move &amp; IV drop after.</td></tr><tr class=''><td><b>Wed Nov 18</b><br><span class='sub'>2026-11-18</span></td><td>2:00 PM ET</td><td><b>Fed Meeting Minutes</b></td><td class='sub'>Notes from the last Fed meeting.</td></tr><tr class=''><td><b>Thu Nov 19</b><br><span class='sub'>2026-11-19</span></td><td>8:30 AM ET</td><td><b>Weekly Jobless Claims</b></td><td class='sub'>Weekly layoff count at 8:30 AM.</td></tr><tr class=''><td><b>Fri Nov 20</b><br><span class='sub'>2026-11-20</span></td><td>4:00 PM ET</td><td><b>Monthly Option Expire</b></td><td class='sub'>Big monthly options expire at 4:00 PM.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="box" style="margin-bottom:0; border-top: 2px solid var(--cyan);">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px;">
+        <h2 style="margin:0;">OPTION PRICING</h2>
+        <div><span class="pill pill-red">EXPENSIVE NEAR-TERM</span> <span class="mono sub">(<span class="sem-crimson">+53.6%</span> spread)</span></div>
+      </div>
+      <div id="entry-edge-widget" class="edge-pill edge-wait" title="60-150d Call Entry Edge across Entry Check, Price Map, and News Filter">
+        <div class="edge-head">
+          <span>ENTRY EDGE: 44/100 &bull; WAIT / REASSESS</span>
+        </div>
+        <div class="edge-breakdown">
+          <div class="edge-row"><span class="edge-row-lbl">Timing 15/40</span><div class="edge-seg-track"><div class="edge-seg-fill" style="clip-path:inset(0 62% 0 0);"></div></div></div>
+          <div class="edge-row"><span class="edge-row-lbl">Map 25/35</span><div class="edge-seg-track"><div class="edge-seg-fill" style="clip-path:inset(0 29% 0 0);"></div></div></div>
+          <div class="edge-row"><span class="edge-row-lbl">News 4/25</span><div class="edge-seg-track"><div class="edge-seg-fill" style="clip-path:inset(0 84% 0 0);"></div></div></div>
+        </div>
+      </div>
+      <div class="regime-stack">
+        <div class="regime-metrics">
+          <div class="metric-blk">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <span class="stat-label">MARKET FEAR</span>
+              <span class="mono"><span style="color:#10b981;font-weight:800;">22/100 &bull; CALM (CONTANGO)</span> <span class="sub">(VIX 19.3 +0.60)</span></span>
+            </div>
+            <div class="micro-gauge" style="background:linear-gradient(90deg, rgba(16,185,129,0.35) 0%, rgba(34,211,238,0.35) 45%, rgba(251,146,60,0.38) 65%, rgba(244,63,94,0.42) 100%);" title="0-100 Non-Linear Curved Fear Index"><div class="gauge-dot" style="left:22.0%;border-color:#10b981;"></div></div>
+            <div class="gauge-labels"><span style="color:#10b981;font-weight:700;">0 Calm</span><span style="color:#22d3ee;font-weight:700;">50 Inflection</span><span style="color:#f43f5e;font-weight:700;">75+ Stress</span></div>
+            <div class="sub mono" style="margin-top:3px;font-size:11px;">9d/3m Ratio: <span style="color:#22d3ee;font-weight:700;">0.86 Contango</span> &bull; 3d Velocity: <span style="color:#10b981;font-weight:700;">-0.8%</span></div>
+          </div>
+          <div class="metric-blk">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <span class="stat-label">IMPLIED WEEKLY MOVE</span>
+              <span class="mono" style="font-size:15px;font-weight:800;"><span class="sem-cyan">±9.64%</span> <span class="sub" style="font-size:12.5px;font-weight:600;">(&plusmn;$15.70 / share)</span></span>
+            </div>
+            <div class="bar-track stacked" title="ATM Put vs Call Straddle Cost Split">
+              <div class="bar-fill dn-bg" style="width:48.7%"></div>
+              <div class="bar-fill up-bg" style="width:51.3%"></div>
+            </div>
+            <div class="gauge-labels mono" style="font-size:11.5px;margin-top:4px;align-items:baseline;">
+              <span><span class="sem-crimson">Put $7.65</span></span>
+              <span style="text-align:center;"><span style="color:#f43f5e;font-weight:800;letter-spacing:0.02em;">CALLS &amp; PUTS EXPENSIVE</span> <span class="sub">($15.70 ATM straddle &bull; +53.6% markup)</span></span>
+              <span><span class="sem-emerald">Call $8.05</span> <span style="display:inline-block;padding:0 4px;border-radius:3px;border:1px solid rgba(16,185,129,0.45);color:#10b981;font-size:10px;font-weight:800;letter-spacing:0.03em;vertical-align:1px;">UPSIDE SKEW</span></span>
+            </div>
+            <div class="sub" style="margin-top:3px;font-size:11px;">Event tax baked in — wait for IV crush or buy 60–150d</div>
+          </div>
+          <div class="metric-blk">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <span class="stat-label">ORDER FLOW</span>
+              <span class="mono"><span class="sem-emerald">P/C 0.76</span> <span class="sub">(<span class="sem-emerald">57% C</span> / <span class="sem-crimson">43% P</span>)</span></span>
+            </div>
+            <div class="bar-track stacked" title="Call vs Put Volume Ratio">
+              <div class="bar-fill up-bg" style="width:56.9%"></div>
+              <div class="bar-fill dn-bg" style="width:43.1%"></div>
+            </div>
+            <div class="sub" style="margin-top:3px;">Balanced (Normal Call/Put Mix)</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:space-between;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;"><span class="stat-label" style="color:#22d3ee;font-weight:800;font-size:11.5px;">IMPLIED VOLATILITY (IV %) TERM STRUCTURE</span><span class="sub mono">Near-Term vs. 60&ndash;150d Target</span></div>
+          <svg class="mc-svg" viewBox="0 0 560 240" style="width:100%;height:auto;min-height:220px;background:#0b0f14;border:1px solid #1e293b;border-radius:6px;display:block;"><defs>  <linearGradient id="tsAreaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#22d3ee" stop-opacity="0.28"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0.02"/></linearGradient></defs><line x1="50" y1="188.0" x2="534" y2="188.0" stroke="#1e293b" stroke-width="1"/><text x="42" y="192.2" text-anchor="end" fill="#94a3b8" font-size="13" font-weight="600">42%</text><line x1="50" y1="110.0" x2="534" y2="110.0" stroke="#1e293b" stroke-width="1"/><text x="42" y="114.2" text-anchor="end" fill="#94a3b8" font-size="13" font-weight="600">81%</text><line x1="50" y1="32.0" x2="534" y2="32.0" stroke="#1e293b" stroke-width="1"/><text x="42" y="36.2" text-anchor="end" fill="#94a3b8" font-size="13" font-weight="600">120%</text><polygon points="102.0,188 102.0,64.4 292.0,154.4 482.0,172.8 482.0,188" fill="url(#tsAreaGrad)"/><polyline points="102.0,64.4 292.0,154.4 482.0,172.8" fill="none" stroke="#22d3ee" stroke-width="3" stroke-linejoin="round"/><g><title>This Friday (5d (11-20)): 103.6% IV | $162.5 (103.4%), $165.0 (102.5%)</title><circle cx="102.0" cy="64.4" r="6" fill="#0b0f14" stroke="#22d3ee" stroke-width="2.5"/><text x="102.0" y="53.400000000000006" text-anchor="middle" fill="#22d3ee" font-size="15.5" font-weight="800">103.6%</text><text x="102.0" y="214" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700">This Friday</text><text x="102.0" y="232" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">5d (11-20)</text></g><g><title>Next Month (33d (12-18)): 59.1% IV | $162.0 (59.3%), $164.0 (59.0%)</title><circle cx="292.0" cy="154.4" r="6" fill="#0b0f14" stroke="#22d3ee" stroke-width="2.5"/><text x="292.0" y="143.4" text-anchor="middle" fill="#22d3ee" font-size="15.5" font-weight="800">59.1%</text><text x="292.0" y="214" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700">Next Month</text><text x="292.0" y="232" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">33d (12-18)</text></g><g><title>60-150d Target (96d (02-19)): 50.0% IV | $165.0 (50.0%), $160.0 (50.5%)</title><circle cx="482.0" cy="172.8" r="6" fill="#0b0f14" stroke="#22d3ee" stroke-width="2.5"/><text x="482.0" y="161.8" text-anchor="middle" fill="#22d3ee" font-size="15.5" font-weight="800">50.0%</text><text x="482.0" y="214" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700">60-150d Target</text><text x="482.0" y="232" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">96d (02-19)</text></g></svg>
+          <div class="sub" style="margin-top:5px;">This week&#x27;s IV is higher than 60-150 day IV.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box" id="sec-viz">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;">
+      <h2>FLOW &amp; MAGNET <span class="pill pill-muted" style="margin-left:4px;">Weekly Cycle (Exp: 2026-11-20 | 5d)</span></h2>
+      <div>View: <a class="qbtn active" href="/?ticker=NVDA&tf=weekly">Weekly</a> <a class="qbtn" href="/?ticker=NVDA&tf=monthly">Monthly</a> </div>
+    </div>
+
+    <div class="legend-pills" id="svg-layer-toggles">
+      <button type="button" class="lpill active" data-layer="layer-price" onclick="toggleSvgLayer(this)"><span class="ldot" style="background:#ffffff"></span>Price</button>
+      <button type="button" class="lpill active" data-layer="layer-mp" onclick="toggleSvgLayer(this)"><span class="ldot" style="background:#f59e0b"></span>Max Pain Drift</button>
+      <button type="button" class="lpill active" data-layer="layer-em" onclick="toggleSvgLayer(this)"><span class="ldot" style="background:#38bdf8"></span>Realm Band</button>
+      <button type="button" class="lpill active" data-layer="layer-w1" onclick="toggleSvgLayer(this)"><span class="ldot" style="background:#0284c7"></span>Base OI</button>
+      <button type="button" class="lpill active" data-layer="layer-w23" onclick="toggleSvgLayer(this)"><span class="ldot" style="background:#10b981"></span>New Flow</button>
+    </div>
+
+    <div class="viz-strip">
+      <div class="viz-item">
+        <span class="viz-k">Expected Range</span>
+        <div class="viz-v"><b><span class="sem-crimson">$147.15</span> &ndash; <span class="sem-emerald">$178.55</span></b></div>
+        <div class="viz-sub"><span class="sem-cyan">±9.64% / ±$15.7</span> &bull; <span class="sem-cyan">ATM $162.5</span></div>
+      </div>
+      <div class="viz-item">
+        <span class="viz-k">Base (W1) vs New Flows (W2, W3)</span>
+        <div class="viz-v"><span class="pill pill-amber">EXISTING VOLUME MATCHED</span></div>
+        <div class="viz-sub"><span class="sem-cyan">61.5%</span> of OI</div>
+      </div>
+      <div class="viz-item">
+        <span class="viz-k">Pin Gravity</span>
+        <div class="viz-v"><span class="z-badge z-reset z-badge-sm" title="Chain Reset (Z > 1.5x): price broke far outside expected move; legacy OI walls lost grip.">&#9888;&#65039; CHAIN RESET &bull; Z = 1.73x</span></div>
+        <div class="viz-sub">&gt;1.5x = legacy walls broke</div>
+      </div>
+    </div>
+
+    <svg class="mc-svg" id="main-wave-svg" viewBox="0 0 1080 537" style="width:100%;height:auto;border:1px solid #262626;border-radius:6px;margin-top:6px;display:block;"><style>.mc-svg text{font-family:"JetBrains Mono","Cascadia Code","SF Mono",Consolas,monospace;font-variant-numeric:tabular-nums;letter-spacing:-0.2px;} .svg-layer{transition:opacity .18s ease;} .svg-layer.layer-hidden{opacity:0.06;pointer-events:none;} .iv-chart-pane .iv-hover-badge{opacity:0;pointer-events:none;transition:opacity .16s ease;} .iv-chart-pane:hover .iv-hover-badge{opacity:1;}</style><defs>  <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#050505"/><stop offset="100%" stop-color="#000000"/></linearGradient>  <linearGradient id="emGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.14"/><stop offset="50%" stop-color="#38bdf8" stop-opacity="0.04"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.14"/></linearGradient>  <linearGradient id="priceArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e5e5e5" stop-opacity="0.16"/><stop offset="100%" stop-color="#e5e5e5" stop-opacity="0.0"/></linearGradient>  <linearGradient id="ivArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f43f5e" stop-opacity="0.22"/><stop offset="100%" stop-color="#f43f5e" stop-opacity="0.0"/></linearGradient>  <linearGradient id="w1Grad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#0284c7" stop-opacity="0.70"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.34"/></linearGradient>  <linearGradient id="w2Grad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#7e22ce" stop-opacity="0.70"/><stop offset="100%" stop-color="#a855f7" stop-opacity="0.34"/></linearGradient>  <linearGradient id="w3Grad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#059669" stop-opacity="0.75"/><stop offset="100%" stop-color="#10b981" stop-opacity="0.36"/></linearGradient></defs><rect x="0" y="0" width="1080" height="537" rx="6" fill="url(#bgGrad)"/><rect x="54" y="14" width="1012" height="360" fill="#050505" stroke="#262626" stroke-width="1"/><line x1="54" y1="350.0" x2="1066" y2="350.0" stroke="#161616" stroke-width="1"/><text x="48" y="353.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$139</text><line x1="54" y1="285.5" x2="1066" y2="285.5" stroke="#161616" stroke-width="1"/><text x="48" y="289.3" text-anchor="end" fill="#b8b8b8" font-size="11.5">$154</text><line x1="54" y1="221.0" x2="1066" y2="221.0" stroke="#161616" stroke-width="1"/><text x="48" y="224.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$169</text><line x1="54" y1="156.5" x2="1066" y2="156.5" stroke="#161616" stroke-width="1"/><text x="48" y="160.3" text-anchor="end" fill="#b8b8b8" font-size="11.5">$183</text><line x1="54" y1="92.0" x2="1066" y2="92.0" stroke="#161616" stroke-width="1"/><text x="48" y="95.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$198</text><line x1="54" y1="70.0" x2="1066" y2="70.0" stroke="#1a1a1a" stroke-width="1"/><text x="48" y="73.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$210</text><line x1="54" y1="44.0" x2="1066" y2="44.0" stroke="#1a1a1a" stroke-width="1"/><text x="48" y="47.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$230</text><g class="axis-break"><line x1="54" y1="84.0" x2="1066" y2="84.0" stroke="#2e2e2e" stroke-width="1" stroke-dasharray="5,5"/><rect x="50" y="78.5" width="8" height="11" fill="#050505"/><polyline points="54,78.0 50.0,82.0 58.0,86.0 54,90.0" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linejoin="round"/></g><g class="svg-layer layer-em"><rect x="54" y="176.8" width="1012" height="139.09999999999997" fill="url(#emGrad)"/><line x1="54" y1="176.8" x2="1066" y2="176.8" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4,4" opacity="0.65"/><line x1="54" y1="315.9" x2="1066" y2="315.9" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4,4" opacity="0.65"/><rect x="961.3" y="168.8" width="100.7" height="16.0" rx="3" fill="#06121b" fill-opacity="0.93" stroke="#0ea5e9" stroke-width="0.9"/><text x="1056.0" y="180.6" text-anchor="end" fill="#7dd3fc" font-size="11.0">Exp High $179</text><rect x="968.2" y="307.9" width="93.8" height="16.0" rx="3" fill="#06121b" fill-opacity="0.93" stroke="#0ea5e9" stroke-width="0.9"/><text x="1056.0" y="319.7" text-anchor="end" fill="#7dd3fc" font-size="11.0">Exp Low $147</text></g><g class="svg-layer layer-w1"><text x="58.0" y="26.5" text-anchor="start" fill="#38bdf8" font-size="10.0" font-weight="700" letter-spacing="0.4" paint-order="stroke" stroke="#050505" stroke-width="2.8">W1 • BASELINE OI</text><g class="wave-bar-item"><title>W1 Baseline OI $190 | Vol: 2,197 | OI: 89,538 | Vol/OI: 0.02x | Calls: 0 OI / 0 Vol | Puts: 89,538 OI / 2,197 Vol</title><rect x="58.0" y="121.6" width="86.0" height="9" fill="url(#w1Grad)" rx="2"/><text x="149.0" y="129.3" text-anchor="start" fill="#bae6fd" font-size="10.5" font-weight="600" paint-order="stroke" stroke="#050505" stroke-width="2.6" stroke-linejoin="round">$190 (89.5k)</text></g><g class="wave-bar-item"><title>W1 Baseline OI $210 | Vol: 6,070 | OI: 86,771 | Vol/OI: 0.07x | Calls: 86,771 OI / 6,070 Vol | Puts: 0 OI / 0 Vol</title><rect x="58.0" y="65.5" width="83.3" height="9" fill="url(#w1Grad)" rx="2"/><text x="146.3" y="73.2" text-anchor="start" fill="#bae6fd" font-size="10.5" font-weight="600" paint-order="stroke" stroke="#050505" stroke-width="2.6" stroke-linejoin="round">$210 (86.8k)</text></g><g class="wave-bar-item"><title>W1 Baseline OI $230 | Vol: 4,975 | OI: 82,071 | Vol/OI: 0.06x | Calls: 82,071 OI / 4,975 Vol | Puts: 0 OI / 0 Vol</title><rect x="58.0" y="39.5" width="78.8" height="9" fill="url(#w1Grad)" rx="2"/><text x="141.8" y="47.2" text-anchor="start" fill="#bae6fd" font-size="10.5" font-weight="600" paint-order="stroke" stroke="#050505" stroke-width="2.6" stroke-linejoin="round">$230 (82.1k)</text></g><rect x="54" y="14" width="0" height="0" fill="url(#w1Grad)"/></g><g class="svg-layer layer-w23"><text x="398.1" y="26.5" text-anchor="start" fill="#c084fc" font-size="10.0" font-weight="700" letter-spacing="0.4" paint-order="stroke" stroke="#050505" stroke-width="2.8">W2 • MID-CYCLE</text><text x="681.4" y="26.5" text-anchor="start" fill="#34d399" font-size="10.0" font-weight="700" letter-spacing="0.4" paint-order="stroke" stroke="#050505" stroke-width="2.8">W3 • FRESH SPIKES</text><g class="wave-bar-item"><title>W2 Mid-Cycle $210 | Vol: 6,070 | OI: 86,771 | Vol/OI: 0.07x | Calls: 86,771 OI / 6,070 Vol | Puts: 0 OI / 0 Vol</title><rect x="398.1" y="65.5" width="86.0" height="9" fill="url(#w2Grad)" rx="2"/><text x="489.1" y="73.2" text-anchor="start" fill="#e9d5ff" font-size="10.5" font-weight="600" paint-order="stroke" stroke="#050505" stroke-width="2.6" stroke-linejoin="round">$210 (6.1k)</text></g><g class="wave-bar-item"><title>W2 Mid-Cycle $190 | Vol: 2,197 | OI: 89,538 | Vol/OI: 0.02x | Calls: 0 OI / 0 Vol | Puts: 89,538 OI / 2,197 Vol</title><rect x="398.1" y="121.6" width="85.0" height="9" fill="url(#w2Grad)" rx="2"/><text x="488.1" y="129.3" text-anchor="start" fill="#e9d5ff" font-size="10.5" font-weight="600" paint-order="stroke" stroke="#050505" stroke-width="2.6" stroke-linejoin="round">$190 (2.2k)</text></g><g class="wave-bar-item"><title>W2 Mid-Cycle $230 | Vol: 4,975 | OI: 82,071 | Vol/OI: 0.06x | Calls: 82,071 OI / 4,975 Vol | Puts: 0 OI / 0 Vol</title><rect x="398.1" y="39.5" width="80.6" height="9" fill="url(#w2Grad)" rx="2"/><text x="483.7" y="47.2" text-anchor="start" fill="#e9d5ff" font-size="10.5" font-weight="600" paint-order="stroke" stroke="#050505" stroke-width="2.6" stroke-linejoin="round">$230 (5.0k)</text></g><g class="wave-bar-item"><title>W3 Fresh Spikes $170 | Vol: 41,579 | OI: 30,210 | Vol/OI: 1.38x</title><rect x="681.4" y="210.2" width="86.0" height="9" fill="url(#w3Grad)" rx="2"/><text x="772.4" y="217.9" text-anchor="start" fill="#a7f3d0" font-size="10.5" font-weight="600" paint-order="stroke" stroke="#050505" stroke-width="2.6" stroke-linejoin="round">$170 (41.6k)</text></g><g class="wave-bar-item"><title>W3 Fresh Spikes $175 | Vol: 33,672 | OI: 35,651 | Vol/OI: 0.94x</title><rect x="681.4" y="188.1" width="69.6" height="9" fill="url(#w3Grad)" rx="2"/><text x="756.0" y="195.8" text-anchor="start" fill="#a7f3d0" font-size="10.5" font-weight="600" paint-order="stroke" stroke="#050505" stroke-width="2.6" stroke-linejoin="round">$175 (33.7k)</text></g><g class="wave-bar-item"><title>W3 Fresh Spikes $180 | Vol: 32,021 | OI: 44,796 | Vol/OI: 0.71x</title><rect x="681.4" y="165.9" width="66.2" height="9" fill="url(#w3Grad)" rx="2"/><text x="752.6" y="173.6" text-anchor="start" fill="#a7f3d0" font-size="10.5" font-weight="600" paint-order="stroke" stroke="#050505" stroke-width="2.6" stroke-linejoin="round">$180 (32.0k)</text></g><rect x="54" y="14" width="0" height="0" fill="url(#w3Grad)"/></g><g class="svg-layer layer-mp"><line x1="54" y1="126.1" x2="1066" y2="126.1" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,3" opacity="0.65"/><polyline points="70.0,126.1 494.0,148.3 918.0,170.4" fill="none" stroke="#f59e0b" stroke-width="2.0" stroke-dasharray="6,4"/><circle cx="70.0" cy="126.1" r="5.0" fill="#050505" stroke="#f59e0b" stroke-width="1.8"/><circle cx="70.0" cy="126.1" r="2.0" fill="#fbbf24"/><circle cx="494.0" cy="148.3" r="5.0" fill="#050505" stroke="#f59e0b" stroke-width="1.8"/><circle cx="494.0" cy="148.3" r="2.0" fill="#fbbf24"/><circle cx="918.0" cy="170.4" r="5.0" fill="#050505" stroke="#f59e0b" stroke-width="1.8"/><circle cx="918.0" cy="170.4" r="2.0" fill="#fbbf24"/><line x1="918.0" y1="170.4" x2="939.3" y2="150.4" stroke="#f59e0b" stroke-width="0.9" stroke-dasharray="2,2" opacity="0.85"/><rect x="939.3" y="142.4" width="122.7" height="16.0" rx="3" fill="#140d02" fill-opacity="0.93" stroke="#d97706" stroke-width="0.9"/><text x="1056.0" y="154.2" text-anchor="end" fill="#fde68a" font-size="10.5">Flow Drift $180.0</text><rect x="964.4" y="118.1" width="97.6" height="16.0" rx="3" fill="#140d02" fill-opacity="0.93" stroke="#f59e0b" stroke-width="0.9"/><text x="1056.0" y="129.9" text-anchor="end" fill="#fcd34d" font-size="11.5" font-weight="700">🧲 Pin $190.0</text></g><g class="svg-layer layer-price"><line class="friday-grid-line" x1="70.0" y1="14" x2="70.0" y2="374" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,4" opacity="0.35"/><line class="friday-grid-line" x1="918.0" y1="14" x2="918.0" y2="374" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,4" opacity="0.35"/><line x1="54" y1="246.3" x2="1066" y2="246.3" stroke="#e5e5e5" stroke-width="1" stroke-dasharray="2,3" opacity="0.55"/><polygon points="70.0,374 70.0,141.0 239.6,176.3 409.2,219.6 578.8,198.2 748.4,231.6 918.0,246.3 918.0,374" fill="url(#priceArea)"/><polyline points="70.0,141.0 239.6,176.3 409.2,219.6 578.8,198.2 748.4,231.6 918.0,246.3" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linejoin="round"/><circle cx="70.0" cy="141.0" r="5.2" fill="#050505" stroke="#f59e0b" stroke-width="2.0"/><circle cx="70.0" cy="141.0" r="2.2" fill="#fbbf24"/><g class="x-axis-friday" data-friday="11/06"><title>Friday (11/06): $186.64</title><line x1="70.0" y1="374" x2="70.0" y2="377.5" stroke="#f59e0b" stroke-width="1.6"/><rect x="49.5" y="378.5" width="41.0" height="15" rx="3" fill="#1c1204" stroke="#f59e0b" stroke-width="1.1"/><text x="70.0" y="390" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">11/06</text></g><circle cx="239.6" cy="176.3" r="5.0" fill="#050505" stroke="#38bdf8" stroke-width="1.8"/><circle cx="239.6" cy="176.3" r="2.0" fill="#ffffff"/><text x="239.6" y="390" text-anchor="middle" fill="#b8b8b8" font-size="11">11/09</text><circle cx="409.2" cy="219.6" r="5.0" fill="#050505" stroke="#38bdf8" stroke-width="1.8"/><circle cx="409.2" cy="219.6" r="2.0" fill="#ffffff"/><text x="409.2" y="390" text-anchor="middle" fill="#b8b8b8" font-size="11">11/10</text><circle cx="578.8" cy="198.2" r="5.0" fill="#050505" stroke="#38bdf8" stroke-width="1.8"/><circle cx="578.8" cy="198.2" r="2.0" fill="#ffffff"/><text x="578.8" y="390" text-anchor="middle" fill="#b8b8b8" font-size="11">11/11</text><circle cx="748.4" cy="231.6" r="5.0" fill="#050505" stroke="#38bdf8" stroke-width="1.8"/><circle cx="748.4" cy="231.6" r="2.0" fill="#ffffff"/><text x="748.4" y="390" text-anchor="middle" fill="#b8b8b8" font-size="11">11/12</text><circle cx="918.0" cy="246.3" r="5.2" fill="#050505" stroke="#f59e0b" stroke-width="2.0"/><circle cx="918.0" cy="246.3" r="2.2" fill="#fbbf24"/><g class="x-axis-friday" data-friday="11/13"><title>Friday (11/13): $162.85</title><line x1="918.0" y1="374" x2="918.0" y2="377.5" stroke="#f59e0b" stroke-width="1.6"/><rect x="897.5" y="378.5" width="41.0" height="15" rx="3" fill="#1c1204" stroke="#f59e0b" stroke-width="1.1"/><text x="918.0" y="390" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">11/13</text></g><rect x="76.0" y="147.0" width="51.1" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#383838" stroke-width="0.9"/><text x="82.0" y="158.8" text-anchor="start" fill="#f5f5f5" font-size="10.5">$186.6</text><rect x="214.0" y="154.3" width="51.1" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#383838" stroke-width="0.9"/><text x="239.6" y="166.1" text-anchor="middle" fill="#f5f5f5" font-size="10.5">$178.7</text><rect x="383.6" y="197.6" width="51.1" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#383838" stroke-width="0.9"/><text x="409.2" y="209.4" text-anchor="middle" fill="#f5f5f5" font-size="10.5">$168.9</text><rect x="553.2" y="176.2" width="51.1" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#383838" stroke-width="0.9"/><text x="578.8" y="188.0" text-anchor="middle" fill="#f5f5f5" font-size="10.5">$173.7</text><rect x="722.9" y="209.6" width="51.1" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#383838" stroke-width="0.9"/><text x="748.4" y="221.4" text-anchor="middle" fill="#f5f5f5" font-size="10.5">$166.2</text><rect x="860.9" y="224.3" width="51.1" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#383838" stroke-width="0.9"/><text x="906.0" y="236.1" text-anchor="end" fill="#f5f5f5" font-size="10.5">$162.8</text><rect x="964.4" y="238.3" width="97.6" height="16.0" rx="3" fill="#0c0c0c" fill-opacity="0.93" stroke="#666666" stroke-width="0.9"/><text x="1056.0" y="250.1" text-anchor="end" fill="#ffffff" font-size="11.5" font-weight="700">Spot $162.85</text></g><line x1="0" y1="398" x2="1080" y2="398" stroke="#1c1c1c" stroke-width="1"/><g class="iv-chart-pane"><rect x="54" y="402" width="1012" height="103" fill="#050505" stroke="#262626" stroke-width="1"/><line x1="54" y1="497.0" x2="1066" y2="497.0" stroke="#161616" stroke-width="1"/><text x="48" y="500.5" text-anchor="end" fill="#b8b8b8" font-size="11">42%</text><line x1="54" y1="478.2" x2="1066" y2="478.2" stroke="#161616" stroke-width="1"/><text x="48" y="481.7" text-anchor="end" fill="#b8b8b8" font-size="11">62%</text><line x1="54" y1="459.5" x2="1066" y2="459.5" stroke="#161616" stroke-width="1"/><text x="48" y="463.0" text-anchor="end" fill="#b8b8b8" font-size="11">81%</text><line x1="54" y1="440.8" x2="1066" y2="440.8" stroke="#161616" stroke-width="1"/><text x="48" y="444.3" text-anchor="end" fill="#b8b8b8" font-size="11">101%</text><line x1="54" y1="422.0" x2="1066" y2="422.0" stroke="#161616" stroke-width="1"/><text x="48" y="425.5" text-anchor="end" fill="#b8b8b8" font-size="11">120%</text><polygon points="70.0,505 70.0,438.0 494.0,481.0 918.0,489.8 918.0,505" fill="url(#ivArea)"/><polyline points="70.0,438.0 494.0,481.0 918.0,489.8" fill="none" stroke="#f43f5e" stroke-width="2.2" stroke-linejoin="round"/><circle cx="70.0" cy="438.0" r="5.0" fill="#050505" stroke="#f43f5e" stroke-width="1.8"/><circle cx="70.0" cy="438.0" r="2.0" fill="#fda4af"/><rect x="43.5" y="415.0" width="52.9" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#7f1d1d" stroke-width="0.9"/><text x="70.0" y="426.8" text-anchor="middle" fill="#fda4af" font-size="11.0" font-weight="700">103.6%</text><text x="70.0" y="522" text-anchor="middle" fill="#b8b8b8" font-size="11">Active Exp</text><circle cx="494.0" cy="481.0" r="5.0" fill="#050505" stroke="#f43f5e" stroke-width="1.8"/><circle cx="494.0" cy="481.0" r="2.0" fill="#fda4af"/><rect x="470.9" y="458.0" width="46.1" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#7f1d1d" stroke-width="0.9"/><text x="494.0" y="469.8" text-anchor="middle" fill="#fda4af" font-size="11.0" font-weight="700">59.1%</text><text x="494.0" y="522" text-anchor="middle" fill="#b8b8b8" font-size="11">30d Mid</text><circle cx="918.0" cy="489.8" r="5.0" fill="#050505" stroke="#f43f5e" stroke-width="1.8"/><circle cx="918.0" cy="489.8" r="2.0" fill="#fda4af"/><rect x="895.0" y="466.8" width="46.1" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#7f1d1d" stroke-width="0.9"/><text x="918.0" y="478.6" text-anchor="middle" fill="#fda4af" font-size="11.0" font-weight="700">50.0%</text><text x="918.0" y="522" text-anchor="middle" fill="#b8b8b8" font-size="11">60+d</text><g class="iv-hover-badge"><rect x="760.0" y="410.0" width="296.0" height="20" rx="4" fill="#0c0c0c" fill-opacity="0.95" stroke="#fbbf24" stroke-width="1"/><text x="768.0" y="423.5" fill="#fbbf24" font-size="11.5" font-weight="700">IV CURVE — Implied Move: ±9.6% (±$15.70)</text></g></g></svg>
+    <div class="viz-foot">
+      <div class="viz-foot-item">
+        <span class="viz-k">Wave Flow</span>
+        <div class="viz-foot-body">Fresh volume is <span class="sem-cyan">61.5%</span> of existing walls (50-100%)—institutions are holding legacy <span class="sem-cyan">$190</span>/<span class="sem-cyan">$210</span> contracts against fresh flow around the <span class="sem-cyan">$190.0</span> pin.</div>
+      </div>
+      <div class="viz-foot-item">
+        <span class="viz-k">Pin Check</span>
+        <div class="viz-foot-body">Spot (<span class="sem-cyan">$162.85</span>) is <span class="sem-z-reset">1.73x</span> expected moves below the old <span class="sem-cyan">$190.0</span> Max Pain pin—confirming the old <span class="sem-cyan">$190</span> wall broke during this week&#x27;s slide and shifted flow down to <span class="sem-cyan">$170</span>–<span class="sem-cyan">$180</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box lazy-sec" id="sec-walls">
+    <h2>WALLS &amp; PIN</h2>
+    <div class="viz-strip viz-strip-2">
+      <div class="viz-item">
+        <span class="viz-k">FRIDAY MAGNET</span>
+        <div class="viz-v"><b><span class="sem-cyan">$190.0</span></b></div>
+        <div class="viz-sub">Pin (<span class="sem-cyan">$190.0</span>) is <span class="sem-emerald">16.7% ABOVE</span> price (<span class="sem-crimson">$162.85</span>).</div>
+      </div>
+      <div class="viz-item">
+        <span class="viz-k">OPEN INTEREST (2026-11-20)</span>
+        <div class="viz-v"><b>Calls: <span class="sem-emerald">1,270,948</span> | Puts: <span class="sem-crimson">841,857</span></b></div>
+        <div class="viz-sub mono">Today Vol &mdash; Calls: <span class="sem-emerald">377,579</span> | Puts: <span class="sem-crimson">286,524</span></div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:8px;">
+      <div>
+        <div class="strike-ladder">  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px;">    <div><b>STRIKE WALLS</b> <span class="sub">(Translucent = OI Wall &bull; Bright Fill = Today Vol)</span></div>    <div style="display:flex;gap:4px;">      <button type="button" class="qbtn active" data-ladder-btn="front" onclick="switchLadder('front', this)">Friday 11/20</button>      <button type="button" class="qbtn" data-ladder-btn="back" onclick="switchLadder('back', this)">60+d 02-19</button>    </div>  </div>  <div class="ladder-hdr"><span>&larr; PUT FLOORS (<span class="lnum-vol">Vol</span> <span class="lnum-sep">/</span> <span class="lnum-oi">OI</span>)</span><span>STRIKE (% SPOT)</span><span>CALL CEILINGS (<span class="lnum-vol">Vol</span> <span class="lnum-sep">/</span> <span class="lnum-oi">OI</span>) &rarr;</span></div>  <div class="ladder-pane active" data-ladder-pane="front"><div class="ladder-row">  <div class="ladder-side left"></div>  <div class="ladder-mid mono">    <div><b>$260</b> <span class="sub" style="font-size:11px;">(+59.7%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"></div>  </div>  <div class="ladder-side right" title="Call OI: 67,701 | Call Today Vol: 1,112"><div class="ladder-bar-wrap right"><div class="lbar-oi call" style="width:75.6%"></div><div class="lbar-vol call" style="width:1.2%"></div></div><span class="ladder-num"><span class="lnum-vol">1.1k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">67.7k</span></span></div></div><div class="ladder-row">  <div class="ladder-side left"></div>  <div class="ladder-mid mono">    <div><b>$230</b> <span class="sub" style="font-size:11px;">(+41.2%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"></div>  </div>  <div class="ladder-side right" title="Call OI: 82,071 | Call Today Vol: 4,975"><div class="ladder-bar-wrap right"><div class="lbar-oi call" style="width:91.7%"></div><div class="lbar-vol call" style="width:5.6%"></div></div><span class="ladder-num"><span class="lnum-vol">5.0k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">82.1k</span></span></div></div><div class="ladder-row">  <div class="ladder-side left"></div>  <div class="ladder-mid mono">    <div><b>$210</b> <span class="sub" style="font-size:11px;">(+29.0%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"></div>  </div>  <div class="ladder-side right" title="Call OI: 86,771 | Call Today Vol: 6,070"><div class="ladder-bar-wrap right"><div class="lbar-oi call" style="width:96.9%"></div><div class="lbar-vol call" style="width:6.8%"></div></div><span class="ladder-num"><span class="lnum-vol">6.1k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">86.8k</span></span></div></div><div class="ladder-row">  <div class="ladder-side left" title="Put OI: 56,847 | Put Today Vol: 1,073"><span class="ladder-num"><span class="lnum-vol">1.1k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">56.8k</span></span><div class="ladder-bar-wrap left"><div class="lbar-oi put" style="width:63.5%"></div><div class="lbar-vol put" style="width:1.2%"></div></div></div>  <div class="ladder-mid mono">    <div><b>$200</b> <span class="sub" style="font-size:11px;">(+22.8%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"></div>  </div>  <div class="ladder-side right" title="Call OI: 59,753 | Call Today Vol: 20,722"><div class="ladder-bar-wrap right"><div class="lbar-oi call" style="width:66.7%"></div><div class="lbar-vol call" style="width:23.1%"></div></div><span class="ladder-num"><span class="lnum-vol">20.7k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">59.8k</span></span></div></div><div class="ladder-row pin-row">  <div class="ladder-side left" title="Put OI: 89,538 | Put Today Vol: 2,197"><span class="ladder-num"><span class="lnum-vol">2.2k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">89.5k</span></span><div class="ladder-bar-wrap left"><div class="lbar-oi put" style="width:100.0%"></div><div class="lbar-vol put" style="width:2.5%"></div></div></div>  <div class="ladder-mid mono">    <div><b>$190</b> <span class="sub" style="font-size:11px;">(+16.7%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"><span class='pill pill-amber' style='font-size:10px;padding:0 4px;'>PIN</span></div>  </div>  <div class="ladder-side right"></div></div><div class="ladder-row spike-row spike-row-call">  <div class="ladder-side left"></div>  <div class="ladder-mid mono">    <div><b>$170</b> <span class="sub" style="font-size:11px;">(+4.4%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"><span class='pill pill-green' style='font-size:10px;padding:0 4px;'>C 1.4x</span></div>  </div>  <div class="ladder-side right" title="Call OI: 30,210 | Call Today Vol: 41,579"><div class="ladder-bar-wrap right"><div class="lbar-oi call" style="width:33.7%"></div><div class="lbar-vol call" style="width:46.4%"></div></div><span class="ladder-num"><span class="lnum-vol">41.6k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">30.2k</span></span></div></div><div class="ladder-row spike-row spike-row-call">  <div class="ladder-side left"></div>  <div class="ladder-mid mono">    <div><b>$167.5</b> <span class="sub" style="font-size:11px;">(+2.9%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"><span class='pill pill-green' style='font-size:10px;padding:0 4px;'>C 5.5x</span></div>  </div>  <div class="ladder-side right" title="Call OI: 3,596 | Call Today Vol: 19,813"><div class="ladder-bar-wrap right"><div class="lbar-oi call" style="width:4.0%"></div><div class="lbar-vol call" style="width:22.1%"></div></div><span class="ladder-num"><span class="lnum-vol">19.8k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">3.6k</span></span></div></div><div class="ladder-row spike-row spike-row-call">  <div class="ladder-side left"></div>  <div class="ladder-mid mono">    <div><b>$165</b> <span class="sub" style="font-size:11px;">(+1.3%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"><span class='pill pill-green' style='font-size:10px;padding:0 4px;'>C 1.6x</span></div>  </div>  <div class="ladder-side right" title="Call OI: 12,077 | Call Today Vol: 19,873"><div class="ladder-bar-wrap right"><div class="lbar-oi call" style="width:13.5%"></div><div class="lbar-vol call" style="width:22.2%"></div></div><span class="ladder-num"><span class="lnum-vol">19.9k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">12.1k</span></span></div></div><div class="ladder-ref spot-ref"><span>&mdash; SPOT PRICE $162.85 &mdash;</span></div><div class="ladder-row spike-row spike-row-call">  <div class="ladder-side left" title="Put OI: 40,810 | Put Today Vol: 25,859"><span class="ladder-num"><span class="lnum-vol">25.9k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">40.8k</span></span><div class="ladder-bar-wrap left"><div class="lbar-oi put" style="width:45.6%"></div><div class="lbar-vol put" style="width:28.9%"></div></div></div>  <div class="ladder-mid mono">    <div><b>$160</b> <span class="sub" style="font-size:11px;">(-1.8%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"><span class='pill pill-green' style='font-size:10px;padding:0 4px;'>C 1.9x</span></div>  </div>  <div class="ladder-side right" title="Call OI: 10,648 | Call Today Vol: 19,832"><div class="ladder-bar-wrap right"><div class="lbar-oi call" style="width:11.9%"></div><div class="lbar-vol call" style="width:22.1%"></div></div><span class="ladder-num"><span class="lnum-vol">19.8k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">10.6k</span></span></div></div><div class="ladder-row">  <div class="ladder-side left" title="Put OI: 42,115 | Put Today Vol: 25,745"><span class="ladder-num"><span class="lnum-vol">25.7k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">42.1k</span></span><div class="ladder-bar-wrap left"><div class="lbar-oi put" style="width:47.0%"></div><div class="lbar-vol put" style="width:28.8%"></div></div></div>  <div class="ladder-mid mono">    <div><b>$150</b> <span class="sub" style="font-size:11px;">(-7.9%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"></div>  </div>  <div class="ladder-side right"></div></div><div class="ladder-row spike-row spike-row-put">  <div class="ladder-side left" title="Put OI: 18,660 | Put Today Vol: 21,230"><span class="ladder-num"><span class="lnum-vol">21.2k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">18.7k</span></span><div class="ladder-bar-wrap left"><div class="lbar-oi put" style="width:20.8%"></div><div class="lbar-vol put" style="width:23.7%"></div></div></div>  <div class="ladder-mid mono">    <div><b>$140</b> <span class="sub" style="font-size:11px;">(-14.0%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"><span class='pill pill-red' style='font-size:10px;padding:0 4px;'>P 1.1x</span></div>  </div>  <div class="ladder-side right"></div></div></div>  <div class="ladder-pane" data-ladder-pane="back"><div class="ladder-row">  <div class="ladder-side left"></div>  <div class="ladder-mid mono">    <div><b>$280</b> <span class="sub" style="font-size:11px;">(+71.9%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"></div>  </div>  <div class="ladder-side right" title="Call OI: 17,588 | Call Today Vol: 239"><div class="ladder-bar-wrap right"><div class="lbar-oi call" style="width:25.6%"></div><div class="lbar-vol call" style="width:0.3%"></div></div><span class="ladder-num"><span class="lnum-vol">239</span> <span class="lnum-sep">/</span> <span class="lnum-oi">17.6k</span></span></div></div><div class="ladder-row spike-row spike-row-call">  <div class="ladder-side left"></div>  <div class="ladder-mid mono">    <div><b>$240</b> <span class="sub" style="font-size:11px;">(+47.4%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"><span class='pill pill-green' style='font-size:10px;padding:0 4px;'>C 7.0x</span></div>  </div>  <div class="ladder-side right" title="Call OI: 7,676 | Call Today Vol: 54,073"><div class="ladder-bar-wrap right"><div class="lbar-oi call" style="width:11.2%"></div><div class="lbar-vol call" style="width:78.6%"></div></div><span class="ladder-num"><span class="lnum-vol">54.1k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">7.7k</span></span></div></div><div class="ladder-row">  <div class="ladder-side left"></div>  <div class="ladder-mid mono">    <div><b>$210</b> <span class="sub" style="font-size:11px;">(+29.0%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"></div>  </div>  <div class="ladder-side right" title="Call OI: 30,889 | Call Today Vol: 2,106"><div class="ladder-bar-wrap right"><div class="lbar-oi call" style="width:44.9%"></div><div class="lbar-vol call" style="width:3.1%"></div></div><span class="ladder-num"><span class="lnum-vol">2.1k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">30.9k</span></span></div></div><div class="ladder-row">  <div class="ladder-side left"></div>  <div class="ladder-mid mono">    <div><b>$200</b> <span class="sub" style="font-size:11px;">(+22.8%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"></div>  </div>  <div class="ladder-side right" title="Call OI: 20,394 | Call Today Vol: 7,846"><div class="ladder-bar-wrap right"><div class="lbar-oi call" style="width:29.7%"></div><div class="lbar-vol call" style="width:11.4%"></div></div><span class="ladder-num"><span class="lnum-vol">7.8k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">20.4k</span></span></div></div><div class="ladder-row">  <div class="ladder-side left"></div>  <div class="ladder-mid mono">    <div><b>$185</b> <span class="sub" style="font-size:11px;">(+13.6%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"></div>  </div>  <div class="ladder-side right" title="Call OI: 55,333 | Call Today Vol: 54,602"><div class="ladder-bar-wrap right"><div class="lbar-oi call" style="width:80.5%"></div><div class="lbar-vol call" style="width:79.4%"></div></div><span class="ladder-num"><span class="lnum-vol">54.6k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">55.3k</span></span></div></div><div class="ladder-row">  <div class="ladder-side left" title="Put OI: 23,318 | Put Today Vol: 564"><span class="ladder-num"><span class="lnum-vol">564</span> <span class="lnum-sep">/</span> <span class="lnum-oi">23.3k</span></span><div class="ladder-bar-wrap left"><div class="lbar-oi put" style="width:33.9%"></div><div class="lbar-vol put" style="width:0.8%"></div></div></div>  <div class="ladder-mid mono">    <div><b>$180</b> <span class="sub" style="font-size:11px;">(+10.5%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"></div>  </div>  <div class="ladder-side right"></div></div><div class="ladder-row">  <div class="ladder-side left" title="Put OI: 49,304 | Put Today Vol: 1,357"><span class="ladder-num"><span class="lnum-vol">1.4k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">49.3k</span></span><div class="ladder-bar-wrap left"><div class="lbar-oi put" style="width:71.7%"></div><div class="lbar-vol put" style="width:2.0%"></div></div></div>  <div class="ladder-mid mono">    <div><b>$165</b> <span class="sub" style="font-size:11px;">(+1.3%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"></div>  </div>  <div class="ladder-side right"></div></div><div class="ladder-ref spot-ref"><span>&mdash; SPOT PRICE $162.85 &mdash;</span></div><div class="ladder-row">  <div class="ladder-side left" title="Put OI: 23,301 | Put Today Vol: 2,475"><span class="ladder-num"><span class="lnum-vol">2.5k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">23.3k</span></span><div class="ladder-bar-wrap left"><div class="lbar-oi put" style="width:33.9%"></div><div class="lbar-vol put" style="width:3.6%"></div></div></div>  <div class="ladder-mid mono">    <div><b>$150</b> <span class="sub" style="font-size:11px;">(-7.9%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"></div>  </div>  <div class="ladder-side right"></div></div><div class="ladder-row">  <div class="ladder-side left" title="Put OI: 68,778 | Put Today Vol: 5,210"><span class="ladder-num"><span class="lnum-vol">5.2k</span> <span class="lnum-sep">/</span> <span class="lnum-oi">68.8k</span></span><div class="ladder-bar-wrap left"><div class="lbar-oi put" style="width:100.0%"></div><div class="lbar-vol put" style="width:7.6%"></div></div></div>  <div class="ladder-mid mono">    <div><b>$120</b> <span class="sub" style="font-size:11px;">(-26.3%)</span></div>    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;"></div>  </div>  <div class="ladder-side right"></div></div></div>  </div>
+      </div>
+      <div>
+        <div class="sweet-spot-box">
+          <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px;">
+            <b>DEALER SWEET-SPOT (2026-11-20)</b>
+            <span class="sub">Lowest total cash payout = Friday Pin magnet.</span>
+          </div>
+          <div class="table-wrap">
+            <table class="chain-table sweet-spot-table">
+              <thead><tr><th>Strike</th><th>Call Payout</th><th>Put Payout</th><th>Total Payout</th></tr></thead>
+              <tbody><tr class=''><td class='mono'><b>$182.5</b></td><td class='mono'>$249.2M</td><td class='mono'>$749.8M</td><td class='mono'><div class='sweet-tot-cell'><b class='sweet-tot-val'>$999.0M</b><div class='bar-track stacked sweet-bar'><div class='bar-fill up-bg' style='width:24.9%'></div><div class='bar-fill dn-bg' style='width:75.1%'></div></div></div></td></tr><tr class=''><td class='mono'><b>$185.0</b></td><td class='mono'>$306.2M</td><td class='mono'>$661.4M</td><td class='mono'><div class='sweet-tot-cell'><b class='sweet-tot-val'>$967.6M</b><div class='bar-track stacked sweet-bar'><div class='bar-fill up-bg' style='width:30.7%'></div><div class='bar-fill dn-bg' style='width:66.2%'></div></div></div></td></tr><tr class=''><td class='mono'><b>$187.5</b></td><td class='mono'>$370.9M</td><td class='mono'>$576.9M</td><td class='mono'><div class='sweet-tot-cell'><b class='sweet-tot-val'>$947.9M</b><div class='bar-track stacked sweet-bar'><div class='bar-fill up-bg' style='width:37.1%'></div><div class='bar-fill dn-bg' style='width:57.8%'></div></div></div></td></tr><tr class='hot'><td class='mono'><b>$190.0</b> <span class='pill pill-amber' title='Pin Magnet' aria-label='Pin Magnet'>&#129522;</span></td><td class='mono'>$439.0M</td><td class='mono'>$492.6M</td><td class='mono'><div class='sweet-tot-cell'><b class='sweet-tot-val'>$931.6M</b><div class='bar-track stacked sweet-bar'><div class='bar-fill pin' style='width:93.3%'></div></div></div></td></tr><tr class=''><td class='mono'><b>$192.5</b></td><td class='mono'>$515.0M</td><td class='mono'>$430.6M</td><td class='mono'><div class='sweet-tot-cell'><b class='sweet-tot-val'>$945.6M</b><div class='bar-track stacked sweet-bar'><div class='bar-fill up-bg' style='width:51.6%'></div><div class='bar-fill dn-bg' style='width:43.1%'></div></div></div></td></tr><tr class=''><td class='mono'><b>$195.0</b></td><td class='mono'>$593.1M</td><td class='mono'>$369.3M</td><td class='mono'><div class='sweet-tot-cell'><b class='sweet-tot-val'>$962.4M</b><div class='bar-track stacked sweet-bar'><div class='bar-fill up-bg' style='width:59.4%'></div><div class='bar-fill dn-bg' style='width:37.0%'></div></div></div></td></tr><tr class=''><td class='mono'><b>$197.5</b></td><td class='mono'>$675.6M</td><td class='mono'>$313.9M</td><td class='mono'><div class='sweet-tot-cell'><b class='sweet-tot-val'>$989.5M</b><div class='bar-track stacked sweet-bar'><div class='bar-fill up-bg' style='width:67.6%'></div><div class='bar-fill dn-bg' style='width:31.4%'></div></div></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="otm-chain-box" id="otm-sub-dollar-chain">  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px;">    <b>OTM SUB-$1.00 OPTIONS CHAIN (2026-11-20)</b>  </div>  <div class="otm-chain-grid"><div><div style='font-size:11px;font-weight:700;color:#f87171;margin-bottom:2px;letter-spacing:0.3px;'>OTM PUTS • Strike &lt; Spot</div><div class='table-wrap'><table class='chain-table otm-sub-table'><thead><tr><th>Strike</th><th>Price</th><th>Bid/Ask</th><th>Vol/OI</th><th>IV</th></tr></thead><tbody><tr class="otm-best-row"><td><b>$139</b> <span class='sub'>(-14%)</span></td><td style='color:#f87171;'><b>$0.96</b></td><td title="Spread slippage: 5.2%"><span style="color:#22d3ee;font-weight:600;">0.94/0.99</span></td><td><span style="color:#10b981;font-weight:700;">1.3k/644</span></td><td style="color:#22d3ee;font-weight:700;" title="Median Sub-$1 IV: 108">108</td></tr><tr><td><b>$138</b> <span class='sub'>(-15%)</span></td><td style='color:#f87171;'><b>$0.89</b></td><td title="Spread slippage: 4.6%"><span style="color:#10b981;font-weight:600;">0.85/0.89</span></td><td><span style="color:#10b981;font-weight:700;">1.3k/449</span></td><td style="color:#22d3ee;font-weight:700;" title="Median Sub-$1 IV: 108">109</td></tr><tr><td><b>$137</b> <span class='sub'>(-15%)</span></td><td style='color:#f87171;'><b>$0.78</b></td><td title="Spread slippage: 5.1%"><span style="color:#22d3ee;font-weight:600;">0.77/0.81</span></td><td>532/476</td><td style="color:#22d3ee;font-weight:700;" title="Median Sub-$1 IV: 108">110</td></tr><tr><td><b>$136</b> <span class='sub'>(-16%)</span></td><td style='color:#f87171;'><b>$0.72</b></td><td title="Spread slippage: 5.6%"><span style="color:#22d3ee;font-weight:600;">0.69/0.73</span></td><td><span style="color:#10b981;font-weight:700;">1.8k/398</span></td><td style="color:#22d3ee;font-weight:700;" title="Median Sub-$1 IV: 108">110</td></tr><tr><td><b>$135</b> <span class='sub'>(-17%)</span></td><td style='color:#f87171;'><b>$0.64</b></td><td title="Spread slippage: 6.3%"><span style="color:#22d3ee;font-weight:600;">0.62/0.66</span></td><td>8.3k/12.3k</td><td style="color:#fb923c;font-weight:700;" title="Median Sub-$1 IV: 108">111</td></tr><tr><td><b>$134</b> <span class='sub'>(-17%)</span></td><td style='color:#f87171;'><b>$0.58</b></td><td title="Spread slippage: 6.9%"><span style="color:#22d3ee;font-weight:600;">0.56/0.60</span></td><td><span style="color:#10b981;font-weight:700;">1.5k/349</span></td><td style="color:#fb923c;font-weight:700;" title="Median Sub-$1 IV: 108">112</td></tr><tr><td><b>$133</b> <span class='sub'>(-18%)</span></td><td style='color:#f87171;'><b>$0.54</b></td><td title="Spread slippage: 7.5%"><span style="color:#22d3ee;font-weight:600;">0.51/0.55</span></td><td>821/1.4k</td><td style="color:#fb923c;font-weight:700;" title="Median Sub-$1 IV: 108">113</td></tr><tr><td><b>$132</b> <span class='sub'>(-18%)</span></td><td style='color:#f87171;'><b>$0.46</b></td><td title="Spread slippage: 8.3%"><span style="color:#22d3ee;font-weight:600;">0.46/0.50</span></td><td><span style="color:#64748b;">385/497</span></td><td style="color:#f43f5e;font-weight:700;" title="Median Sub-$1 IV: 108">114</td></tr></tbody></table></div></div><div><div style='font-size:11px;font-weight:700;color:#34d399;margin-bottom:2px;letter-spacing:0.3px;'>OTM CALLS • Strike &gt; Spot</div><div class='table-wrap'><table class='chain-table otm-sub-table'><thead><tr><th>Strike</th><th>Price</th><th>Bid/Ask</th><th>Vol/OI</th><th>IV</th></tr></thead><tbody><tr class="otm-best-row"><td><b>$190</b> <span class='sub'>(+16%)</span></td><td style='color:#34d399;'><b>$0.95</b></td><td title="Spread slippage: 4.2%"><span style="color:#10b981;font-weight:600;">0.94/0.98</span></td><td><b style="color:#22d3ee;">26.1k/31.9k</b></td><td style="color:#10b981;font-weight:700;" title="Median Sub-$1 IV: 108">102</td></tr><tr><td><b>$192.5</b> <span class='sub'>(+18%)</span></td><td style='color:#34d399;'><b>$0.76</b></td><td title="Spread slippage: 5.2%"><span style="color:#22d3ee;font-weight:600;">0.75/0.79</span></td><td>6.4k/7.9k</td><td style="color:#10b981;font-weight:700;" title="Median Sub-$1 IV: 108">102</td></tr><tr><td><b>$195</b> <span class='sub'>(+19%)</span></td><td style='color:#34d399;'><b>$0.62</b></td><td title="Spread slippage: 8.0%"><span style="color:#22d3ee;font-weight:600;">0.60/0.65</span></td><td>9.0k/18.0k</td><td style="color:#10b981;font-weight:700;" title="Median Sub-$1 IV: 108">102</td></tr><tr><td><b>$197.5</b> <span class='sub'>(+21%)</span></td><td style='color:#34d399;'><b>$0.51</b></td><td title="Spread slippage: 5.7%"><span style="color:#22d3ee;font-weight:600;">0.51/0.54</span></td><td>3.2k/3.4k</td><td style="color:#10b981;font-weight:700;" title="Median Sub-$1 IV: 108">104</td></tr><tr><td><b>$200</b> <span class='sub'>(+22%)</span></td><td style='color:#34d399;'><b>$0.44</b></td><td title="Spread slippage: 2.3%"><span style="color:#10b981;font-weight:600;">0.43/0.44</span></td><td><b style="color:#22d3ee;">20.7k/59.8k</b></td><td style="color:#10b981;font-weight:700;" title="Median Sub-$1 IV: 108">105</td></tr><tr><td><b>$202.5</b> <span class='sub'>(+24%)</span></td><td style='color:#34d399;'><b>$0.37</b></td><td title="Spread slippage: 8.2%"><span style="color:#22d3ee;font-weight:600;">0.35/0.38</span></td><td>3.3k/4.6k</td><td style="color:#10b981;font-weight:700;" title="Median Sub-$1 IV: 108">106</td></tr><tr><td><b>$205</b> <span class='sub'>(+25%)</span></td><td style='color:#34d399;'><b>$0.30</b></td><td title="Spread slippage: 12.5%"><span style="color:#fb923c;font-weight:600;">0.30/0.34</span></td><td>4.0k/24.5k</td><td style="color:#22d3ee;font-weight:700;" title="Median Sub-$1 IV: 108">108</td></tr><tr><td><b>$207.5</b> <span class='sub'>(+27%)</span></td><td style='color:#34d399;'><b>$0.30</b></td><td title="Spread slippage: 14.3%"><span style="color:#fb923c;font-weight:600;">0.26/0.30</span></td><td>1.7k/5.9k</td><td style="color:#22d3ee;font-weight:700;" title="Median Sub-$1 IV: 108">110</td></tr></tbody></table></div></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box lazy-sec" id="sec-trend">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;">
+      <h2 style="margin:0;">MACRO TRENDLINE &amp; SD CHANNELS <span class="pill pill-muted" style="margin-left:4px;">2&ndash;3Y Weekly Candlesticks</span></h2>
+      <div class="legend-pills" style="margin-top:0;">
+        <span class="lpill active"><span class="ldot" style="background:#34d399"></span>+1 sd / -1 sd</span>
+        <span class="lpill active"><span class="ldot" style="background:#facc15"></span>+2 sd / -2 sd</span>
+        <span class="lpill active"><span class="ldot" style="background:#fb923c"></span>+3 sd / -3 sd</span>
+      </div>
+    </div>
+    <svg class="mc-svg" id="sd-channel-svg" viewBox="0 0 960 390" style="width:100%;height:auto;border:1px solid #262626;border-radius:6px;margin-top:6px;display:block;"><defs>  <linearGradient id="sdBgGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#050505"/><stop offset="100%" stop-color="#000000"/></linearGradient>  <clipPath id="sdPlotClip"><rect x="58" y="16" width="846" height="338"/></clipPath></defs><rect x="0" y="0" width="960" height="390" rx="6" fill="url(#sdBgGrad)"/><rect x="58" y="16" width="846" height="338" fill="#050505" stroke="#262626" stroke-width="1"/><line x1="58" y1="354.0" x2="904" y2="354.0" stroke="#161616" stroke-width="1"/><text x="51" y="357.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$3</text><line x1="58" y1="286.4" x2="904" y2="286.4" stroke="#161616" stroke-width="1"/><text x="51" y="290.2" text-anchor="end" fill="#b8b8b8" font-size="11.5">$65</text><line x1="58" y1="218.8" x2="904" y2="218.8" stroke="#161616" stroke-width="1"/><text x="51" y="222.6" text-anchor="end" fill="#b8b8b8" font-size="11.5">$127</text><line x1="58" y1="151.2" x2="904" y2="151.2" stroke="#161616" stroke-width="1"/><text x="51" y="155.0" text-anchor="end" fill="#b8b8b8" font-size="11.5">$190</text><line x1="58" y1="83.6" x2="904" y2="83.6" stroke="#161616" stroke-width="1"/><text x="51" y="87.4" text-anchor="end" fill="#b8b8b8" font-size="11.5">$252</text><line x1="58" y1="16.0" x2="904" y2="16.0" stroke="#161616" stroke-width="1"/><text x="51" y="19.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$314</text><line x1="68.0" y1="16" x2="68.0" y2="354" stroke="#121212" stroke-width="1"/><line x1="68.0" y1="354" x2="68.0" y2="358" stroke="#334155" stroke-width="1"/><text x="68.0" y="372" text-anchor="middle" fill="#b8b8b8" font-size="11">Nov &#x27;23</text><line x1="194.7" y1="16" x2="194.7" y2="354" stroke="#121212" stroke-width="1"/><line x1="194.7" y1="354" x2="194.7" y2="358" stroke="#334155" stroke-width="1"/><text x="194.7" y="372" text-anchor="middle" fill="#b8b8b8" font-size="11">May &#x27;24</text><line x1="321.3" y1="16" x2="321.3" y2="354" stroke="#121212" stroke-width="1"/><line x1="321.3" y1="354" x2="321.3" y2="358" stroke="#334155" stroke-width="1"/><text x="321.3" y="372" text-anchor="middle" fill="#b8b8b8" font-size="11">Nov &#x27;24</text><line x1="448.0" y1="16" x2="448.0" y2="354" stroke="#121212" stroke-width="1"/><line x1="448.0" y1="354" x2="448.0" y2="358" stroke="#334155" stroke-width="1"/><text x="448.0" y="372" text-anchor="middle" fill="#b8b8b8" font-size="11">May &#x27;25</text><line x1="574.7" y1="16" x2="574.7" y2="354" stroke="#121212" stroke-width="1"/><line x1="574.7" y1="354" x2="574.7" y2="358" stroke="#334155" stroke-width="1"/><text x="574.7" y="372" text-anchor="middle" fill="#b8b8b8" font-size="11">Nov &#x27;25</text><line x1="701.3" y1="16" x2="701.3" y2="354" stroke="#121212" stroke-width="1"/><line x1="701.3" y1="354" x2="701.3" y2="358" stroke="#334155" stroke-width="1"/><text x="701.3" y="372" text-anchor="middle" fill="#b8b8b8" font-size="11">May &#x27;26</text><line x1="828.0" y1="16" x2="828.0" y2="354" stroke="#121212" stroke-width="1"/><line x1="828.0" y1="354" x2="828.0" y2="358" stroke="#334155" stroke-width="1"/><text x="828.0" y="372" text-anchor="middle" fill="#b8b8b8" font-size="11">Nov &#x27;26</text><g clip-path="url(#sdPlotClip)"><polygon points="58.0,226.8 904.0,31.4 904.0,50.0 58.0,245.4" fill="#f97316" fill-opacity="0.06"/><polygon points="58.0,320.0 904.0,124.6 904.0,143.2 58.0,338.6" fill="#f97316" fill-opacity="0.06"/><polygon points="58.0,245.4 904.0,50.0 904.0,68.6 58.0,264.1" fill="#eab308" fill-opacity="0.07"/><polygon points="58.0,301.4 904.0,105.9 904.0,124.6 58.0,320.0" fill="#eab308" fill-opacity="0.07"/><polygon points="58.0,264.1 904.0,68.6 904.0,105.9 58.0,301.4" fill="#10b981" fill-opacity="0.09"/><line class="sd-trendline" x1="58.0" y1="282.7" x2="904.0" y2="87.3" stroke="#e2e8f0" stroke-width="1.6" stroke-dasharray="6,4" opacity="0.90"/><line class="sd-rail" x1="58.0" y1="226.8" x2="904.0" y2="31.4" stroke="#fb923c" stroke-width="1.4" stroke-dasharray="4,3" opacity="0.92"/><line class="sd-rail" x1="58.0" y1="245.4" x2="904.0" y2="50.0" stroke="#facc15" stroke-width="1.4" stroke-dasharray="5,3" opacity="0.92"/><line class="sd-rail" x1="58.0" y1="264.1" x2="904.0" y2="68.6" stroke="#34d399" stroke-width="1.6" opacity="0.92"/><line class="sd-rail" x1="58.0" y1="301.4" x2="904.0" y2="105.9" stroke="#34d399" stroke-width="1.6" opacity="0.92"/><line class="sd-rail" x1="58.0" y1="320.0" x2="904.0" y2="124.6" stroke="#facc15" stroke-width="1.4" stroke-dasharray="5,3" opacity="0.92"/><line class="sd-rail" x1="58.0" y1="338.6" x2="904.0" y2="143.2" stroke="#fb923c" stroke-width="1.4" stroke-dasharray="4,3" opacity="0.92"/><g class="sd-candle"><title>2023-11-17 | O: $49.53 | H: $49.81 | L: $48.06 | C: $49.15</title><line class="candle-wick" x1="68.0" y1="302.9" x2="68.0" y2="304.8" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="66.4" y="302.8" width="3.2" height="1.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2023-11-24 | O: $49.17 | H: $50.40 | L: $47.55 | C: $47.63</title><line class="candle-wick" x1="72.9" y1="302.3" x2="72.9" y2="305.4" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="71.3" y="303.6" width="3.2" height="1.7" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2023-12-01 | O: $47.66 | H: $48.62 | L: $46.05 | C: $46.63</title><line class="candle-wick" x1="77.7" y1="304.2" x2="77.7" y2="307.0" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="76.1" y="305.6" width="3.2" height="1.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2023-12-08 | O: $45.94 | H: $47.60 | L: $44.88 | C: $47.37</title><line class="candle-wick" x1="82.6" y1="305.3" x2="82.6" y2="308.3" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="81.0" y="304.8" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2023-12-15 | O: $47.35 | H: $49.26 | L: $45.70 | C: $48.75</title><line class="candle-wick" x1="87.5" y1="303.5" x2="87.5" y2="307.4" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="85.9" y="303.3" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2023-12-22 | O: $49.26 | H: $50.29 | L: $47.96 | C: $48.69</title><line class="candle-wick" x1="92.4" y1="302.4" x2="92.4" y2="304.9" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="90.8" y="303.3" width="3.2" height="1.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2023-12-29 | O: $48.83 | H: $49.85 | L: $48.61 | C: $49.38</title><line class="candle-wick" x1="97.2" y1="302.9" x2="97.2" y2="304.2" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="95.6" y="302.6" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-01-05 | O: $49.10 | H: $49.40 | L: $47.18 | C: $48.96</title><line class="candle-wick" x1="102.1" y1="303.4" x2="102.1" y2="305.8" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="100.5" y="303.0" width="3.2" height="1.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-01-12 | O: $49.37 | H: $55.19 | L: $49.34 | C: $54.55</title><line class="candle-wick" x1="107.0" y1="297.1" x2="107.0" y2="303.4" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="105.4" y="297.8" width="3.2" height="5.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-01-19 | O: $54.86 | H: $59.33 | L: $54.58 | C: $59.32</title><line class="candle-wick" x1="111.8" y1="292.6" x2="111.8" y2="297.8" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="110.2" y="292.6" width="3.2" height="4.8" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-01-26 | O: $59.88 | H: $62.67 | L: $58.42 | C: $60.85</title><line class="candle-wick" x1="116.7" y1="289.0" x2="116.7" y2="293.6" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="115.1" y="290.2" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-02-02 | O: $61.05 | H: $66.41 | L: $60.52 | C: $65.97</title><line class="candle-wick" x1="121.6" y1="284.9" x2="121.6" y2="291.3" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="120.0" y="285.4" width="3.2" height="5.3" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-02-09 | O: $68.03 | H: $71.98 | L: $66.11 | C: $71.92</title><line class="candle-wick" x1="126.5" y1="278.9" x2="126.5" y2="285.2" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="124.9" y="278.9" width="3.2" height="4.3" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-02-16 | O: $72.39 | H: $74.40 | L: $69.42 | C: $72.40</title><line class="candle-wick" x1="131.3" y1="276.3" x2="131.3" y2="281.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="129.7" y="277.6" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-02-23 | O: $71.74 | H: $82.16 | L: $66.06 | C: $78.59</title><line class="candle-wick" x1="136.2" y1="267.8" x2="136.2" y2="285.3" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="134.6" y="271.7" width="3.2" height="7.4" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-03-01 | O: $79.47 | H: $82.06 | L: $76.90 | C: $82.04</title><line class="candle-wick" x1="141.1" y1="267.9" x2="141.1" y2="273.5" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="139.5" y="268.0" width="3.2" height="2.8" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-03-08 | O: $83.89 | H: $97.12 | L: $83.18 | C: $87.28</title><line class="candle-wick" x1="145.9" y1="251.6" x2="145.9" y2="266.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="144.3" y="262.3" width="3.2" height="3.7" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-03-15 | O: $86.18 | H: $91.70 | L: $83.93 | C: $87.59</title><line class="candle-wick" x1="150.8" y1="257.5" x2="150.8" y2="265.9" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="149.2" y="261.2" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-03-22 | O: $90.13 | H: $94.51 | L: $84.77 | C: $94.02</title><line class="candle-wick" x1="155.7" y1="254.4" x2="155.7" y2="265.0" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="154.1" y="255.0" width="3.2" height="4.2" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-03-28 | O: $93.67 | H: $96.49 | L: $88.87 | C: $90.10</title><line class="candle-wick" x1="160.6" y1="252.3" x2="160.6" y2="260.6" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="159.0" y="255.4" width="3.2" height="3.8" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-04-05 | O: $90.04 | H: $91.96 | L: $85.64 | C: $87.76</title><line class="candle-wick" x1="165.4" y1="257.2" x2="165.4" y2="264.1" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="163.8" y="259.3" width="3.2" height="2.5" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-04-12 | O: $88.45 | H: $90.48 | L: $82.79 | C: $87.94</title><line class="candle-wick" x1="170.3" y1="258.8" x2="170.3" y2="267.2" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="168.7" y="260.8" width="3.2" height="1.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-04-19 | O: $88.84 | H: $90.36 | L: $75.39 | C: $75.98</title><line class="candle-wick" x1="175.2" y1="258.9" x2="175.2" y2="275.2" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="173.6" y="260.6" width="3.2" height="13.9" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-04-26 | O: $77.88 | H: $88.08 | L: $76.18 | C: $87.49</title><line class="candle-wick" x1="180.1" y1="261.4" x2="180.1" y2="274.3" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="178.5" y="262.1" width="3.2" height="10.4" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-05-03 | O: $87.35 | H: $89.03 | L: $81.02 | C: $88.54</title><line class="candle-wick" x1="184.9" y1="260.4" x2="184.9" y2="269.1" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="183.3" y="260.1" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-05-10 | O: $89.14 | H: $91.96 | L: $87.98 | C: $89.62</title><line class="candle-wick" x1="189.8" y1="257.2" x2="189.8" y2="261.5" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="188.2" y="258.9" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-05-17 | O: $90.22 | H: $95.55 | L: $88.28 | C: $92.22</title><line class="candle-wick" x1="194.7" y1="253.3" x2="194.7" y2="261.2" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="193.1" y="256.9" width="3.2" height="2.2" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-05-24 | O: $93.48 | H: $106.17 | L: $92.92 | C: $106.17</title><line class="candle-wick" x1="199.5" y1="241.8" x2="199.5" y2="256.2" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="197.9" y="241.8" width="3.2" height="13.8" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-05-31 | O: $109.93 | H: $115.49 | L: $106.64 | C: $109.32</title><line class="candle-wick" x1="204.4" y1="231.7" x2="204.4" y2="241.3" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="202.8" y="237.6" width="3.2" height="1.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-06-07 | O: $113.30 | H: $125.23 | L: $111.68 | C: $120.54</title><line class="candle-wick" x1="209.3" y1="221.1" x2="209.3" y2="235.8" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="207.7" y="226.2" width="3.2" height="7.9" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-06-14 | O: $120.03 | H: $132.47 | L: $116.68 | C: $131.52</title><line class="candle-wick" x1="214.2" y1="213.3" x2="214.2" y2="230.4" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="212.6" y="214.3" width="3.2" height="12.5" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-06-21 | O: $132.62 | H: $140.37 | L: $123.96 | C: $126.22</title><line class="candle-wick" x1="219.0" y1="204.7" x2="219.0" y2="222.5" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="217.4" y="213.1" width="3.2" height="7.0" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-06-28 | O: $122.90 | H: $127.77 | L: $117.71 | C: $123.20</title><line class="candle-wick" x1="223.9" y1="218.4" x2="223.9" y2="229.3" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="222.3" y="222.5" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-07-05 | O: $123.13 | H: $128.49 | L: $118.50 | C: $125.48</title><line class="candle-wick" x1="228.8" y1="217.6" x2="228.8" y2="228.4" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="227.2" y="220.9" width="3.2" height="2.5" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-07-12 | O: $127.14 | H: $135.77 | L: $126.69 | C: $128.88</title><line class="candle-wick" x1="233.6" y1="209.7" x2="233.6" y2="219.5" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="232.0" y="217.2" width="3.2" height="1.9" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-07-19 | O: $130.20 | H: $131.03 | L: $116.24 | C: $117.60</title><line class="candle-wick" x1="238.5" y1="214.8" x2="238.5" y2="230.9" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="236.9" y="215.7" width="3.2" height="13.7" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-07-26 | O: $120.02 | H: $124.35 | L: $106.01 | C: $112.75</title><line class="candle-wick" x1="243.4" y1="222.1" x2="243.4" y2="242.0" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="241.8" y="226.8" width="3.2" height="7.9" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-08-02 | O: $113.38 | H: $119.83 | L: $101.09 | C: $106.97</title><line class="candle-wick" x1="248.3" y1="227.0" x2="248.3" y2="247.3" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="246.7" y="234.0" width="3.2" height="6.9" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-08-09 | O: $91.81 | H: $108.50 | L: $90.44 | C: $104.46</title><line class="candle-wick" x1="253.1" y1="239.3" x2="253.1" y2="258.9" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="251.5" y="243.7" width="3.2" height="13.7" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-08-16 | O: $106.03 | H: $124.65 | L: $105.97 | C: $124.24</title><line class="candle-wick" x1="258.0" y1="221.8" x2="258.0" y2="242.0" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="256.4" y="222.2" width="3.2" height="19.8" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-08-23 | O: $123.94 | H: $130.39 | L: $122.76 | C: $129.01</title><line class="candle-wick" x1="262.9" y1="215.5" x2="262.9" y2="223.8" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="261.3" y="217.0" width="3.2" height="5.5" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-08-30 | O: $129.21 | H: $130.90 | L: $116.39 | C: $119.04</title><line class="candle-wick" x1="267.7" y1="215.0" x2="267.7" y2="230.7" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="266.1" y="216.8" width="3.2" height="11.0" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-09-06 | O: $115.69 | H: $115.89 | L: $100.67 | C: $102.55</title><line class="candle-wick" x1="272.6" y1="231.3" x2="272.6" y2="247.8" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="271.0" y="231.5" width="3.2" height="14.2" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-09-13 | O: $104.59 | H: $120.47 | L: $103.40 | C: $118.78</title><line class="candle-wick" x1="277.5" y1="226.3" x2="277.5" y2="244.8" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="275.9" y="228.1" width="3.2" height="15.4" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-09-20 | O: $116.48 | H: $119.34 | L: $112.92 | C: $115.69</title><line class="candle-wick" x1="282.4" y1="227.5" x2="282.4" y2="234.5" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="280.8" y="230.7" width="3.2" height="1.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-09-27 | O: $116.24 | H: $127.33 | L: $114.55 | C: $121.08</title><line class="candle-wick" x1="287.2" y1="218.9" x2="287.2" y2="232.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="285.6" y="225.6" width="3.2" height="5.3" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-10-04 | O: $117.99 | H: $124.71 | L: $114.83 | C: $124.59</title><line class="candle-wick" x1="292.1" y1="221.7" x2="292.1" y2="232.4" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="290.5" y="221.8" width="3.2" height="7.2" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-10-11 | O: $124.66 | H: $135.42 | L: $124.62 | C: $134.44</title><line class="candle-wick" x1="297.0" y1="210.1" x2="297.0" y2="221.8" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="295.4" y="211.1" width="3.2" height="10.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-10-18 | O: $136.10 | H: $140.51 | L: $128.40 | C: $137.63</title><line class="candle-wick" x1="301.8" y1="204.6" x2="301.8" y2="217.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="300.2" y="207.7" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-10-25 | O: $137.76 | H: $144.03 | L: $137.09 | C: $141.16</title><line class="candle-wick" x1="306.7" y1="200.7" x2="306.7" y2="208.3" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="305.1" y="203.9" width="3.2" height="3.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-11-01 | O: $142.62 | H: $142.76 | L: $131.76 | C: $135.04</title><line class="candle-wick" x1="311.6" y1="202.1" x2="311.6" y2="214.0" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="310.0" y="202.3" width="3.2" height="8.2" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-11-08 | O: $136.84 | H: $149.37 | L: $135.21 | C: $147.23</title><line class="candle-wick" x1="316.5" y1="194.9" x2="316.5" y2="210.3" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="314.9" y="197.3" width="3.2" height="11.2" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-11-15 | O: $148.28 | H: $149.25 | L: $139.71 | C: $141.60</title><line class="candle-wick" x1="321.3" y1="195.1" x2="321.3" y2="205.4" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="319.7" y="196.1" width="3.2" height="7.3" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-11-22 | O: $139.13 | H: $152.48 | L: $136.78 | C: $141.57</title><line class="candle-wick" x1="326.2" y1="191.6" x2="326.2" y2="208.6" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="324.6" y="203.4" width="3.2" height="2.7" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-11-29 | O: $141.61 | H: $141.67 | L: $131.45 | C: $137.88</title><line class="candle-wick" x1="331.1" y1="203.3" x2="331.1" y2="214.4" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="329.5" y="203.4" width="3.2" height="4.0" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-12-06 | O: $138.46 | H: $146.16 | L: $137.45 | C: $142.07</title><line class="candle-wick" x1="335.9" y1="198.4" x2="335.9" y2="207.9" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="334.3" y="202.9" width="3.2" height="3.9" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-12-13 | O: $138.61 | H: $141.45 | L: $132.19 | C: $133.90</title><line class="candle-wick" x1="340.8" y1="203.5" x2="340.8" y2="213.6" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="339.2" y="206.6" width="3.2" height="5.1" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-12-20 | O: $133.83 | H: $136.34 | L: $126.53 | C: $134.35</title><line class="candle-wick" x1="345.7" y1="209.1" x2="345.7" y2="219.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="344.1" y="210.4" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2024-12-27 | O: $135.92 | H: $141.53 | L: $134.36 | C: $136.65</title><line class="candle-wick" x1="350.6" y1="203.5" x2="350.6" y2="211.2" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="349.0" y="207.9" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-01-03 | O: $134.48 | H: $144.52 | L: $133.48 | C: $144.09</title><line class="candle-wick" x1="355.4" y1="200.2" x2="355.4" y2="212.2" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="353.8" y="200.7" width="3.2" height="10.4" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-01-10 | O: $148.20 | H: $152.73 | L: $133.87 | C: $135.56</title><line class="candle-wick" x1="360.3" y1="191.3" x2="360.3" y2="211.8" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="358.7" y="196.2" width="3.2" height="13.7" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-01-17 | O: $129.65 | H: $138.39 | L: $129.17 | C: $137.35</title><line class="candle-wick" x1="365.2" y1="206.9" x2="365.2" y2="216.9" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="363.6" y="208.0" width="3.2" height="8.3" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-01-24 | O: $138.80 | H: $148.58 | L: $136.73 | C: $142.25</title><line class="candle-wick" x1="370.1" y1="195.8" x2="370.1" y2="208.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="368.5" y="202.7" width="3.2" height="3.7" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-01-31 | O: $124.47 | H: $128.66 | L: $115.95 | C: $119.76</title><line class="candle-wick" x1="374.9" y1="217.4" x2="374.9" y2="231.2" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="373.3" y="222.0" width="3.2" height="5.1" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-02-07 | O: $114.45 | H: $130.03 | L: $112.72 | C: $129.50</title><line class="candle-wick" x1="379.8" y1="215.9" x2="379.8" y2="234.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="378.2" y="216.5" width="3.2" height="16.3" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-02-14 | O: $129.75 | H: $138.89 | L: $128.74 | C: $138.49</title><line class="candle-wick" x1="384.7" y1="206.3" x2="384.7" y2="217.3" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="383.1" y="206.7" width="3.2" height="9.5" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-02-21 | O: $140.90 | H: $143.07 | L: $133.68 | C: $134.08</title><line class="candle-wick" x1="389.5" y1="201.8" x2="389.5" y2="212.0" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="387.9" y="204.1" width="3.2" height="7.4" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-02-28 | O: $136.20 | H: $138.23 | L: $116.10 | C: $124.59</title><line class="candle-wick" x1="394.4" y1="207.0" x2="394.4" y2="231.0" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="392.8" y="209.2" width="3.2" height="12.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-03-07 | O: $123.19 | H: $123.38 | L: $107.28 | C: $112.40</title><line class="candle-wick" x1="399.3" y1="223.1" x2="399.3" y2="240.6" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="397.7" y="223.3" width="3.2" height="11.7" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-03-14 | O: $109.61 | H: $121.57 | L: $104.50 | C: $121.36</title><line class="candle-wick" x1="404.2" y1="225.1" x2="404.2" y2="243.6" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="402.6" y="225.3" width="3.2" height="12.8" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-03-21 | O: $122.43 | H: $122.58 | L: $114.25 | C: $117.40</title><line class="candle-wick" x1="409.0" y1="224.0" x2="409.0" y2="233.0" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="407.4" y="224.2" width="3.2" height="5.4" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-03-28 | O: $119.58 | H: $121.91 | L: $108.80 | C: $109.39</title><line class="candle-wick" x1="413.9" y1="224.7" x2="413.9" y2="238.9" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="412.3" y="227.3" width="3.2" height="11.0" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-04-04 | O: $104.87 | H: $111.70 | L: $91.88 | C: $94.07</title><line class="candle-wick" x1="418.8" y1="235.8" x2="418.8" y2="257.3" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="417.2" y="243.2" width="3.2" height="11.7" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-04-11 | O: $87.24 | H: $114.81 | L: $86.40 | C: $110.65</title><line class="candle-wick" x1="423.6" y1="232.4" x2="423.6" y2="263.2" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="422.0" y="236.9" width="3.2" height="25.4" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-04-17 | O: $113.82 | H: $114.00 | L: $99.80 | C: $101.23</title><line class="candle-wick" x1="428.5" y1="233.3" x2="428.5" y2="248.7" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="426.9" y="233.5" width="3.2" height="13.7" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-04-25 | O: $98.52 | H: $111.64 | L: $94.80 | C: $110.73</title><line class="candle-wick" x1="433.4" y1="235.9" x2="433.4" y2="254.1" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="431.8" y="236.9" width="3.2" height="13.2" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-05-02 | O: $109.41 | H: $115.11 | L: $103.82 | C: $114.21</title><line class="candle-wick" x1="438.3" y1="232.1" x2="438.3" y2="244.3" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="436.7" y="233.1" width="3.2" height="5.2" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-05-09 | O: $112.63 | H: $118.38 | L: $110.54 | C: $116.36</title><line class="candle-wick" x1="443.1" y1="228.6" x2="443.1" y2="237.1" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="441.5" y="230.7" width="3.2" height="4.1" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-05-16 | O: $121.66 | H: $136.01 | L: $119.98 | C: $135.06</title><line class="candle-wick" x1="448.0" y1="209.4" x2="448.0" y2="226.8" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="446.4" y="210.5" width="3.2" height="14.5" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-05-23 | O: $132.06 | H: $137.05 | L: $128.84 | C: $130.96</title><line class="candle-wick" x1="452.9" y1="208.3" x2="452.9" y2="217.2" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="451.3" y="214.1" width="3.2" height="1.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-05-30 | O: $133.81 | H: $143.13 | L: $132.59 | C: $134.79</title><line class="candle-wick" x1="457.7" y1="201.7" x2="457.7" y2="213.1" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="456.1" y="210.0" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-06-06 | O: $135.15 | H: $143.64 | L: $135.06 | C: $141.36</title><line class="candle-wick" x1="462.6" y1="201.2" x2="462.6" y2="210.5" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="461.0" y="203.6" width="3.2" height="6.8" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-06-13 | O: $142.83 | H: $144.65 | L: $140.51 | C: $141.62</title><line class="candle-wick" x1="467.5" y1="200.1" x2="467.5" y2="204.6" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="465.9" y="202.6" width="3.2" height="1.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-06-20 | O: $143.00 | H: $145.84 | L: $142.30 | C: $143.50</title><line class="candle-wick" x1="472.4" y1="198.8" x2="472.4" y2="202.6" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="470.8" y="200.5" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-06-27 | O: $142.15 | H: $158.32 | L: $141.68 | C: $157.36</title><line class="candle-wick" x1="477.2" y1="185.2" x2="477.2" y2="203.3" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="475.6" y="186.3" width="3.2" height="16.5" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-07-03 | O: $158.01 | H: $160.59 | L: $151.12 | C: $158.95</title><line class="candle-wick" x1="482.1" y1="182.8" x2="482.1" y2="193.1" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="480.5" y="183.8" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-07-11 | O: $157.81 | H: $167.48 | L: $156.96 | C: $164.52</title><line class="candle-wick" x1="487.0" y1="175.3" x2="487.0" y2="186.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="485.4" y="178.5" width="3.2" height="7.3" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-07-18 | O: $164.97 | H: $173.82 | L: $161.62 | C: $171.99</title><line class="candle-wick" x1="491.8" y1="168.4" x2="491.8" y2="181.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="490.2" y="170.4" width="3.2" height="7.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-07-25 | O: $172.33 | H: $174.29 | L: $164.18 | C: $173.08</title><line class="candle-wick" x1="496.7" y1="167.9" x2="496.7" y2="178.9" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="495.1" y="168.4" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-08-01 | O: $173.59 | H: $182.85 | L: $170.47 | C: $173.29</title><line class="candle-wick" x1="501.6" y1="158.6" x2="501.6" y2="172.1" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="500.0" y="168.2" width="3.2" height="1.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-08-08 | O: $174.73 | H: $183.43 | L: $174.09 | C: $182.25</title><line class="candle-wick" x1="506.5" y1="158.0" x2="506.5" y2="168.1" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="504.9" y="159.3" width="3.2" height="8.1" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-08-15 | O: $181.60 | H: $184.03 | L: $177.60 | C: $180.01</title><line class="candle-wick" x1="511.3" y1="157.4" x2="511.3" y2="164.3" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="509.7" y="160.0" width="3.2" height="1.7" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-08-22 | O: $180.16 | H: $182.49 | L: $168.39 | C: $177.55</title><line class="candle-wick" x1="516.2" y1="159.0" x2="516.2" y2="174.3" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="514.6" y="161.6" width="3.2" height="2.8" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-08-29 | O: $177.91 | H: $184.02 | L: $172.73 | C: $173.75</title><line class="candle-wick" x1="521.1" y1="157.4" x2="521.1" y2="169.6" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="519.5" y="164.0" width="3.2" height="4.5" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-09-05 | O: $169.58 | H: $171.99 | L: $163.67 | C: $166.61</title><line class="candle-wick" x1="525.9" y1="170.4" x2="525.9" y2="179.4" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="524.3" y="173.0" width="3.2" height="3.3" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-09-12 | O: $167.14 | H: $179.85 | L: $166.33 | C: $177.40</title><line class="candle-wick" x1="530.8" y1="161.9" x2="530.8" y2="176.6" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="529.2" y="164.5" width="3.2" height="11.2" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-09-19 | O: $175.25 | H: $178.42 | L: $168.01 | C: $176.25</title><line class="candle-wick" x1="535.7" y1="163.4" x2="535.7" y2="174.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="534.1" y="165.0" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-09-26 | O: $174.88 | H: $184.11 | L: $172.72 | C: $177.76</title><line class="candle-wick" x1="540.6" y1="157.3" x2="540.6" y2="169.6" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="539.0" y="164.2" width="3.2" height="3.1" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-10-03 | O: $180.00 | H: $190.59 | L: $179.89 | C: $187.17</title><line class="candle-wick" x1="545.4" y1="150.2" x2="545.4" y2="161.8" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="543.8" y="154.0" width="3.2" height="7.7" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-10-10 | O: $185.06 | H: $195.15 | L: $181.61 | C: $182.72</title><line class="candle-wick" x1="550.3" y1="145.3" x2="550.3" y2="160.0" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="548.7" y="156.2" width="3.2" height="2.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-10-17 | O: $187.52 | H: $189.66 | L: $176.87 | C: $182.78</title><line class="candle-wick" x1="555.2" y1="151.3" x2="555.2" y2="165.1" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="553.6" y="153.6" width="3.2" height="5.1" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-10-24 | O: $182.69 | H: $187.02 | L: $176.34 | C: $185.81</title><line class="candle-wick" x1="560.1" y1="154.1" x2="560.1" y2="165.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="558.5" y="155.4" width="3.2" height="3.4" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-10-31 | O: $189.54 | H: $211.68 | L: $187.98 | C: $202.01</title><line class="candle-wick" x1="564.9" y1="127.4" x2="564.9" y2="153.1" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="563.3" y="137.9" width="3.2" height="13.5" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-11-07 | O: $207.58 | H: $210.83 | L: $178.48 | C: $187.70</title><line class="candle-wick" x1="569.8" y1="128.3" x2="569.8" y2="163.4" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="568.2" y="131.8" width="3.2" height="21.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-11-14 | O: $194.64 | H: $199.46 | L: $180.15 | C: $189.72</title><line class="candle-wick" x1="574.7" y1="140.6" x2="574.7" y2="161.6" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="573.1" y="145.9" width="3.2" height="5.3" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-11-21 | O: $185.53 | H: $195.53 | L: $172.52 | C: $178.45</title><line class="candle-wick" x1="579.5" y1="144.9" x2="579.5" y2="169.8" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="577.9" y="155.7" width="3.2" height="7.7" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-11-28 | O: $179.06 | H: $183.06 | L: $169.14 | C: $176.58</title><line class="candle-wick" x1="584.4" y1="158.4" x2="584.4" y2="173.5" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="582.8" y="162.7" width="3.2" height="2.7" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-12-05 | O: $174.34 | H: $185.22 | L: $173.26 | C: $181.98</title><line class="candle-wick" x1="589.3" y1="156.1" x2="589.3" y2="169.0" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="587.7" y="159.6" width="3.2" height="8.3" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-12-12 | O: $182.21 | H: $187.56 | L: $174.21 | C: $174.61</title><line class="candle-wick" x1="594.2" y1="153.5" x2="594.2" y2="168.0" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="592.6" y="159.3" width="3.2" height="8.3" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-12-19 | O: $177.52 | H: $181.03 | L: $169.91 | C: $180.57</title><line class="candle-wick" x1="599.0" y1="160.6" x2="599.0" y2="172.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="597.4" y="161.1" width="3.2" height="3.3" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2025-12-26 | O: $183.49 | H: $192.24 | L: $181.92 | C: $190.09</title><line class="candle-wick" x1="603.9" y1="148.5" x2="603.9" y2="159.6" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="602.3" y="150.8" width="3.2" height="7.1" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-01-02 | O: $187.27 | H: $192.48 | L: $185.48 | C: $188.41</title><line class="candle-wick" x1="608.8" y1="148.2" x2="608.8" y2="155.8" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="607.2" y="151.8" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-01-09 | O: $191.31 | H: $193.18 | L: $183.24 | C: $184.43</title><line class="candle-wick" x1="613.6" y1="147.4" x2="613.6" y2="158.2" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="612.0" y="149.5" width="3.2" height="7.4" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-01-16 | O: $182.79 | H: $190.00 | L: $180.38 | C: $185.80</title><line class="candle-wick" x1="618.5" y1="150.9" x2="618.5" y2="161.3" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="616.9" y="155.4" width="3.2" height="3.3" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-01-23 | O: $181.48 | H: $189.16 | L: $177.20 | C: $187.23</title><line class="candle-wick" x1="623.4" y1="151.8" x2="623.4" y2="164.8" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="621.8" y="153.9" width="3.2" height="6.2" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-01-30 | O: $186.72 | H: $194.04 | L: $185.27 | C: $190.68</title><line class="candle-wick" x1="628.3" y1="146.5" x2="628.3" y2="156.0" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="626.7" y="150.1" width="3.2" height="4.3" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-02-06 | O: $186.76 | H: $189.86 | L: $170.63 | C: $184.98</title><line class="candle-wick" x1="633.1" y1="151.0" x2="633.1" y2="171.9" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="631.5" y="154.4" width="3.2" height="1.9" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-02-13 | O: $183.83 | H: $193.21 | L: $181.17 | C: $182.38</title><line class="candle-wick" x1="638.0" y1="147.4" x2="638.0" y2="160.5" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="636.4" y="158.3" width="3.2" height="1.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-02-20 | O: $181.33 | H: $189.93 | L: $178.76 | C: $189.38</title><line class="candle-wick" x1="642.9" y1="151.0" x2="642.9" y2="163.1" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="641.3" y="151.6" width="3.2" height="8.7" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-02-27 | O: $190.95 | H: $197.17 | L: $175.97 | C: $176.78</title><line class="candle-wick" x1="647.7" y1="143.1" x2="647.7" y2="166.1" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="646.1" y="149.9" width="3.2" height="15.3" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-03-06 | O: $174.60 | H: $184.27 | L: $174.23 | C: $177.40</title><line class="candle-wick" x1="652.6" y1="157.1" x2="652.6" y2="168.0" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="651.0" y="164.5" width="3.2" height="3.1" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-03-13 | O: $176.42 | H: $187.19 | L: $175.15 | C: $179.84</title><line class="candle-wick" x1="657.5" y1="153.9" x2="657.5" y2="167.0" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="655.9" y="161.9" width="3.2" height="3.7" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-03-20 | O: $182.55 | H: $188.45 | L: $171.33 | C: $172.31</title><line class="candle-wick" x1="662.4" y1="152.6" x2="662.4" y2="171.1" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="660.8" y="159.0" width="3.2" height="11.1" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-03-27 | O: $176.86 | H: $180.81 | L: $166.63 | C: $167.14</title><line class="candle-wick" x1="667.2" y1="160.9" x2="667.2" y2="176.2" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="665.6" y="165.1" width="3.2" height="10.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-04-02 | O: $168.40 | H: $177.09 | L: $163.90 | C: $176.99</title><line class="candle-wick" x1="672.1" y1="164.9" x2="672.1" y2="179.2" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="670.5" y="165.0" width="3.2" height="9.3" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-04-10 | O: $176.76 | H: $189.57 | L: $173.26 | C: $188.20</title><line class="candle-wick" x1="677.0" y1="151.4" x2="677.0" y2="169.0" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="675.4" y="152.8" width="3.2" height="12.4" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-04-17 | O: $185.61 | H: $201.24 | L: $185.32 | C: $201.22</title><line class="candle-wick" x1="681.8" y1="138.7" x2="681.8" y2="156.0" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="680.2" y="138.7" width="3.2" height="16.9" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-04-24 | O: $199.52 | H: $210.47 | L: $196.77 | C: $207.79</title><line class="candle-wick" x1="686.7" y1="128.7" x2="686.7" y2="143.5" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="685.1" y="131.6" width="3.2" height="9.0" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-05-01 | O: $209.17 | H: $216.34 | L: $196.67 | C: $198.00</title><line class="candle-wick" x1="691.6" y1="122.3" x2="691.6" y2="143.7" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="690.0" y="130.1" width="3.2" height="12.1" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-05-08 | O: $199.04 | H: $217.30 | L: $194.30 | C: $214.71</title><line class="candle-wick" x1="696.5" y1="121.3" x2="696.5" y2="146.2" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="694.9" y="124.1" width="3.2" height="17.0" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-05-15 | O: $213.55 | H: $236.00 | L: $213.40 | C: $224.81</title><line class="candle-wick" x1="701.3" y1="101.0" x2="701.3" y2="125.5" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="699.7" y="113.1" width="3.2" height="12.2" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-05-22 | O: $229.35 | H: $229.48 | L: $214.31 | C: $214.84</title><line class="candle-wick" x1="706.2" y1="108.1" x2="706.2" y2="124.5" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="704.6" y="108.2" width="3.2" height="15.7" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-05-29 | O: $216.05 | H: $217.68 | L: $208.30 | C: $210.66</title><line class="candle-wick" x1="711.1" y1="120.9" x2="711.1" y2="131.0" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="709.5" y="122.6" width="3.2" height="5.9" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-06-05 | O: $215.24 | H: $231.75 | L: $204.10 | C: $204.87</title><line class="candle-wick" x1="715.9" y1="105.6" x2="715.9" y2="135.6" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="714.3" y="123.5" width="3.2" height="11.3" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-06-12 | O: $209.95 | H: $211.16 | L: $199.12 | C: $204.96</title><line class="candle-wick" x1="720.8" y1="127.9" x2="720.8" y2="141.0" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="719.2" y="129.2" width="3.2" height="5.5" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-06-18 | O: $208.69 | H: $212.47 | L: $202.85 | C: $210.45</title><line class="candle-wick" x1="725.7" y1="126.5" x2="725.7" y2="136.9" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="724.1" y="128.7" width="3.2" height="1.9" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-06-26 | O: $211.20 | H: $213.75 | L: $191.01 | C: $192.31</title><line class="candle-wick" x1="730.6" y1="125.1" x2="730.6" y2="149.8" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="729.0" y="127.9" width="3.2" height="20.5" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-07-02 | O: $193.63 | H: $200.41 | L: $189.59 | C: $194.61</title><line class="candle-wick" x1="735.4" y1="139.6" x2="735.4" y2="151.3" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="733.8" y="145.1" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-07-10 | O: $194.20 | H: $210.76 | L: $190.93 | C: $210.72</title><line class="candle-wick" x1="740.3" y1="128.4" x2="740.3" y2="149.9" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="738.7" y="128.4" width="3.2" height="17.9" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-07-17 | O: $208.31 | H: $213.57 | L: $197.75 | C: $202.58</title><line class="candle-wick" x1="745.2" y1="125.3" x2="745.2" y2="142.5" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="743.6" y="131.0" width="3.2" height="6.2" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-07-24 | O: $205.64 | H: $214.15 | L: $202.05 | C: $206.61</title><line class="candle-wick" x1="750.1" y1="124.7" x2="750.1" y2="137.8" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="748.5" y="132.1" width="3.2" height="1.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-07-31 | O: $207.97 | H: $208.52 | L: $189.80 | C: $200.53</title><line class="candle-wick" x1="754.9" y1="130.8" x2="754.9" y2="151.1" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="753.3" y="131.4" width="3.2" height="8.1" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-08-07 | O: $197.47 | H: $224.51 | L: $196.63 | C: $223.71</title><line class="candle-wick" x1="759.8" y1="113.5" x2="759.8" y2="143.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="758.2" y="114.3" width="3.2" height="28.5" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-08-14 | O: $223.15 | H: $227.24 | L: $215.96 | C: $224.91</title><line class="candle-wick" x1="764.7" y1="110.5" x2="764.7" y2="122.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="763.1" y="113.0" width="3.2" height="1.9" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-08-21 | O: $225.73 | H: $227.67 | L: $214.26 | C: $214.48</title><line class="candle-wick" x1="769.5" y1="110.0" x2="769.5" y2="124.6" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="767.9" y="112.1" width="3.2" height="12.2" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-08-28 | O: $215.29 | H: $230.21 | L: $207.02 | C: $217.31</title><line class="candle-wick" x1="774.4" y1="107.3" x2="774.4" y2="132.4" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="772.8" y="121.3" width="3.2" height="2.2" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-09-04 | O: $218.63 | H: $234.50 | L: $214.86 | C: $230.10</title><line class="candle-wick" x1="779.3" y1="102.6" x2="779.3" y2="123.9" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="777.7" y="107.4" width="3.2" height="12.4" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-09-11 | O: $232.85 | H: $233.45 | L: $217.20 | C: $218.29</title><line class="candle-wick" x1="784.2" y1="103.8" x2="784.2" y2="121.4" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="782.6" y="104.4" width="3.2" height="15.8" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-09-18 | O: $211.24 | H: $222.73 | L: $208.93 | C: $222.27</title><line class="candle-wick" x1="789.0" y1="115.4" x2="789.0" y2="130.4" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="787.4" y="115.9" width="3.2" height="11.9" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-09-25 | O: $222.94 | H: $229.98 | L: $221.09 | C: $225.07</title><line class="candle-wick" x1="793.9" y1="107.5" x2="793.9" y2="117.2" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="792.3" y="112.9" width="3.2" height="2.3" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-10-02 | O: $229.75 | H: $237.88 | L: $227.03 | C: $233.95</title><line class="candle-wick" x1="798.8" y1="99.0" x2="798.8" y2="110.7" stroke="#34d399" stroke-width="1.2"/><rect class="candle-body" x="797.2" y="103.2" width="3.2" height="4.6" fill="#10b981" stroke="#34d399" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-10-09 | O: $236.09 | H: $243.37 | L: $229.11 | C: $229.28</title><line class="candle-wick" x1="803.6" y1="93.0" x2="803.6" y2="108.5" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="802.0" y="100.9" width="3.2" height="7.4" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-10-16 | O: $228.73 | H: $228.86 | L: $212.85 | C: $214.13</title><line class="candle-wick" x1="808.5" y1="108.7" x2="808.5" y2="126.1" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="806.9" y="108.9" width="3.2" height="15.8" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-10-23 | O: $218.10 | H: $222.19 | L: $210.18 | C: $210.96</title><line class="candle-wick" x1="813.4" y1="116.0" x2="813.4" y2="129.0" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="811.8" y="120.4" width="3.2" height="7.8" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-10-30 | O: $213.11 | H: $219.99 | L: $200.92 | C: $204.64</title><line class="candle-wick" x1="818.3" y1="118.4" x2="818.3" y2="139.0" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="816.7" y="125.8" width="3.2" height="9.2" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-11-06 | O: $207.53 | H: $209.98 | L: $181.46 | C: $186.64</title><line class="candle-wick" x1="823.1" y1="129.2" x2="823.1" y2="160.1" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="821.5" y="131.9" width="3.2" height="22.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-11-13 | O: $173.07 | H: $179.92 | L: $148.80 | C: $162.85</title><line class="candle-wick" x1="828.0" y1="161.8" x2="828.0" y2="195.6" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="826.4" y="169.2" width="3.2" height="11.1" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><line class="sd-last-line" x1="828.0" y1="180.3" x2="838.1" y2="180.3" stroke="#f87171" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.85"/></g><g class="sd-last-price"><rect x="838.1" y="171.3" width="61.9" height="18.0" rx="3" fill="#0c0c0c" fill-opacity="0.95" stroke="#f87171" stroke-width="1.2"/><text x="894.0" y="184.3" text-anchor="end" fill="#ffffff" font-size="11.5" font-weight="700">$162.85</text></g><text class="sd-rail-label" x="910.0" y="34.9" text-anchor="start" fill="#fb923c" font-size="11.5" font-weight="700">+3 sd</text><text class="sd-rail-label" x="910.0" y="53.5" text-anchor="start" fill="#facc15" font-size="11.5" font-weight="700">+2 sd</text><text class="sd-rail-label" x="910.0" y="72.1" text-anchor="start" fill="#34d399" font-size="11.5" font-weight="700">+1 sd</text><text class="sd-rail-label" x="910.0" y="109.4" text-anchor="start" fill="#34d399" font-size="11.5" font-weight="700">-1 sd</text><text class="sd-rail-label" x="910.0" y="128.1" text-anchor="start" fill="#facc15" font-size="11.5" font-weight="700">-2 sd</text><text class="sd-rail-label" x="910.0" y="146.7" text-anchor="start" fill="#fb923c" font-size="11.5" font-weight="700">-3 sd</text></svg>
+  </div>
+
+  <div class="box lazy-sec" id="sec-intel" style="border-top: 3px solid var(--cyan);">
+    <h2>INTEL FEED</h2>
+
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-label">RATES</div>
+        <div class="stat-val"><span class="sem-cyan">5.15%</span> (<span class="sem-crimson">+0.05</span>)</div>
+        <div class="sub">10Y-3M Spread: <span class="sem-emerald">+1.03%</span></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">DOLLAR</div>
+        <div class="stat-val"><span class="sem-cyan">103.45</span> (<span class="sem-crimson">+0.04%</span>)</div>
+        <div class="sub">NEUTRAL: Rates and Dollar are steady today.</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">SECTORS</div>
+        <div class="stat-val">SMH <span class="sem-crimson">-2.99%</span> | URA <span class="sem-crimson">-1.61%</span></div>
+        <div class="sub">AI Compute vs Grid Power Pulse</div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:8px;">
+      <div>
+        <b>SEC FILINGS</b>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Form</th><th>Signal</th><th>Flagged Items (EDGAR Link)</th></tr></thead>
+            <tbody><tr><td>2026-11-12</td><td><b>Form 8-K</b></td><td><span class="pill pill-amber">8-K EXEC / BOARD CHANGE</span></td><td><a class='lnk' target='_blank' href='https://www.sec.gov/Archives/edgar/data/1045810/000104581026000082/nvda-20261111.htm'>Item 5.02: Departure/Election of Directors or Principal Officers; Item 9.01: Material Update</a></td></tr><tr><td>2026-11-06</td><td><b>Form 4</b></td><td><span class="pill pill-muted">FORM 4 INSIDER TRADE</span></td><td><a class='lnk' target='_blank' href='https://www.sec.gov/Archives/edgar/data/1045810/000119764726000013/xslF345X06/wk-form4_1793999520.xml'>COXE TENCH: Gift / Transfer -500,000 sh [finnhub]</a></td></tr><tr><td>2026-10-13</td><td><b>Form 4</b></td><td><span class="pill pill-muted">FORM 4 INSIDER TRADE</span></td><td><a class='lnk' target='_blank' href=''>Parker Nicholas P. (Officer): Grant / Award +160,418 sh [finnhub+yfinance]</a></td></tr><tr><td>2026-10-09</td><td><b>Form 4</b></td><td><span class="pill pill-muted">FORM 4 INSIDER TRADE</span></td><td><a class='lnk' target='_blank' href='https://www.sec.gov/Archives/edgar/data/1045810/000119764726000011/xslF345X06/wk-form4_1791579847.xml'>COXE TENCH: Gift / Transfer -500,000 sh [finnhub]</a></td></tr><tr><td>2026-09-23</td><td><b>Form 4</b></td><td><span class="pill pill-amber">FORM 4 INSIDER CLUSTER</span></td><td><a class='lnk' target='_blank' href='https://www.sec.gov/Archives/edgar/data/1045810/000169684126000014/xslF345X06/wk-form4_1790196985.xml'>Teter Timothy S.: Open-Market Sale -13,478 sh @ $223.05 ($3,006,253) [finnhub]</a></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <b>GLOBAL ALERTS</b>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Severity &amp; Sympathy</th><th>Headline &amp; Source</th></tr></thead>
+            <tbody><tr class=''><td><span class="pill pill-muted">OSINT</span><div class='sub'>Monitor Flow</div><div class='sub'>Sympathy: NVDA</div></td><td><a class='lnk-plain' target='_blank' href='https://www.thestreet.com/fed/fed-warsh-ai-task-force-nvidia-earnings'><b>Nvidia earnings collide with Fed&#x27;s biggest AI challenge under Warsh</b></a> <span class='sub'>(thestreet.com (yfinance))</span></td></tr><tr class='hot'><td><span class="pill pill-red">LEVEL 2 OUTAGE</span><div class='sub'>Multi-Day Physical/Endpoint Failure - Reprice &amp; Track Sympathy Plays like PANW/CRWD</div><div class='sub'>Sympathy: PANW, CRWD, S, FTNT, MSFT</div></td><td><a class='lnk-plain' target='_blank' href='https://nova.kapualabs.com/nvda-stock_panel_c/nvidias-systemic-fragility-a-deep-dive-into-regulatory-and-supply-chain-risks/'><b>Nvidia&#x27;s Systemic Fragility: Regulatory &amp; Supply Chain Risks</b></a> <span class='sub'>(nova.kapualabs.com)</span></td></tr><tr class=''><td><span class="pill pill-muted">OSINT</span><div class='sub'>Monitor Flow</div><div class='sub'>Sympathy: NVDA</div></td><td><a class='lnk-plain' target='_blank' href='https://www.trefis.com/stock/nvda/articles/604525/the-supply-chain-bet-that-underpins-the-nvidia-stock-story/2026-06-25'><b>The Supply-Chain Bet That Underpins The NVIDIA Stock Story</b></a> <span class='sub'>(trefis.com)</span></td></tr><tr class=''><td><span class="pill pill-amber">SUPPLY CHAIN</span><div class='sub'>Check 60-150d IV &amp; Sympathy Semis</div><div class='sub'>Sympathy: NVDA, AMD, AVGO, TSM, ASML</div></td><td><a class='lnk-plain' target='_blank' href='https://blofin.com/en/academy/education/nvdax/nvidia-china-and-export-control-risk'><b>NVIDIA, China, and Export Control Risk: What It Means for NVDA and ...</b></a> <span class='sub'>(blofin.com)</span></td></tr><tr class=''><td><span class="pill pill-muted">OSINT</span><div class='sub'>Monitor Flow</div><div class='sub'>Sympathy: NVDA</div></td><td><a class='lnk-plain' target='_blank' href='https://coincentral.com/nvidia-nvda-stock-supply-chain-scrutiny-us-ai-server-probe/'><b>Nvidia (NVDA) Stock; Little Changed as Supply Chain Scrutiny ...</b></a> <span class='sub'>(coincentral.com)</span></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXPANDABLE RIGHT-BOUND SLIDE-OVER DRAWER: WATCHLIST, EOD AUDITS, TRANCHE JOURNAL & CREATOR ARCHIVE -->
+<aside id="lab-drawer" aria-label="Lab and Intel Background Drawer">
+  <div class="drawer-head">
+    <div>
+      <b style="color:#22d3ee;text-transform:uppercase;letter-spacing:0.5px;">LAB DRAWER</b>
+      <span class="sub" style="margin-left:8px;">Watchlist, Audits &amp; Journal</span>
+    </div>
+    <button type="button" onclick="toggleLabDrawer(false)" title="Collapse drawer" aria-label="Collapse drawer" style="padding:3px 10px;font-weight:700;font-size:14px;">&rarr;</button>
+  </div>
+  <div class="drawer-body">
+    <div class="tk-watchlist"><div class="tk-grid-hdr"><span class="tk-hdr-lbl cyan-txt">Stocks</span><span class="sub">Weekly / Monthly</span></div><div class="tk-grid4"><a class="tk-card tk-stock active" href="/?ticker=NVDA&tf=weekly"><span class="tk-sym">NVDA</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock" href="/?ticker=TSLA&tf=weekly"><span class="tk-sym">TSLA</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock" href="/?ticker=AMD&tf=weekly"><span class="tk-sym">AMD</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock" href="/?ticker=META&tf=weekly"><span class="tk-sym">META</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock" href="/?ticker=PLTR&tf=weekly"><span class="tk-sym">PLTR</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock" href="/?ticker=COIN&tf=weekly"><span class="tk-sym">COIN</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock" href="/?ticker=AMZN&tf=weekly"><span class="tk-sym">AMZN</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock" href="/?ticker=UUUU&tf=weekly"><span class="tk-sym">UUUU</span><span class="tk-tag">W/M</span></a></div><div class="tk-grid-hdr" style="margin-top:8px;"><span class="tk-hdr-lbl amber-txt">0DTE Indices</span><span class="sub">Daily Cycle</span></div><div class="tk-grid4"><a class="tk-card tk-idx" href="/?ticker=SPY&tf=weekly"><span class="tk-sym">SPY</span><span class="tk-tag">0DTE</span></a><a class="tk-card tk-idx" href="/?ticker=QQQ&tf=weekly"><span class="tk-sym">QQQ</span><span class="tk-tag">0DTE</span></a><a class="tk-card tk-idx" href="/?ticker=IWM&tf=weekly"><span class="tk-sym">IWM</span><span class="tk-tag">0DTE</span></a><a class="tk-card tk-idx" href="/?ticker=DIA&tf=weekly"><span class="tk-sym">DIA</span><span class="tk-tag">0DTE</span></a><a class="tk-card tk-idx" href="/?ticker=SPX&tf=weekly"><span class="tk-sym">SPX</span><span class="tk-tag">0DTE</span></a><a class="tk-card tk-idx" href="/?ticker=XSP&tf=weekly"><span class="tk-sym">XSP</span><span class="tk-tag">0DTE</span></a><a class="tk-card tk-idx" href="/?ticker=NDX&tf=weekly"><span class="tk-sym">NDX</span><span class="tk-tag">0DTE</span></a><a class="tk-card tk-idx" href="/?ticker=RUT&tf=weekly"><span class="tk-sym">RUT</span><span class="tk-tag">0DTE</span></a></div></div>
+    <div class="box lazy-sec" id="sec-audit" style="margin-bottom:10px;">
+      <h2>TRADE AUDIT</h2>
+
+      <div style="margin-bottom:12px;">
+        <b>End-of-Day Open Interest vs. Prior Day Volume Check (Did Volume Stick?)</b>
+        <div class="table-wrap">
+          <table class="chain-table">
+            <thead><tr><th>Expire</th><th>Contract</th><th>Prior Vol</th><th>Prior OI &rarr; Current OI</th><th>Settlement Verdict</th></tr></thead>
+            <tbody><tr><td class='mono'>2026-11-20</td><td class='mono'><b>CALL $167.5</b></td><td class='mono'>19,813</td><td class='mono'>3,596 &rarr; <b>3,596</b> <span class='sub'>(+0)</span></td><td><span class="pill pill-muted">WEEKEND FROZEN CHAIN (Awaiting OCC Settlement Refresh)</span></td></tr><tr><td class='mono'>2026-11-20</td><td class='mono'><b>CALL $160.0</b></td><td class='mono'>19,832</td><td class='mono'>10,648 &rarr; <b>10,648</b> <span class='sub'>(+0)</span></td><td><span class="pill pill-muted">WEEKEND FROZEN CHAIN (Awaiting OCC Settlement Refresh)</span></td></tr><tr><td class='mono'>2026-11-20</td><td class='mono'><b>CALL $165.0</b></td><td class='mono'>19,873</td><td class='mono'>12,077 &rarr; <b>12,077</b> <span class='sub'>(+0)</span></td><td><span class="pill pill-muted">WEEKEND FROZEN CHAIN (Awaiting OCC Settlement Refresh)</span></td></tr><tr><td class='mono'>2026-11-20</td><td class='mono'><b>PUT $140.0</b></td><td class='mono'>21,230</td><td class='mono'>18,660 &rarr; <b>18,660</b> <span class='sub'>(+0)</span></td><td><span class="pill pill-muted">WEEKEND FROZEN CHAIN (Awaiting OCC Settlement Refresh)</span></td></tr><tr><td class='mono'>2026-11-20</td><td class='mono'><b>CALL $170.0</b></td><td class='mono'>41,579</td><td class='mono'>30,210 &rarr; <b>30,210</b> <span class='sub'>(+0)</span></td><td><span class="pill pill-muted">WEEKEND FROZEN CHAIN (Awaiting OCC Settlement Refresh)</span></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <b>Friday Close vs. Monday Open IV &amp; Weekend Decay Audit (60&ndash;150d Benchmark Call)</b>
+        <div class="table-wrap">
+          <table class="chain-table">
+            <thead><tr><th>Session</th><th>60&ndash;150d Contract</th><th>Mark (Extrinsic)</th><th>IV % (Change)</th><th>Audit Note</th></tr></thead>
+            <tbody><tr><td class='mono'>2026-11-15 <span class='sub'>(Sunday (Closed))</span></td><td class='mono'>2027-02-19 <b>$170.0C</b></td><td class='mono'><b>$14.15</b> <span class='sub'>(Ext: $14.15)</span></td><td class='mono'><b>51.8%</b> <span class='sub'>(+0.5%)</span></td><td class='sub'>Vs baseline (2026-11-13): IV +0.5% | Mark +0.00</td></tr><tr><td class='mono'>2026-11-14 <span class='sub'>(Saturday (Closed))</span></td><td class='mono'>2027-02-19 <b>$170.0C</b></td><td class='mono'><b>$14.15</b> <span class='sub'>(Ext: $14.15)</span></td><td class='mono'><b>51.6%</b> <span class='sub'>(+0.3%)</span></td><td class='sub'>Vs baseline (2026-11-13): IV +0.3% | Mark +0.00</td></tr><tr><td class='mono'>2026-11-13 <span class='sub'>(Friday)</span></td><td class='mono'>2027-02-19 <b>$170.0C</b></td><td class='mono'><b>$14.15</b> <span class='sub'>(Ext: $14.15)</span></td><td class='mono'><b>51.3%</b> <span class='sub'>(+0.0%)</span></td><td class='sub'>Vs baseline (2026-11-13): IV +0.0% | Mark +0.00</td></tr><tr><td class='mono'>2026-11-13 <span class='sub'>(Friday)</span></td><td class='mono'>2027-02-19 <b>$175.0C</b></td><td class='mono'><b>$12.15</b> <span class='sub'>(Ext: $12.15)</span></td><td class='mono'><b>50.9%</b> <span class='sub'>(+0.0%)</span></td><td class='sub'>Vs baseline (2026-11-13): IV +0.0% | Mark +0.00</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <b>Sympathy Catalyst &amp; Extrinsic Value Tranche Journal</b>
+        <div class="table-wrap">
+          <table class="chain-table">
+            <thead><tr><th>Contract</th><th>Entry &rarr; Now Mark</th><th>Entry &rarr; Now Extrinsic ($)</th><th>Entry &rarr; Now IV (%)</th><th>Catalyst / Sympathy Note</th></tr></thead>
+            <tbody><tr><td class='mono'><b>NVDA</b> 2027-02-19 <b>$170.0C</b></td><td class='mono'>$14.15 &rarr; <b>$14.15</b></td><td class='mono'>$14.15 &rarr; <b>$14.15</b> <span class='up'>(+0.00)</span></td><td class='mono'>51.3% &rarr; <b>51.8%</b> <span class='up'>(+0.5%)</span></td><td class='sub'>Auto-tracked 60-150d OTM Call | Next Catalyst: PPI Inflation</td></tr><tr><td class='mono'><b>NVDA</b> 2027-02-19 <b>$175.0C</b></td><td class='mono'>$12.15 &rarr; <b>$12.15</b></td><td class='mono'>$12.15 &rarr; <b>$12.15</b> <span class='up'>(+0.00)</span></td><td class='mono'>50.9% &rarr; <b>51.4%</b> <span class='up'>(+0.5%)</span></td><td class='sub'>Auto-tracked 60-150d OTM Call | Next Catalyst: PPI Inflation</td></tr></tbody>
+          </table>
+        </div>
+        <form method="GET" action="/add_tranche" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;background:var(--bg-elevated);padding:9px 11px;border:1px solid var(--border);border-radius:6px;">
+          <input type="hidden" name="ticker" value="NVDA">
+          <input type="hidden" name="spot" value="162.85">
+          <label class="fld"><span>Expire</span><input type="text" name="exp" value="2027-02-19" style="width:105px;" placeholder="YYYY-MM-DD"></label>
+          <label class="fld"><span>Strike</span><input type="number" step="0.5" name="strike" value="170.0" style="width:80px;" placeholder="Strike"></label>
+          <label class="fld"><span>Mark $</span><input type="number" step="0.05" name="mark" value="14.15" style="width:80px;" placeholder="Mark $"></label>
+          <label class="fld"><span>IV %</span><input type="number" step="0.1" name="iv" value="51.8" style="width:74px;" placeholder="IV %"></label>
+          <label class="fld"><span>Catalyst Note</span><input type="text" name="note" value="Sympathy / Scaling Tranche" style="width:210px;" placeholder="Catalyst Note"></label>
+          <button type="submit" class="qbtn-accent" style="padding:7px 13px;">Save Tranche</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="box lazy-sec">
+      <h2>CREATOR NOTES</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Creator</th><th>Video Title</th><th>Transcript</th><th>Detected Tags</th></tr></thead>
+          <tbody><tr><td>2026-11-15</td><td><b>Patrick Boyle</b></td><td><a class='lnk-plain' target='_blank' href='https://www.youtube.com/watch?v=6dOFQHTVzEg'>The Risk Factors Nvidia Forgot to Mention</a></td><td><code>FULL_TRANSCRIPT</code><br><span class='sub'>6,391 words</span></td><td class='sub'>AMZN,META,SPY,TREASURY</td></tr><tr><td>2026-11-14</td><td><b>Two Minute Papers</b></td><td><a class='lnk-plain' target='_blank' href='https://www.youtube.com/watch?v=x7iwI6WfWS0'>AI Can Do Everything…Except This</a></td><td><code>FULL_TRANSCRIPT</code><br><span class='sub'>473 words</span></td><td class='sub'>MACRO</td></tr><tr><td>2026-11-13</td><td><b>The Plain Bagel</b></td><td><a class='lnk-plain' target='_blank' href='https://www.youtube.com/watch?v=V6Vm1LU0kbQ'>Canada Just Made Some Big Tax Changes</a></td><td><code>FULL_TRANSCRIPT</code><br><span class='sub'>3,393 words</span></td><td class='sub'>NUCLEAR,QUANTUM</td></tr><tr><td>2026-11-13</td><td><b>Asianometry</b></td><td><a class='lnk-plain' target='_blank' href='https://www.youtube.com/watch?v=ZnNRkW51qng'>Indonesia’s Mega Rice Failure</a></td><td><code>FULL_TRANSCRIPT</code><br><span class='sub'>3,699 words</span></td><td class='sub'>NUCLEAR</td></tr><tr><td>2026-11-13</td><td><b>Two Minute Papers</b></td><td><a class='lnk-plain' target='_blank' href='https://www.youtube.com/watch?v=gPNiuyYirfw'>DeepMind’s AI Just Did The Impossible</a></td><td><code>FULL_TRANSCRIPT</code><br><span class='sub'>937 words</span></td><td class='sub'>MACRO</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <!--
+    <div class="box lazy-sec" style="margin-top:10px;">
+      <b>QUICK READ</b>
+      <ul><li>Mechanics + Rates: NVDA is in [EXPENSIVE NEAR-TERM (Panic Pricing)] with [EXISTING VOLUME MATCHED]. 10Y Yield is 5.15% (+0.05) -&gt; NEUTRAL: Rates and Dollar are steady today.</li><li>SEC Filing Check: Latest NVDA filing is Form 8-K on 2026-11-12 [8-K EXEC / BOARD CHANGE] — Item 5.02: Departure/Election of Directors or Principal Officers; Item 9.01: Material Update.</li><li>⚠️ OSINT LEVEL 2 ALERT: &quot;Nvidia&#x27;s Systemic Fragility: Regulatory &amp; Supply Chain Risks&quot; -&gt; Vendor Outage, Level 2 [Multi-Day Physical/Endpoint Failure - Reprice &amp; Track Sympathy Plays like PANW/CRWD] (Sympathy: PANW, CRWD, S, FTNT, MSFT).</li><li>Creator Radar: Latest video from Patrick Boyle is &quot;The Risk Factors Nvidia Forgot to Mention&quot; (2026-11-15) | Tags: AMZN,META,SPY,TREASURY.</li></ul>
+    </div>
+    -->
+  </div>
+</aside>
+<div role="button" tabindex="0" id="drawer-edge-tab" onclick="toggleLabDrawer()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleLabDrawer();}" title="Open Watchlist, Post-Close Audit &amp; Journal" aria-label="Open slide-over drawer">&larr;</div>
+
+<script>
+function showPageLoader() {
+  var b = document.getElementById('nav-loader');
+  if (b) b.style.width = '72%';
+  var o = document.getElementById('page-loading-overlay');
+  if (o) o.classList.add('active');
+}
+function hidePageLoader() {
+  var b = document.getElementById('nav-loader');
+  if (b) b.style.width = '0';
+  var o = document.getElementById('page-loading-overlay');
+  if (o) o.classList.remove('active');
+}
+window.addEventListener('pageshow', hidePageLoader);
+window.addEventListener('beforeunload', showPageLoader);
+document.querySelectorAll('a.qbtn:not([target="_blank"]), a.tk-card, form').forEach(function(el) {
+  var ev = el.tagName === 'FORM' ? 'submit' : 'click';
+  el.addEventListener(ev, showPageLoader);
+});
+function toggleSvgLayer(btn) {
+  var cls = btn.getAttribute('data-layer');
+  var svg = document.getElementById('main-wave-svg');
+  if (!svg || !cls) return;
+  var active = btn.classList.toggle('active');
+  svg.querySelectorAll('.' + cls).forEach(function(g) {
+    g.classList.toggle('layer-hidden', !active);
+  });
+}
+function switchLadder(targetPane, btn) {
+  var box = btn.closest('.strike-ladder');
+  if (!box) return;
+  box.querySelectorAll('[data-ladder-btn]').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-ladder-btn') === targetPane);
+  });
+  box.querySelectorAll('.ladder-pane').forEach(function(p) {
+    p.classList.toggle('active', p.getAttribute('data-ladder-pane') === targetPane);
+  });
+}
+function toggleLabDrawer(forceOpen) {
+  var d = document.getElementById('lab-drawer');
+  var bk = document.getElementById('drawer-backdrop');
+  if (!d || !bk) return;
+  var open = (typeof forceOpen === 'boolean') ? forceOpen : !d.classList.contains('open');
+  d.classList.toggle('open', open);
+  bk.classList.toggle('open', open);
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') toggleLabDrawer(false);
+});
+(function() {
+  if (window.location.hash === '#sec-audit' || window.location.search.indexOf('added=1') !== -1) {
+    toggleLabDrawer(true);
+  }
+  var el = document.getElementById('live-et-clock');
+  if (!el || typeof Intl === 'undefined') return;
+  var fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    weekday: 'short', month: 'short', day: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+  });
+  function tick() {
+    var parts = {};
+    fmt.formatToParts(new Date()).forEach(function(p) { parts[p.type] = p.value; });
+    var s = (parts.weekday + ' ' + parts.month + ' ' + parts.day + ', ' + parts.year + ' • ' + parts.hour + ':' + parts.minute + ':' + parts.second + ' ' + parts.dayPeriod + ' ET').toUpperCase();
+    el.textContent = s;
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>
