@@ -561,6 +561,14 @@
   .otm-sub-table tr.otm-best-row td:first-child { border-left: 3px solid #10b981; }
   .otm-badge { display: inline-block; padding: 0 3px; border-radius: 3px; font-size: 9.5px; font-weight: 800; letter-spacing: 0.02em; line-height: 1.25; border: 1px solid rgba(148, 163, 184, 0.35); vertical-align: baseline; }
   .otm-badge-emerald { color: #10b981; background: rgba(16, 185, 129, 0.14); border-color: rgba(16, 185, 129, 0.5); }
+  #sec-earnings-watcher { background: #0b0f14; border: 1px solid #1e293b; border-radius: 6px; padding: 10px 12px; margin-top: 10px; }
+  .ew-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .ew-grid { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(300px, 1.35fr); gap: 10px; align-items: stretch; }
+  @media (max-width: 900px) { .ew-grid { grid-template-columns: 1fr; } }
+  #earnings-rubric-input { width: 100%; min-height: 112px; background: #05080c; color: #e2e8f0; border: 1px solid #1e293b; border-radius: 5px; padding: 8px 10px; font-family: var(--font-mono); font-size: 12px; line-height: 1.45; resize: vertical; box-sizing: border-box; }
+  #earnings-rubric-input:focus { outline: none; border-color: #22d3ee; }
+  #earnings-summary-output { background: #05080c; color: #e2e8f0; border: 1px solid #1e293b; border-radius: 5px; padding: 9px 11px; font-family: var(--font-mono); font-size: 12px; line-height: 1.5; white-space: pre-wrap; min-height: 112px; max-height: 320px; overflow-y: auto; }
+  .ew-status { font-size: 11.5px; color: #94a3b8; font-family: var(--font-mono); }
   .spike-foot {
     background: #0d0d0d;
     border: 1px solid #2e2e2e;
@@ -795,7 +803,7 @@
         <span class="live-dot closed" title="PRE-MARKET (04:00-09:30 ET)"></span>
         <span class="tk-pill">AMD</span>
         <h1><span class="sem-crimson">$504.28</span> <span style="font-size:16px;">(<span class="sem-crimson">-5.58%</span>)</span></h1>
-        <span class="clock-pill" id="live-et-clock" title="Live Eastern Time (US Market Clock)">TUE NOV 17, 2026 • 07:04:24 AM ET</span>
+        <span class="clock-pill" id="live-et-clock" title="Live Eastern Time (US Market Clock)">TUE NOV 17, 2026 • 09:19:39 AM ET</span>
       </div>
       <div class="sub" style="margin-top:3px;">Snapshot: 2026-11-17 7:03 AM ET | Feed: finnhub | Run #372 (199 dates)</div>
     </div>
@@ -1054,6 +1062,24 @@
       </div>
     </div>
   </div>
+
+  <div id="sec-earnings-watcher">
+    <div class="ew-head">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <b style="color:#22d3ee;letter-spacing:0.4px;font-size:12px;">SEC 8-K EARNINGS RUBRIC EVALUATOR (LOCAL OLLAMA)</b>
+        <span class="ew-status" id="earnings-watcher-status">Idle</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <button type="button" class="qbtn" id="ew-save-rubric-btn" onclick="saveEarningsRubric()">Save Rubric</button>
+        <button type="button" class="qbtn" id="ew-poll-btn" onclick="triggerEarningsPoll('poll_now')">Poll Now / Test</button>
+        <button type="button" class="qbtn" id="ew-test-latest-btn" onclick="triggerEarningsPoll('test_latest')">Test Latest 8-K</button>
+      </div>
+    </div>
+    <div class="ew-grid">
+      <textarea id="earnings-rubric-input" aria-label="Earnings Rubric Prompt" placeholder="Enter your custom SEC 8-K earnings evaluation rubric..."></textarea>
+      <div id="earnings-summary-output" aria-live="polite">Waiting for Form 8-K / Exhibit 99.1 summary (auto-polls at 4:15 PM ET or click Poll Now / Test)...</div>
+    </div>
+  </div>
 </div>
 
 <!-- EXPANDABLE RIGHT-BOUND SLIDE-OVER DRAWER: WATCHLIST, EOD AUDITS, TRANCHE JOURNAL & CREATOR ARCHIVE -->
@@ -1211,6 +1237,117 @@ document.addEventListener('keydown', function(e) {
   }
   tick();
   setInterval(tick, 1000);
+})();
+(function() {
+  var LS_KEY = 'aeos_earnings_rubric';
+  var DEFAULT_RUBRIC = "1. Headline Revenue & EPS vs. Prior Quarter / YoY (Beat or Miss?)\n2. Data Center / Core Segment Revenue & Margin Trajectory\n3. Next-Quarter Revenue, Gross Margin, & OpEx Guidance\n4. Inventory, Supply-Chain, Customer Concentration, or Regulatory Red Flags\n5. 3-Bullet Executive Verdict (Bullish / Neutral / Bearish)";
+  var rubricEl = document.getElementById('earnings-rubric-input');
+  var summaryEl = document.getElementById('earnings-summary-output');
+  var statusEl = document.getElementById('earnings-watcher-status');
+  if (!rubricEl || !summaryEl || !statusEl) return;
+
+  var activeTicker = "AMD";
+  var isLocal = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost');
+  var apiBase = isLocal ? 'http://localhost:8000' : '';
+
+  try {
+    var saved = localStorage.getItem(LS_KEY);
+    rubricEl.value = (saved && saved.trim()) ? saved : DEFAULT_RUBRIC;
+  } catch (e) {
+    rubricEl.value = DEFAULT_RUBRIC;
+  }
+
+  function renderWatcherState(st) {
+    if (!st || typeof st !== 'object') return;
+    var parts = [st.status || 'Idle'];
+    if (st.processed_at) parts.push('Processed: ' + st.processed_at);
+    else if (st.last_checked_at) parts.push('Checked: ' + st.last_checked_at);
+    if (st.model_used) parts.push(st.model_used);
+    statusEl.textContent = parts.join(' • ');
+    if (st.status && st.status.indexOf('8-K Processed') !== -1) statusEl.style.color = '#10b981';
+    else if (st.status === 'Polling' || st.status === 'Processing 8-K') statusEl.style.color = '#22d3ee';
+    else if (st.status === 'Error') statusEl.style.color = '#f43f5e';
+    else statusEl.style.color = '#94a3b8';
+
+    if (st.summary && st.summary.trim()) {
+      summaryEl.textContent = st.summary;
+    } else if (st.error && st.error.trim()) {
+      summaryEl.textContent = 'Watcher notice: ' + st.error;
+    }
+    if (st.rubric && st.rubric.trim() && document.activeElement !== rubricEl) {
+      var lsVal = '';
+      try { lsVal = localStorage.getItem(LS_KEY) || ''; } catch (e) {}
+      if (!lsVal.trim()) {
+        rubricEl.value = st.rubric;
+      }
+    }
+  }
+
+  function ewFetch(path, opts) {
+    var primary = apiBase ? (apiBase + path) : path;
+    return fetch(primary, opts).catch(function(err) {
+      if (apiBase) return fetch(path, opts);
+      throw err;
+    });
+  }
+
+  window.saveEarningsRubric = function() {
+    var val = rubricEl.value || '';
+    try { localStorage.setItem(LS_KEY, val); } catch (e) {}
+    ewFetch('/api/earnings-rubric', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rubric: val, ticker: activeTicker })
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d && d.state) renderWatcherState(d.state);
+      statusEl.textContent = 'Rubric Saved • ' + (statusEl.textContent || 'Idle');
+    }).catch(function() {
+      statusEl.textContent = 'Saved in browser (backend :8000 offline)';
+      statusEl.style.color = '#fb923c';
+    });
+  };
+
+  window.triggerEarningsPoll = function(actionName) {
+    var val = rubricEl.value || '';
+    try { localStorage.setItem(LS_KEY, val); } catch (e) {}
+    statusEl.textContent = 'Polling SEC EDGAR + Ollama...';
+    statusEl.style.color = '#22d3ee';
+    ewFetch('/api/earnings-rubric', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rubric: val, ticker: activeTicker })
+    }).finally(function() {
+      ewFetch('/api/earnings-poll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: actionName || 'poll_now', ticker: activeTicker })
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d && d.state) renderWatcherState(d.state);
+      }).catch(function() {
+        statusEl.textContent = 'Watcher backend offline (run earnings_watcher.py on :8000)';
+        statusEl.style.color = '#fb923c';
+      });
+    });
+  };
+
+  function pollEarningsStatus() {
+    fetch('http://localhost:8000/api/earnings-status').catch(function() {
+      return isLocal ? Promise.reject() : fetch('/api/earnings-status');
+    }).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function(st) {
+      renderWatcherState(st);
+    }).catch(function() {
+      // Keep quiet when local :8000 service isn't started yet
+    });
+  }
+
+  rubricEl.addEventListener('change', function() {
+    try { localStorage.setItem(LS_KEY, rubricEl.value || ''); } catch (e) {}
+  });
+  pollEarningsStatus();
+  setInterval(pollEarningsStatus, 5000);
 })();
 </script>
 </body>
