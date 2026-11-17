@@ -580,6 +580,12 @@
   #earnings-rubric-input:focus { outline: none; border-color: #22d3ee; }
   #earnings-summary-output { background: #05080c; color: #e2e8f0; border: 1px solid #1e293b; border-radius: 5px; padding: 9px 11px; font-family: var(--font-mono); font-size: 12px; line-height: 1.5; white-space: pre-wrap; min-height: 112px; max-height: 320px; overflow-y: auto; }
   .ew-status { font-size: 11.5px; color: #94a3b8; font-family: var(--font-mono); }
+  #live-call-listener { background: #0b0f14; border: 1px solid #1e293b; border-radius: 6px; padding: 10px 12px; margin-top: 10px; }
+  .cl-controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+  #call-stream-url-input { flex: 1; min-width: 240px; background: #05080c; color: #e2e8f0; border: 1px solid #1e293b; border-radius: 5px; padding: 6px 9px; font-family: var(--font-mono); font-size: 12px; box-sizing: border-box; }
+  #call-stream-url-input:focus, #call-stream-label-input:focus { outline: none; border-color: #22d3ee; }
+  #call-stream-label-input { width: 170px; background: #05080c; color: #e2e8f0; border: 1px solid #1e293b; border-radius: 5px; padding: 6px 9px; font-family: var(--font-mono); font-size: 12px; box-sizing: border-box; }
+  #call-summary-output { background: #05080c; color: #e2e8f0; border: 1px solid #1e293b; border-radius: 5px; padding: 9px 11px; font-family: var(--font-mono); font-size: 12px; line-height: 1.5; white-space: pre-wrap; min-height: 96px; max-height: 320px; overflow-y: auto; }
   .spike-foot {
     background: #0d0d0d;
     border: 1px solid #2e2e2e;
@@ -814,7 +820,7 @@
         <span class="live-dot closed" title="AFTER-HOURS (RTH CLOSED 4:00 PM ET)"></span>
         <span class="tk-pill">DIA</span>
         <h1><span class="sem-crimson">$507.31</span> <span style="font-size:16px;">(<span class="sem-crimson">-1.62%</span>)</span></h1>
-        <span class="clock-pill" id="live-et-clock" title="Live Eastern Time (US Market Clock)">TUE NOV 17, 2026 • 04:31:39 PM ET</span>
+        <span class="clock-pill" id="live-et-clock" title="Live Eastern Time (US Market Clock)">TUE NOV 17, 2026 • 05:54:37 PM ET</span>
       </div>
       <div class="sub" style="margin-top:3px;">Snapshot: 2026-11-17 4:30 PM ET | Feed: finnhub | Run #418 (199 dates)</div>
     </div>
@@ -1091,6 +1097,25 @@
       <div id="earnings-summary-output" aria-live="polite">Waiting for Form 8-K / Exhibit 99.1 summary (auto-polls at 4:15 PM ET or click Poll Now / Test)...</div>
     </div>
   </div>
+
+  <div id="live-call-listener">
+    <div class="ew-head">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <b style="color:#22d3ee;letter-spacing:0.4px;font-size:12px;">LIVE CALL AUDIO LISTENER (60S CHUNKS &bull; FASTER-WHISPER + OLLAMA)</b>
+        <span class="ew-status" id="call-listener-status">Idle</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <button type="button" class="qbtn" id="cl-listen-url-btn" onclick="startCallListener('url')">Listen URL</button>
+        <button type="button" class="qbtn" id="cl-listen-sys-btn" onclick="startCallListener('system_audio')">Listen System Audio</button>
+        <button type="button" class="qbtn" id="cl-stop-btn" onclick="stopCallListener()" style="border-color:rgba(244,63,94,0.45);color:#f87171;">Stop</button>
+      </div>
+    </div>
+    <div class="cl-controls">
+      <input type="text" id="call-stream-url-input" aria-label="Earnings Call Audio or Stream URL" placeholder="Paste YouTube / .m3u8 IR webcast URL (or leave blank for Windows System Audio)..." />
+      <input type="text" id="call-stream-label-input" aria-label="Earnings Call Label" value="DIA Earnings Call" placeholder="Call label (e.g. NVDA Q3 Call)" />
+    </div>
+    <div id="call-summary-output" aria-live="polite">Idle — paste a stream URL or click Listen System Audio to transcribe 60s chunks locally via faster-whisper &amp; stream an objective Ollama recap...</div>
+  </div>
 </div>
 
 <!-- EXPANDABLE RIGHT-BOUND SLIDE-OVER DRAWER: WATCHLIST, EOD AUDITS, TRANCHE JOURNAL & CREATOR ARCHIVE -->
@@ -1359,6 +1384,95 @@ document.addEventListener('keydown', function(e) {
   });
   pollEarningsStatus();
   setInterval(pollEarningsStatus, 5000);
+
+  var callStatusEl = document.getElementById('call-listener-status');
+  var callSummaryEl = document.getElementById('call-summary-output');
+  var callUrlEl = document.getElementById('call-stream-url-input');
+  var callLabelEl = document.getElementById('call-stream-label-input');
+
+  function renderCallListenerState(st) {
+    if (!st || typeof st !== 'object' || !callStatusEl || !callSummaryEl) return;
+    var rawSt = String(st.status || 'idle');
+    var stUp = rawSt.charAt(0).toUpperCase() + rawSt.slice(1);
+    var parts = [stUp];
+    if (st.label) parts.push(st.label);
+    if (typeof st.chunks_processed === 'number' && st.chunks_processed > 0) {
+      parts.push('Chunks: ' + st.chunks_processed);
+    }
+    if (st.last_chunk_timestamp) parts.push(st.last_chunk_timestamp);
+    callStatusEl.textContent = parts.join(' • ');
+
+    if (rawSt === 'listening') callStatusEl.style.color = '#10b981';
+    else if (rawSt === 'processing') callStatusEl.style.color = '#22d3ee';
+    else if (rawSt === 'error') callStatusEl.style.color = '#f43f5e';
+    else callStatusEl.style.color = '#94a3b8';
+
+    var blocks = [];
+    if (st.running_summary && st.running_summary.trim()) {
+      blocks.push(st.running_summary.trim());
+    }
+    if (st.latest_transcript_chunk && st.latest_transcript_chunk.trim()) {
+      blocks.push('--- LATEST 60S TRANSCRIPT ---\n' + st.latest_transcript_chunk.trim());
+    }
+    if (st.error && st.error.trim()) {
+      blocks.push('Listener notice: ' + st.error.trim());
+    }
+    if (blocks.length > 0) {
+      callSummaryEl.textContent = blocks.join('\n\n');
+    }
+  }
+
+  window.startCallListener = function(mode) {
+    var urlVal = callUrlEl ? (callUrlEl.value || '').trim() : '';
+    var labelVal = callLabelEl ? (callLabelEl.value || '').trim() : (activeTicker + ' Earnings Call');
+    if (callStatusEl) {
+      callStatusEl.textContent = (mode === 'system_audio') ? 'Starting System Audio...' : 'Resolving Stream URL...';
+      callStatusEl.style.color = '#22d3ee';
+    }
+    ewFetch('/api/call-listener/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: mode, url: urlVal, label: labelVal })
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d && d.state) renderCallListenerState(d.state);
+    }).catch(function() {
+      if (callStatusEl) {
+        callStatusEl.textContent = 'Call listener backend offline (run earnings_watcher.py on :8000)';
+        callStatusEl.style.color = '#fb923c';
+      }
+    });
+  };
+
+  window.stopCallListener = function() {
+    ewFetch('/api/call-listener/stop', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d && d.state) renderCallListenerState(d.state);
+    }).catch(function() {
+      if (callStatusEl) {
+        callStatusEl.textContent = 'Call listener backend offline';
+        callStatusEl.style.color = '#fb923c';
+      }
+    });
+  };
+
+  function pollCallListenerStatus() {
+    fetch('http://localhost:8000/api/call-listener/status').catch(function() {
+      return isLocal ? Promise.reject() : fetch('/api/call-listener/status');
+    }).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function(st) {
+      renderCallListenerState(st);
+    }).catch(function() {
+      // Keep quiet when local :8000 service isn't running
+    });
+  }
+
+  pollCallListenerStatus();
+  setInterval(pollCallListenerStatus, 5000);
 })();
 </script>
 </body>
