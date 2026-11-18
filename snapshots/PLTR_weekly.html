@@ -256,7 +256,10 @@
   .rc-axis-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px; font-size: 11.5px; margin-bottom: 4px; }
   .rc-gauge { position: relative; height: 7px; border-radius: 4px; margin: 5px 0 3px 0; }
   .rc-tick { position: absolute; top: -2px; bottom: -2px; width: 2px; background: rgba(241, 245, 249, 0.55); transform: translateX(-50%); pointer-events: none; }
-  .rc-scale { display: flex; justify-content: space-between; font-size: 9.5px; color: var(--muted); font-family: var(--font-mono); }
+  .rc-scale { position: relative; height: 14px; font-size: 9.5px; color: var(--muted); font-family: var(--font-mono); margin-top: 2px; }
+  .rc-lbl { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; line-height: 1.2; }
+  .rc-lbl.rc-lbl-start { left: 0; transform: none; }
+  .rc-lbl.rc-lbl-end { right: 0; left: auto; transform: none; }
   .rc-synthesis { margin-top: 8px; padding-top: 7px; border-top: 1px solid #1e293b; font-size: 12px; color: #cbd5e1; line-height: 1.4; }
   .box {
     background: var(--bg-card);
@@ -837,7 +840,7 @@
         <span class="live-dot closed" title="AFTER-HOURS (RTH CLOSED 4:00 PM ET)"></span>
         <span class="tk-pill">PLTR</span>
         <h1><span class="sem-emerald">$156.67</span> <span style="font-size:16px;">(<span class="sem-emerald">+0.07%</span>)</span></h1>
-        <span class="clock-pill" id="live-et-clock" title="Live Eastern Time (US Market Clock)">WED NOV 18, 2026 • 04:08:55 PM ET</span>
+        <span class="clock-pill" id="live-et-clock" title="Live Eastern Time (US Market Clock)">WED NOV 18, 2026 • 05:39:06 PM ET</span>
       </div>
       <div class="sub" style="margin-top:3px;">Snapshot: 2026-11-18 4:07 PM ET | Feed: finnhub | Run #449 (200 dates)</div>
     </div>
@@ -889,14 +892,14 @@
             <span class="mono"><span style="color:#34d399;font-weight:800;">-1.28 SD</span> <span class="sub">(Mid $191.53 &bull; 1SD &plusmn;$27.16)</span></span>
           </div>
           <div class="rc-gauge" style="background:linear-gradient(90deg, rgba(244,63,94,0.45) 0%, rgba(251,146,60,0.38) 25%, rgba(16,185,129,0.35) 50%, rgba(251,146,60,0.38) 75%, rgba(244,63,94,0.45) 100%);" title="Signed SD stretch from macro regression trendline (-3.0 to +3.0 SD)">
-            <div class="rc-tick" style="left:16.7%;" title="-2.0 SD"></div>
+            <div class="rc-tick" style="left:16.67%;" title="-2.0 SD"></div>
             <div class="rc-tick" style="left:25.0%;" title="-1.5 SD"></div>
             <div class="rc-tick" style="left:50.0%;background:rgba(16,185,129,0.75);" title="0.0 SD Trendline Mid"></div>
             <div class="rc-tick" style="left:75.0%;" title="+1.5 SD"></div>
-            <div class="rc-tick" style="left:83.3%;" title="+2.0 SD"></div>
+            <div class="rc-tick" style="left:83.33%;" title="+2.0 SD"></div>
             <div class="gauge-dot" style="left:28.7%;border-color:#34d399;top:-2px;width:11px;height:11px;"></div>
           </div>
-          <div class="rc-scale"><span>-3.0 SD</span><span>-2.0</span><span>-1.5</span><span style="color:#34d399;">0 Mid</span><span>+1.5</span><span>+2.0</span><span>+3.0 SD</span></div>
+          <div class="rc-scale"><span class="rc-lbl rc-lbl-start">-3.0 SD</span><span class="rc-lbl" style="left:16.67%;">-2.0</span><span class="rc-lbl" style="left:25.0%;color:#fb923c;font-weight:700;">-1.5</span><span class="rc-lbl" style="left:50.0%;color:#34d399;font-weight:700;">0 Mid</span><span class="rc-lbl" style="left:75.0%;color:#fb923c;font-weight:700;">+1.5</span><span class="rc-lbl" style="left:83.33%;">+2.0</span><span class="rc-lbl rc-lbl-end">+3.0 SD</span></div>
         </div>
         <div class="rc-axis">
           <div class="rc-axis-row">
@@ -906,9 +909,10 @@
           <div class="rc-gauge" style="background:linear-gradient(90deg, rgba(16,185,129,0.38) 0%, rgba(34,211,238,0.35) 25%, rgba(251,146,60,0.42) 37.5%, rgba(244,63,94,0.48) 100%);" title="Forward options implied move breach (0.0x to 4.0x+, break threshold at 1.5x)">
             <div class="rc-tick" style="left:25.0%;" title="1.0x Wall Breach"></div>
             <div class="rc-tick" style="left:37.5%;background:#f43f5e;" title="1.5x Chain Reset Break"></div>
+            <div class="rc-tick" style="left:75.0%;" title="3.0x"></div>
             <div class="gauge-dot" style="left:44.2%;border-color:#f43f5e;top:-2px;width:11px;height:11px;"></div>
           </div>
-          <div class="rc-scale"><span>0.0x Pin</span><span>1.0x Drift</span><span style="color:#f87171;">1.5x Break</span><span>3.0x</span><span>4.0x+</span></div>
+          <div class="rc-scale"><span class="rc-lbl rc-lbl-start">0.0x Pin</span><span class="rc-lbl" style="left:25.0%;">1.0x</span><span class="rc-lbl" style="left:37.5%;color:#f87171;font-weight:700;">1.5x Break</span><span class="rc-lbl" style="left:75.0%;">3.0x</span><span class="rc-lbl rc-lbl-end">4.0x+</span></div>
         </div>
         <div class="rc-synthesis">Options chain snapped 1.77x outside expected move (legacy $170 pin broke), while staying inside multi-year trend (-1.28 SD)—event gap without trend break.</div>
       </div>
