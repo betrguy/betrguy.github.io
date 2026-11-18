@@ -241,6 +241,23 @@
   .expected-range-blk .micro-gauge { height: 7px; margin-top: 8px; margin-bottom: 10px; }
   .expected-range-blk .gauge-dot { top: -3px; width: 13px; height: 13px; }
   .expected-range-blk .gauge-labels { font-size: 11.5px; font-family: var(--font-mono); margin-top: 8px; padding-top: 2px; }
+  .regime-confirm-blk { background: #0b0f14; border: 1px solid #1e293b; padding: 11px 13px; margin-top: 8px; }
+  .rc-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .rc-badge { font-family: var(--font-mono); font-size: 11px; font-weight: 800; letter-spacing: 0.45px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border-hi); }
+  .rc-badge.rc-break { background: rgba(244, 63, 94, 0.18); color: #f87171; border-color: rgba(244, 63, 94, 0.72); animation: rc-pulse 2s infinite; }
+  .rc-badge.rc-warn { background: rgba(251, 146, 60, 0.16); color: #fb923c; border-color: rgba(251, 146, 60, 0.65); }
+  .rc-badge.rc-ok { background: rgba(16, 185, 129, 0.14); color: #34d399; border-color: rgba(16, 185, 129, 0.55); }
+  @keyframes rc-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.45); }
+    70% { box-shadow: 0 0 0 6px rgba(244, 63, 94, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+  }
+  .rc-axis { margin-top: 7px; }
+  .rc-axis-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px; font-size: 11.5px; margin-bottom: 4px; }
+  .rc-gauge { position: relative; height: 7px; border-radius: 4px; margin: 5px 0 3px 0; }
+  .rc-tick { position: absolute; top: -2px; bottom: -2px; width: 2px; background: rgba(241, 245, 249, 0.55); transform: translateX(-50%); pointer-events: none; }
+  .rc-scale { display: flex; justify-content: space-between; font-size: 9.5px; color: var(--muted); font-family: var(--font-mono); }
+  .rc-synthesis { margin-top: 8px; padding-top: 7px; border-top: 1px solid #1e293b; font-size: 12px; color: #cbd5e1; line-height: 1.4; }
   .box {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -817,10 +834,10 @@
   <div class="topbar">
     <div>
       <div class="brand-row">
-        <span class="live-dot closed" title="PRE-MARKET (04:00-09:30 ET)"></span>
+        <span class="live-dot" title="REGULAR SESSION OPEN (09:30-16:00 ET)"></span>
         <span class="tk-pill">SPY</span>
         <h1><span class="sem-emerald">$734.9</span> <span style="font-size:16px;">(<span class="sem-emerald">+0.34%</span>)</span></h1>
-        <span class="clock-pill" id="live-et-clock" title="Live Eastern Time (US Market Clock)">WED NOV 18, 2026 • 07:23:25 AM ET</span>
+        <span class="clock-pill" id="live-et-clock" title="Live Eastern Time (US Market Clock)">WED NOV 18, 2026 • 03:07:34 PM ET</span>
       </div>
       <div class="sub" style="margin-top:3px;">Snapshot: 2026-11-18 7:22 AM ET | Feed: yfinance_premarket (RR #1: Alpaca/Finnhub ready) | Run #435 (200 dates)</div>
     </div>
@@ -861,6 +878,40 @@
       <div style="margin-bottom:5px;"><b>2 days to Friday expire. Option magnets wake up.</b></div>
       
       <ul><li>PRE-MARKET (Before 9:30 AM ET): Regular options session opens at 9:30 AM ET.</li><li>Dealers hedge tighter and slow down wild price swings.</li><li>Big Fed news often hits at 2:00 PM ET.</li><li>Option costs (IV) usually drop fast right after 2:00 PM news.</li></ul>
+      <div class="metric-blk regime-confirm-blk" id="regime-confirmation-meter" style="border-left: 3px solid #10b981;">
+        <div class="rc-head">
+          <span class="stat-label" style="color:#22d3ee;font-weight:800;">REGIME BREAK &bull; DUAL-CONFIRMATION METER</span>
+          <span class="rc-badge rc-ok">NOISE / CONTAINED</span>
+        </div>
+        <div class="rc-axis">
+          <div class="rc-axis-row">
+            <span><b>1. Historical Stretch (Trendline SD)</b></span>
+            <span class="mono"><span style="color:#34d399;font-weight:800;">-1.30 SD</span> <span class="sub">(Mid $766.22 &bull; 1SD &plusmn;$24.14)</span></span>
+          </div>
+          <div class="rc-gauge" style="background:linear-gradient(90deg, rgba(244,63,94,0.45) 0%, rgba(251,146,60,0.38) 25%, rgba(16,185,129,0.35) 50%, rgba(251,146,60,0.38) 75%, rgba(244,63,94,0.45) 100%);" title="Signed SD stretch from macro regression trendline (-3.0 to +3.0 SD)">
+            <div class="rc-tick" style="left:16.7%;" title="-2.0 SD"></div>
+            <div class="rc-tick" style="left:25.0%;" title="-1.5 SD"></div>
+            <div class="rc-tick" style="left:50.0%;background:rgba(16,185,129,0.75);" title="0.0 SD Trendline Mid"></div>
+            <div class="rc-tick" style="left:75.0%;" title="+1.5 SD"></div>
+            <div class="rc-tick" style="left:83.3%;" title="+2.0 SD"></div>
+            <div class="gauge-dot" style="left:28.3%;border-color:#34d399;top:-2px;width:11px;height:11px;"></div>
+          </div>
+          <div class="rc-scale"><span>-3.0 SD</span><span>-2.0</span><span>-1.5</span><span style="color:#34d399;">0 Mid</span><span>+1.5</span><span>+2.0</span><span>+3.0 SD</span></div>
+        </div>
+        <div class="rc-axis">
+          <div class="rc-axis-row">
+            <span><b>2. Forward Options Breach (Chain Reset Z)</b></span>
+            <span class="mono"><span style="color:#fb923c;font-weight:800;">Z = 1.01x</span> <span class="sub">(Pin $750 &bull; Exp &plusmn;$14.99)</span></span>
+          </div>
+          <div class="rc-gauge" style="background:linear-gradient(90deg, rgba(16,185,129,0.38) 0%, rgba(34,211,238,0.35) 25%, rgba(251,146,60,0.42) 37.5%, rgba(244,63,94,0.48) 100%);" title="Forward options implied move breach (0.0x to 4.0x+, break threshold at 1.5x)">
+            <div class="rc-tick" style="left:25.0%;" title="1.0x Wall Breach"></div>
+            <div class="rc-tick" style="left:37.5%;background:#f43f5e;" title="1.5x Chain Reset Break"></div>
+            <div class="gauge-dot" style="left:25.2%;border-color:#fb923c;top:-2px;width:11px;height:11px;"></div>
+          </div>
+          <div class="rc-scale"><span>0.0x Pin</span><span>1.0x Drift</span><span style="color:#f87171;">1.5x Break</span><span>3.0x</span><span>4.0x+</span></div>
+        </div>
+        <div class="rc-synthesis">Inside trendline bounds (-1.30 SD) and options expected move (Z=1.01x &lt; 1.5x)—normal dealer pinning &amp; intraday noise.</div>
+      </div>
       <div class="metric-blk expected-range-blk">
         <div class="er-head">
           <span class="stat-label">EXPECTED RANGE</span>
