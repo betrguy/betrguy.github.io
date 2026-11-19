@@ -531,6 +531,19 @@
   .regime-stack { display: flex; flex-direction: column; gap: 12px; flex: 1; }
   .regime-metrics { display: grid; grid-template-columns: 1fr; gap: 9px; }
   .metric-blk { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 5px; padding: 9px 12px; font-size: 13.5px; }
+  .flow-regime-blk { background: #0b0f14; border: 1px solid #1e293b; padding: 10px 12px; }
+  .fr-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .fr-src { font-family: var(--font-mono); font-size: 10px; color: var(--muted); border: 1px solid var(--border); background: #161d26; padding: 1px 6px; border-radius: 4px; margin-left: 6px; }
+  .fr-badge { font-family: var(--font-mono); font-size: 10.5px; font-weight: 800; letter-spacing: 0.45px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border-hi); }
+  .fr-badge.fr-rotation { color: #22d3ee; background: rgba(34, 211, 238, 0.14); border-color: rgba(34, 211, 238, 0.55); }
+  .fr-badge.fr-rebalance { color: #fb923c; background: rgba(251, 146, 60, 0.16); border-color: rgba(251, 146, 60, 0.60); }
+  .fr-badge.fr-panic { color: #f87171; background: rgba(244, 63, 94, 0.18); border-color: rgba(244, 63, 94, 0.72); }
+  .fr-badge.fr-neutral { color: #94a3b8; background: rgba(148, 163, 184, 0.12); border-color: rgba(148, 163, 184, 0.38); }
+  .fr-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 7px; }
+  .fr-cell { background: #11161d; border: 1px solid #1e293b; border-radius: 4px; padding: 5px 7px; font-family: var(--font-mono); font-size: 11px; line-height: 1.3; }
+  .fr-cell-lbl { display: block; font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 2px; }
+  .fr-pending { font-size: 9px; color: #94a3b8; border: 1px solid #334155; border-radius: 3px; padding: 0 3px; margin-left: 3px; }
+  .fr-reason { font-size: 11.5px; color: #cbd5e1; line-height: 1.38; border-top: 1px solid #1e293b; padding-top: 6px; }
   /* Unified Diverging Strike Ladder */
   .strike-ladder { background: #0b0f14; border: 1px solid var(--border); border-radius: 5px; padding: 8px; font-size: 14px; }
   .strike-ladder .sub { font-size: 12.5px; }
@@ -837,10 +850,10 @@
   <div class="topbar">
     <div>
       <div class="brand-row">
-        <span class="live-dot closed" title="AFTER-HOURS (RTH CLOSED 4:00 PM ET)"></span>
+        <span class="live-dot closed" title="MARKET CLOSED (OVERNIGHT)"></span>
         <span class="tk-pill">COIN</span>
         <h1><span class="sem-crimson">$110.51</span> <span style="font-size:16px;">(<span class="sem-crimson">-3.92%</span>)</span></h1>
-        <span class="clock-pill" id="live-et-clock" title="Live Eastern Time (US Market Clock)">WED NOV 18, 2026 • 05:39:06 PM ET</span>
+        <span class="clock-pill" id="live-et-clock" title="Live Eastern Time (US Market Clock)">WED NOV 18, 2026 • 08:45:50 PM ET</span>
       </div>
       <div class="sub" style="margin-top:3px;">Snapshot: 2026-11-18 4:07 PM ET | Feed: finnhub | Run #450 (200 dates)</div>
     </div>
@@ -987,6 +1000,27 @@
               <div class="bar-fill dn-bg" style="width:32.5%"></div>
             </div>
             <div class="sub" style="margin-top:3px;">Heavy Call Buying (Upside Bets)</div>
+          </div>
+          <div class="metric-blk flow-regime-blk" id="flow-regime-card">
+            <div class="fr-head">
+              <div><span class="stat-label" style="color:#22d3ee;font-weight:800;">FLOW REGIME</span><span class="fr-src">15m: yfinance</span></div>
+              <span class="fr-badge fr-rotation">CASH-RAISE / ROTATION</span>
+            </div>
+            <div class="fr-strip">
+              <div class="fr-cell" title="Closing auction 15:45-16:00 ET volume vs 10:00-15:30 ET 15m average">
+                <span class="fr-cell-lbl">MOC Surge:</span>
+                <span style="color:#f1f5f9;font-weight:700;">0.0x</span> <span class="fr-pending">PENDING</span>
+              </div>
+              <div class="fr-cell" title="Share of post-10:00 AM ET 15m closes below cumulative session VWAP">
+                <span class="fr-cell-lbl">VWAP Bleed:</span>
+                <span style="color:#f1f5f9;font-weight:700;">0% bars &lt; VWAP</span>
+              </div>
+              <div class="fr-cell" title="Non-AI QQQ basket dispersion (PEP, COST, AMGN, TMUS, HON)">
+                <span class="fr-cell-lbl">Basket:</span>
+                <span style="color:#f1f5f9;font-weight:700;">MIXED</span>
+              </div>
+            </div>
+            <div class="fr-reason">Orderly cash-raising without panic (P/C 0.48, VIX -0.97, 0% bars &lt; VWAP) — systematic share supply (mixed basket).</div>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;justify-content:space-between;">
