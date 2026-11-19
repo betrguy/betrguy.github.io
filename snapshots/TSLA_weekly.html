@@ -188,6 +188,96 @@
     color: #22d3ee;
   }
   .qbtn-accent:hover { background: #1e293b; border-color: var(--cyan); }
+  .topbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .topbar-search {
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    height: 28px;
+    background: #070a0e;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    padding: 0 3px 0 9px;
+    gap: 4px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65);
+    transition: border-color 0.14s ease, box-shadow 0.14s ease;
+  }
+  .topbar-search:focus-within {
+    border-color: rgba(34, 211, 238, 0.58);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65), 0 1px 6px rgba(6, 182, 212, 0.18);
+  }
+  .topbar-search input[type=text] {
+    background: transparent;
+    border: none;
+    color: #22d3ee;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    width: 62px;
+    height: 100%;
+    padding: 0;
+    text-transform: uppercase;
+    outline: none;
+  }
+  .topbar-search input[type=text]::placeholder {
+    color: #64748b;
+    font-weight: 600;
+  }
+  .topbar-search button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 20px;
+    width: 24px;
+    padding: 0;
+    border-radius: 4px;
+    border: 1px solid rgba(34, 211, 238, 0.28);
+    background: rgba(6, 182, 212, 0.14);
+    color: #22d3ee;
+    cursor: pointer;
+    transition: all 0.14s ease;
+  }
+  .topbar-search button:hover {
+    background: #22d3ee;
+    color: #0b0f14;
+    border-color: #22d3ee;
+  }
+  .qbtn.topbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 28px;
+    background: #070a0e;
+    color: #cbd5e1;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    padding: 0 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.35px;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65);
+    transition: all 0.14s ease;
+  }
+  .qbtn.topbar-btn.topbar-icon-btn {
+    padding: 0 8px;
+  }
+  .qbtn.topbar-btn:hover {
+    color: #22d3ee;
+    background: rgba(6, 182, 212, 0.16);
+    border-color: rgba(34, 211, 238, 0.55);
+    box-shadow: 0 1px 6px rgba(6, 182, 212, 0.18);
+  }
   .sticky-dock {
     position: sticky;
     top: 0;
@@ -903,18 +993,18 @@
         <span class="live-dot closed" title="MARKET CLOSED (OVERNIGHT)"></span>
         <span class="tk-pill">TSLA</span>
         <h1><span class="sem-emerald">$383.72</span> <span style="font-size:16px;">(<span class="sem-emerald">+0.95%</span>)</span></h1>
-        <span class="clock-pill" id="live-et-clock" title="Live Eastern Time (US Market Clock)">WED NOV 18, 2026 • 09:44:31 PM ET</span>
+        <span class="clock-pill" id="live-et-clock" title="Live Eastern Time (US Market Clock)">WED NOV 18, 2026 • 09:54:48 PM ET</span>
       </div>
       <div class="sub" style="margin-top:3px;">Snapshot: 2026-11-18 4:07 PM ET | Feed: finnhub | Run #446 (200 dates)</div>
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
-      <form method="GET" action="/" style="display:flex;gap:4px;">
+    <div class="topbar-actions">
+      <form class="topbar-search" method="GET" action="/">
         <input type="hidden" name="tf" value="weekly">
-        <input type="text" name="ticker" value="TSLA" style="width:82px;text-transform:uppercase;" placeholder="Ticker">
-        <button type="submit" id="ticker-lookup-btn" aria-label="Lookup ticker" title="Lookup ticker" style="display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+        <input type="text" name="ticker" value="TSLA" placeholder="Ticker" aria-label="Ticker symbol">
+        <button type="submit" id="ticker-lookup-btn" aria-label="Lookup ticker" title="Lookup ticker"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
       </form>
-      <a class="qbtn" id="refresh-live-btn" href="/?ticker=TSLA&tf=weekly&refresh=1" aria-label="Refresh live data" title="Refresh live data (bypass 45s cache)" style="display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></a>
-      <a class="qbtn" target="_blank" href="/api/readout?ticker=TSLA&tf=weekly">Raw Data</a>
+      <a class="qbtn topbar-btn topbar-icon-btn" id="refresh-live-btn" href="/?ticker=TSLA&tf=weekly&refresh=1" aria-label="Refresh live data" title="Refresh live data (bypass 45s cache)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></a>
+      <a class="qbtn topbar-btn" target="_blank" href="/api/readout?ticker=TSLA&tf=weekly">Raw Data</a>
     </div>
   </div>
 
