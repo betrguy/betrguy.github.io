@@ -395,16 +395,19 @@
         var a = ev.target && ev.target.closest ? ev.target.closest("a") : null;
         if (!a) return;
         var href = a.getAttribute("href") || "";
-        if (href.startsWith("/?") || href.startsWith("/poll_intel")) {
+        if (href === "/" || href.startsWith("/?") || href.startsWith("/poll_intel")) {
           ev.preventDefault();
-          var q = new URLSearchParams(href.split("?")[1] || "");
+          var targetHref = href === "/"
+            ? ("/?ticker=" + encodeURIComponent(state.ticker) + "&tf=" + encodeURIComponent(state.tf))
+            : href;
+          var q = new URLSearchParams(targetHref.split("?")[1] || "");
           if (q.get("ticker")) state.ticker = q.get("ticker").toUpperCase();
           if (q.get("tf")) state.tf = q.get("tf").toLowerCase();
           tickerInput.value = state.ticker;
           tfSelect.value = state.tf;
           populateTickerSelect();
           if (state.mode === "live") {
-            fetchLivePath(href);
+            fetchLivePath(targetHref);
           } else {
             loadOfflineSnapshot(state.ticker, state.tf);
           }
