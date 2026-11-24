@@ -197,6 +197,7 @@
 <script>
 (function () {
   var DEFAULT_LOCAL = "http://127.0.0.1:5090";
+  var GH_LIVE_API = "https://api.github.com/repos/betrguy/betrguy.github.io/contents/snapshots/live_endpoint.json?ref=v4";
   var params = new URLSearchParams(window.location.search);
   if (params.get("backend")) {
     localStorage.setItem("mc_backend_url", params.get("backend").replace(/\/+$/, ""));
@@ -205,8 +206,10 @@
   var state = {
     ticker: (params.get("ticker") || "NVDA").toUpperCase(),
     tf: (params.get("tf") || "weekly").toLowerCase(),
+    view: (params.get("view") || "").toLowerCase(),
     customUrl: (localStorage.getItem("mc_backend_url") || "").replace(/\/+$/, ""),
     tunnelUrl: "",
+    apiTunnelUrl: "",
     backendUrl: "",
     mode: "checking",
     manifest: { items: [] }
@@ -267,10 +270,25 @@
     populateTickerSelect();
   }
 
-  async function probeEndpoint(baseUrl) {
+  async function fetchInstantTunnelUrl() {
+    try {
+      var res = await fetch(GH_LIVE_API, {
+        headers: { "Accept": "application/vnd.github.raw+json" },
+        cache: "no-store"
+      });
+      if (!res.ok) return "";
+      var d = await res.json();
+      return String((d && d.live_url) || "").replace(/\/+$/, "");
+    } catch (_) {
+      return "";
+    }
+  }
+
+  async function probeEndpoint(baseUrl, timeoutMs) {
     if (!baseUrl) return null;
+    var limitMs = timeoutMs || 6500;
     var ctrl = new AbortController();
-    var timer = setTimeout(function () { ctrl.abort(); }, 3200);
+    var timer = setTimeout(function () { ctrl.abort(); }, limitMs);
     try {
       var res = await fetch(baseUrl + "/api/health", {
         mode: "cors",
@@ -290,7 +308,7 @@
     }
   }
 
-  async function discoverBackend() {
+  async function discoverBackend(isRetry) {
     var candidates = [];
     function addCand(u) {
       if (u && candidates.indexOf(u) === -1) candidates.push(u);
@@ -298,9 +316,24 @@
     addCand(state.customUrl);
     addCand(DEFAULT_LOCAL);
     addCand(state.tunnelUrl);
-    var results = await Promise.all(candidates.map(probeEndpoint));
+    var probeMs = isRetry ? 9000 : 6500;
+    var results = await Promise.all(candidates.map(function (u) {
+      return probeEndpoint(u, probeMs);
+    }));
     for (var i = 0; i < results.length; i++) {
       if (results[i]) return results[i];
+    }
+    var freshUrl = await fetchInstantTunnelUrl();
+    if (freshUrl) {
+      state.apiTunnelUrl = freshUrl;
+      state.tunnelUrl = freshUrl;
+      var hit = await probeEndpoint(freshUrl, 9000);
+      if (hit) return hit;
+      if (isRetry) {
+        await new Promise(function (r) { setTimeout(r, 800); });
+        hit = await probeEndpoint(freshUrl, 9000);
+        if (hit) return hit;
+      }
     }
     return null;
   }
@@ -358,6 +391,11 @@
         throw new Error("Unexpected response");
       }
       var qp = new URLSearchParams((pathAndQuery.split("?")[1] || ""));
+      if (qp.get("view")) {
+        state.view = qp.get("view").toLowerCase();
+      } else if (qp.get("ticker")) {
+        state.view = "";
+      }
       if (qp.get("ticker")) {
         state.ticker = qp.get("ticker").toUpperCase();
         tickerInput.value = state.ticker;
@@ -370,7 +408,8 @@
       emptyState.classList.remove("open");
       state.mode = "live";
       var labelHost = state.backendUrl.indexOf("127.0.0.1") !== -1 ? "LOCALHOST" : "LIVE TUNNEL";
-      setStatus("live", "LIVE \u2022 " + labelHost, state.ticker + " (" + state.tf + ")");
+      var metaLabel = state.view === "vol-desk" ? "VOL DESK" : (state.ticker + " (" + state.tf + ")");
+      setStatus("live", "LIVE \u2022 " + labelHost, metaLabel);
       frame.removeAttribute("src");
       frame.srcdoc = htmlText;
     } catch (_) {
@@ -401,6 +440,7 @@
             ? ("/?ticker=" + encodeURIComponent(state.ticker) + "&tf=" + encodeURIComponent(state.tf))
             : href;
           var q = new URLSearchParams(targetHref.split("?")[1] || "");
+          state.view = q.get("view") ? q.get("view").toLowerCase() : "";
           if (q.get("ticker")) state.ticker = q.get("ticker").toUpperCase();
           if (q.get("tf")) state.tf = q.get("tf").toLowerCase();
           tickerInput.value = state.ticker;
@@ -439,14 +479,23 @@
 
   frame.addEventListener("load", wireFrameInteractions);
 
-  async function renderTarget() {
-    setStatus("", "CONNECTING TO LAPTOP...", "Checking localhost & live tunnel...");
+  async function renderTarget(forceLiveRefresh) {
+    var isRetry = Boolean(forceLiveRefresh);
+    setStatus(
+      "",
+      isRetry ? "RETRYING LIVE SERVER..." : "CONNECTING TO LAPTOP...",
+      isRetry ? "Checking GitHub endpoint & waking live tunnel..." : "Checking localhost & live tunnel..."
+    );
     await loadMetadata();
-    var found = await discoverBackend();
+    var found = await discoverBackend(isRetry);
     if (found) {
       state.backendUrl = found.url;
       state.mode = "live";
-      await fetchLivePath("/?ticker=" + encodeURIComponent(state.ticker) + "&tf=" + encodeURIComponent(state.tf));
+      var suffix = isRetry ? "&refresh=1" : "";
+      var targetPath = state.view === "vol-desk"
+        ? ("/?view=vol-desk" + suffix)
+        : ("/?ticker=" + encodeURIComponent(state.ticker) + "&tf=" + encodeURIComponent(state.tf) + suffix);
+      await fetchLivePath(targetPath);
       return;
     }
     loadOfflineSnapshot(state.ticker, state.tf);
@@ -458,7 +507,7 @@
     if (state.mode === "live") {
       fetchLivePath("/?ticker=" + encodeURIComponent(state.ticker) + "&tf=" + encodeURIComponent(state.tf));
     } else {
-      renderTarget();
+      renderTarget(false);
     }
   });
 
@@ -470,7 +519,7 @@
     if (state.mode === "live") {
       fetchLivePath("/?ticker=" + encodeURIComponent(state.ticker) + "&tf=" + encodeURIComponent(state.tf));
     } else {
-      renderTarget();
+      renderTarget(false);
     }
   });
 
@@ -478,7 +527,9 @@
     if (e.key === "Enter") document.getElementById("go-btn").click();
   });
 
-  document.getElementById("retry-btn").addEventListener("click", renderTarget);
+  document.getElementById("retry-btn").addEventListener("click", function () {
+    renderTarget(true);
+  });
   document.getElementById("cfg-btn").addEventListener("click", function () {
     cfgPop.classList.toggle("open");
   });
@@ -492,7 +543,7 @@
       localStorage.removeItem("mc_backend_url");
     }
     cfgPop.classList.remove("open");
-    renderTarget();
+    renderTarget(false);
   });
 
   document.getElementById("reset-backend-btn").addEventListener("click", function () {
@@ -500,10 +551,10 @@
     backendInput.value = "";
     localStorage.removeItem("mc_backend_url");
     cfgPop.classList.remove("open");
-    renderTarget();
+    renderTarget(false);
   });
 
-  renderTarget();
+  renderTarget(false);
 })();
 </script>
 </body>
