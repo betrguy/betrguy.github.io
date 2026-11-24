@@ -1,0 +1,1729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ANT Market Intelligence Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg-canvas: #050505;
+    --bg-card: #050505;
+    --bg-elevated: #050505;
+    --border: #1e293b;
+    --border-hi: #334155;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --accent: #06b6d4;
+    --cyan: #22d3ee;
+    --up: #10b981;
+    --dn: #ef4444;
+    --sem-emerald: #34d399;
+    --sem-crimson: #f87171;
+    --sem-cyan: #22d3ee;
+    --sem-slate: #94a3b8;
+    --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "IBM Plex Mono", "Cascadia Mono", "SF Mono", Consolas, monospace;
+    --font-terminal: "Space Grotesk", "IBM Plex Mono", "Bahnschrift", "Cascadia Mono", "SF Mono", Consolas, sans-serif;
+  }
+  * { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--border-hi) var(--bg-canvas); }
+  html { scroll-behavior: smooth; color-scheme: dark; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-canvas); }
+  ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 4px; border: 2px solid var(--bg-canvas); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
+  ::-webkit-scrollbar-corner { background: var(--bg-canvas); }
+  body {
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    background-color: var(--bg-canvas);
+    color: var(--text);
+    margin: 0;
+    padding: 18px 28px 40px 28px;
+    font-size: 13px;
+    line-height: 1.38;
+  }
+  #nav-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    width: 0;
+    background: linear-gradient(90deg, var(--cyan), var(--accent));
+    z-index: 99;
+    transition: width 0.35s ease;
+    pointer-events: none;
+  }
+  #page-loading-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 5, 5, 0.65);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.14s ease;
+  }
+  #page-loading-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .loading-spinner {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3.5px solid rgba(34, 211, 238, 0.22);
+    border-top-color: #22d3ee;
+    animation: mc-spin 0.75s linear infinite;
+  }
+  @keyframes mc-spin {
+    to { transform: rotate(360deg); }
+  }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .chain-table { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13.5px; }
+  .chain-table th { font-family: var(--font-sans); font-size: 11.5px; }
+  .wrap { max-width: 1440px; margin: 0 auto; padding: 0 6px; }
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-card);
+    padding: 12px 16px;
+    border: 1px solid var(--border-hi);
+    border-radius: 6px;
+    margin-bottom: 10px;
+  }
+  .brand-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--up);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: pulse-ring 2.2s infinite;
+    display: inline-block;
+  }
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.65); }
+    70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  }
+  .live-dot.closed { background: #94a3b8; animation: none; box-shadow: none; }
+  .clock-pill {
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    height: 24px;
+    background: #050505;
+    color: #cbd5e1;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    padding: 0 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.35px;
+    line-height: 1;
+    white-space: nowrap;
+    text-transform: uppercase;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65);
+  }
+  .past-row td { opacity: 0.58; }
+  .tk-pill {
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    height: 24px;
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.22) 0%, rgba(5, 5, 5, 0.96) 100%);
+    color: #22d3ee;
+    border: 1px solid rgba(34, 211, 238, 0.58);
+    border-radius: 6px;
+    padding: 0 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.55px;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.65), 0 1px 6px rgba(6, 182, 212, 0.20);
+  }
+  input[type=text], input[type=number] {
+    background: #050505;
+    color: #f1f5f9;
+    border: 1px solid var(--border-hi);
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 12.5px;
+    font-family: var(--font-sans);
+  }
+  #sec-audit input { font-family: var(--font-mono); }
+  input:focus { outline: none; border-color: var(--cyan); }
+  button, .qbtn {
+    background: #050505;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+  button:hover, .qbtn:hover { background: #0d131a; border-color: var(--border-hi); }
+  .qbtn.active {
+    background: linear-gradient(135deg, #06b6d4, #22d3ee);
+    color: #050505;
+    border-color: #22d3ee;
+    font-weight: 700;
+  }
+  .qbtn-accent {
+    background: #050505;
+    border-color: #1e3a4c;
+    color: #22d3ee;
+  }
+  .qbtn-accent:hover { background: #0d131a; border-color: var(--cyan); }
+  .topbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .topbar-search {
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    height: 28px;
+    background: #050505;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    padding: 0 3px 0 9px;
+    gap: 4px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65);
+    transition: border-color 0.14s ease, box-shadow 0.14s ease;
+  }
+  .topbar-search:focus-within {
+    border-color: rgba(34, 211, 238, 0.58);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65), 0 1px 6px rgba(6, 182, 212, 0.18);
+  }
+  .topbar-search input[type=text] {
+    background: transparent;
+    border: none;
+    color: #22d3ee;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    width: 62px;
+    height: 100%;
+    padding: 0;
+    text-transform: uppercase;
+    outline: none;
+  }
+  .topbar-search input[type=text]::placeholder {
+    color: #64748b;
+    font-weight: 600;
+  }
+  .topbar-search button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 20px;
+    width: 24px;
+    padding: 0;
+    border-radius: 4px;
+    border: 1px solid rgba(34, 211, 238, 0.28);
+    background: rgba(6, 182, 212, 0.14);
+    color: #22d3ee;
+    cursor: pointer;
+    transition: all 0.14s ease;
+  }
+  .topbar-search button:hover {
+    background: #22d3ee;
+    color: #050505;
+    border-color: #22d3ee;
+  }
+  .qbtn.topbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 28px;
+    background: #050505;
+    color: #cbd5e1;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    padding: 0 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.35px;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65);
+    transition: all 0.14s ease;
+  }
+  .qbtn.topbar-btn.topbar-icon-btn {
+    padding: 0 8px;
+  }
+  .qbtn.topbar-btn:hover {
+    color: #22d3ee;
+    background: rgba(6, 182, 212, 0.16);
+    border-color: rgba(34, 211, 238, 0.55);
+    box-shadow: 0 1px 6px rgba(6, 182, 212, 0.18);
+  }
+  .sticky-dock {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: rgba(5, 5, 5, 0.94);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 14px;
+  }
+  .jump-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+  .jump-bar a {
+    color: #cbd5e1;
+    text-decoration: none;
+    box-sizing: border-box;
+    height: 24px;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 0 10px;
+    border-radius: 6px;
+    background: #050505;
+    border: 1px solid #1e293b;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.65);
+    transition: all 0.14s ease;
+    line-height: 1;
+  }
+  .jump-bar a:hover {
+    color: #22d3ee;
+    background: rgba(6, 182, 212, 0.16);
+    border-color: rgba(34, 211, 238, 0.55);
+    box-shadow: 0 1px 6px rgba(6, 182, 212, 0.18);
+  }
+  .pillar-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 16px 0 8px 0;
+    padding: 0 4px;
+  }
+  .pillar-title {
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: #e5e5e5;
+  }
+  .pillar-sub { font-size: 11px; color: var(--muted); }
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; align-items: stretch; }
+  .kpi-grid > .box { padding: 16px 18px; display: flex; flex-direction: column; }
+  #sec-today ul { font-size: 13.5px; line-height: 1.5; margin: 6px 0 10px 0; }
+  #sec-cal table th, #sec-cal table td { padding: 6px 9px; font-size: 13px; }
+  .micro-gauge { position: relative; background: #1f1f1f; height: 5px; border-radius: 3px; margin-top: 5px; }
+  .gauge-dot {
+    position: absolute;
+    top: -3px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid var(--cyan);
+    transform: translateX(-50%);
+    box-shadow: 0 0 6px rgba(56, 189, 248, 0.55);
+  }
+  .gauge-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .expected-range-blk { padding: 12px 14px; margin-top: 10px; }
+  .expected-range-blk .er-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; margin-bottom: 10px; }
+  .expected-range-blk .micro-gauge { height: 7px; margin-top: 8px; margin-bottom: 10px; }
+  .expected-range-blk .gauge-dot { top: -3px; width: 13px; height: 13px; }
+  .expected-range-blk .gauge-labels { font-size: 11.5px; font-family: var(--font-mono); margin-top: 8px; padding-top: 2px; }
+  .regime-confirm-blk { background: #050505; border: 1px solid #1e293b; padding: 11px 13px; margin-top: 8px; }
+  .rc-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .rc-badge { display: inline-flex; align-items: center; box-sizing: border-box; height: 24px; font-family: var(--font-mono); font-size: 11px; font-weight: 800; letter-spacing: 0.4px; padding: 0 10px; border-radius: 6px; line-height: 1; white-space: nowrap; border: 1px solid var(--border-hi); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.55), 0 1px 6px rgba(0, 0, 0, 0.25); }
+  .rc-badge.rc-break { background: linear-gradient(180deg, rgba(244, 63, 94, 0.22) 0%, rgba(15, 8, 12, 0.92) 100%); color: #f87171; border-color: rgba(244, 63, 94, 0.72); animation: rc-pulse 2s infinite; }
+  .rc-badge.rc-warn { background: linear-gradient(180deg, rgba(251, 146, 60, 0.22) 0%, rgba(18, 11, 7, 0.92) 100%); color: #fb923c; border-color: rgba(251, 146, 60, 0.65); }
+  .rc-badge.rc-ok { background: linear-gradient(180deg, rgba(16, 185, 129, 0.20) 0%, rgba(7, 15, 12, 0.92) 100%); color: #34d399; border-color: rgba(16, 185, 129, 0.55); }
+  @keyframes rc-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.45); }
+    70% { box-shadow: 0 0 0 6px rgba(244, 63, 94, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+  }
+  .rc-axis { margin-top: 7px; }
+  .rc-axis-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px; font-size: 11.5px; margin-bottom: 4px; }
+  .rc-gauge { position: relative; height: 7px; border-radius: 4px; margin: 5px 0 3px 0; }
+  .rc-tick { position: absolute; top: -2px; bottom: -2px; width: 2px; background: rgba(241, 245, 249, 0.55); transform: translateX(-50%); pointer-events: none; }
+  .rc-scale { position: relative; height: 14px; font-size: 9.5px; color: var(--muted); font-family: var(--font-mono); margin-top: 2px; }
+  .rc-lbl { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; line-height: 1.2; }
+  .rc-lbl.rc-lbl-start { left: 0; transform: none; }
+  .rc-lbl.rc-lbl-end { right: 0; left: auto; transform: none; }
+  .rc-synthesis { margin-top: 8px; padding-top: 7px; border-top: 1px solid #1e293b; font-size: 12px; color: #cbd5e1; line-height: 1.4; }
+  .box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 13px 16px;
+    margin-bottom: 12px;
+  }
+  .lazy-sec { content-visibility: auto; contain-intrinsic-size: 400px; }
+  h1, h1 span { font-family: var(--font-terminal); font-variant-numeric: tabular-nums; }
+  h1 { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; margin: 0; display: inline; }
+  h2, .term-hdr {
+    font-family: var(--font-terminal);
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+    color: #93c5fd;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+  ul { margin: 3px 0 0 0; padding-left: 16px; }
+  li { margin-bottom: 3px; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  th, td { border: 1px solid var(--border); padding: 4px 7px; text-align: left; vertical-align: top; }
+  th { background: var(--bg-elevated); color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.3px; }
+  tbody tr:hover td { background: #0d131a; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .sub { color: var(--muted); font-size: 11.5px; }
+  .hot { background: rgba(239, 68, 68, 0.10); }
+  .up { color: #34d399; font-weight: 700; }
+  .dn { color: #f87171; font-weight: 700; }
+  .sem-emerald { color: #34d399; font-weight: 700; }
+  .sem-crimson { color: #f87171; font-weight: 700; }
+  .sem-cyan { color: #22d3ee; font-weight: 700; }
+  .sem-slate { color: #94a3b8; font-weight: 600; }
+  .sem-z-intact { color: #22d3ee; font-weight: 800; }
+  .sem-z-breach { color: #fb923c; font-weight: 800; }
+  .sem-z-reset { color: #f43f5e; font-weight: 800; }
+  .z-badge {
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    height: 24px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.35px;
+    padding: 0 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  .z-badge.z-badge-sm { height: 24px; font-size: 11px; padding: 0 10px; }
+  .z-badge.z-intact {
+    color: #22d3ee;
+    background: linear-gradient(180deg, rgba(34, 211, 238, 0.20) 0%, rgba(7, 13, 18, 0.92) 100%);
+    border: 1px solid rgba(34, 211, 238, 0.55);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.55), 0 1px 6px rgba(34, 211, 238, 0.16);
+  }
+  .z-badge.z-breach {
+    color: #fb923c;
+    background: linear-gradient(180deg, rgba(251, 146, 60, 0.22) 0%, rgba(18, 11, 7, 0.92) 100%);
+    border: 1px solid rgba(251, 146, 60, 0.62);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.55), 0 1px 6px rgba(251, 146, 60, 0.16);
+  }
+  .z-badge.z-reset {
+    color: #f43f5e;
+    background: linear-gradient(180deg, rgba(244, 63, 94, 0.24) 0%, rgba(15, 8, 12, 0.94) 100%);
+    border: 1px solid rgba(244, 63, 94, 0.78);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.55), 0 1px 8px rgba(244, 63, 94, 0.24);
+  }
+  .z-context-note {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.32;
+    margin: 3px 0 6px 0;
+  }
+  .edge-pill {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+    padding: 7px 11px;
+    border-radius: 6px;
+    background: #050505;
+    border: 1px solid var(--border-hi);
+    margin: 0 0 10px 0;
+  }
+  .edge-pill.edge-prime {
+    border-color: rgba(16, 185, 129, 0.6);
+    background: rgba(16, 185, 129, 0.10);
+  }
+  .edge-pill.edge-selective {
+    border-color: rgba(34, 211, 238, 0.55);
+    background: rgba(34, 211, 238, 0.10);
+  }
+  .edge-pill.edge-wait {
+    border-color: rgba(244, 63, 94, 0.65);
+    background: rgba(244, 63, 94, 0.12);
+  }
+  .edge-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.35px;
+  }
+  .edge-prime .edge-head { color: #10b981; }
+  .edge-selective .edge-head { color: #22d3ee; }
+  .edge-wait .edge-head { color: #f43f5e; }
+  .edge-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #cbd5e1;
+  }
+  .edge-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .edge-row-lbl {
+    min-width: 98px;
+    white-space: nowrap;
+  }
+  .edge-seg-track {
+    flex: 1;
+    background: #050505;
+    border: 1px solid #1e293b;
+    border-radius: 3px;
+    overflow: hidden;
+    height: 6px;
+  }
+  .edge-seg-fill {
+    width: 100%;
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #ef4444 0%, #fb923c 45%, #10b981 100%);
+  }
+  .alert { background: rgba(239, 68, 68, 0.14); border: 1px solid #ef4444; border-radius: 5px; padding: 6px 9px; margin-bottom: 7px; font-weight: 700; color: #fecaca; }
+  .stat-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .stat { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 5px; padding: 6px 8px; flex: 1; min-width: 140px; }
+  .stat-label { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
+  .stat-val { font-size: 15px; font-weight: 700; margin-top: 1px; font-variant-numeric: tabular-nums; }
+  #sec-walls .stat-val { font-family: var(--font-mono); }
+  .viz-strip.viz-strip-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 4px 0 8px 0; }
+  #sec-walls .viz-v { font-family: var(--font-mono); font-size: 13px; }
+  .pill { display: inline-flex; align-items: center; box-sizing: border-box; height: 24px; padding: 0 10px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.25px; line-height: 1; white-space: nowrap; vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.55), 0 1px 4px rgba(0, 0, 0, 0.25); }
+  .pill-red { background: linear-gradient(180deg, rgba(239, 68, 68, 0.22) 0%, rgba(15, 8, 12, 0.92) 100%); color: #f87171; border: 1px solid rgba(244, 63, 94, 0.58); }
+  .pill-amber { background: linear-gradient(180deg, rgba(6, 182, 212, 0.20) 0%, rgba(7, 13, 18, 0.92) 100%); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.52); }
+  .pill-green { background: linear-gradient(180deg, rgba(16, 185, 129, 0.20) 0%, rgba(7, 15, 12, 0.92) 100%); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.52); }
+  .pill-blue { background: linear-gradient(180deg, rgba(6, 182, 212, 0.20) 0%, rgba(7, 13, 18, 0.92) 100%); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.52); }
+  .pill-orange { background: linear-gradient(180deg, rgba(251, 146, 60, 0.22) 0%, rgba(18, 11, 7, 0.92) 100%); color: #fb923c; border: 1px solid rgba(251, 146, 60, 0.58); }
+  .pill-muted { background: #050505; color: #cbd5e1; border: 1px solid #1e293b; box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65); }
+  .iv-spread-inline { margin-left: 5px; font-weight: 600; color: #cbd5e1; }
+  .play-pill-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .ladder-mid .pill { height: auto; padding: 0 4px; border-radius: 4px; font-size: 9.5px; }
+  .bar-track { background: #1e293b; height: 5px; border-radius: 3px; margin-top: 4px; overflow: hidden; display: flex; }
+  .bar-track.sm { height: 4px; margin-top: 3px; }
+  .bar-fill { background: var(--cyan); height: 100%; }
+  .bar-fill.pin { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+  .bar-fill.up-bg { background: var(--up); }
+  .bar-fill.dn-bg { background: var(--dn); }
+  .fld { display: flex; flex-direction: column; gap: 2px; font-size: 10.5px; color: var(--muted); }
+  .lnk { color: var(--cyan); text-decoration: none; }
+  .lnk:hover, .lnk-plain:hover { text-decoration: underline; }
+  .lnk-plain { color: var(--text); text-decoration: none; }
+  code { font-family: var(--font-sans); font-size: 10.5px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.3px; background: #050505; padding: 1px 4px; border-radius: 3px; border: 1px solid var(--border); }
+  .viz-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    background: #050505;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    margin: 6px 0 8px 0;
+    overflow: hidden;
+  }
+  .viz-item {
+    display: grid;
+    grid-template-rows: auto minmax(34px, auto) 1fr;
+    justify-items: stretch;
+    align-items: center;
+    text-align: center;
+    padding: 0;
+    min-width: 0;
+  }
+  .viz-item:not(:last-child) { border-right: 1px solid #1e293b; }
+  .viz-k {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 700;
+    padding: 6px 10px 5px 10px;
+    background: #050505;
+    border-bottom: 1px solid #1e293b;
+    text-align: center;
+  }
+  .viz-v {
+    font-size: 12.5px;
+    line-height: 1.3;
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 12px;
+  }
+  .viz-v .pill { height: 24px; font-size: 11px; padding: 0 10px; border-radius: 6px; line-height: 1; }
+  .viz-sub {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.35;
+    padding: 6px 12px 8px 12px;
+    border-top: 1px solid #222222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    height: 100%;
+    box-sizing: border-box;
+  }
+  .viz-foot {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    background: #050505;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .viz-foot-item {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    justify-items: stretch;
+    align-items: center;
+    text-align: center;
+    min-width: 0;
+  }
+  .viz-foot-item:not(:last-child) { border-right: 1px solid #1e293b; }
+  .viz-foot-body {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+    padding: 8px 14px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 3px;
+    height: 100%;
+    box-sizing: border-box;
+  }
+  .legend-pills { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; background: transparent; border: none; padding: 0; box-shadow: none; }
+  .lpill {
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    height: 24px;
+    gap: 6px;
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 5px;
+    background: #050505;
+    border: 1px solid #1e293b;
+    color: #94a3b8;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.65);
+    transition: all 0.14s ease;
+    line-height: 1;
+  }
+  .lpill.active { border-color: rgba(148, 163, 184, 0.38); color: #f1f5f9; background: #050505; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); }
+  .lpill:hover { border-color: rgba(34, 211, 238, 0.48); color: #ffffff; }
+  .lpill:not(.active) { opacity: 0.48; }
+  .ldot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .regime-stack { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .regime-metrics { display: grid; grid-template-columns: 1fr; gap: 9px; }
+  .metric-blk { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 5px; padding: 9px 12px; font-size: 13.5px; }
+  .flow-regime-blk { background: #050505; border: 1px solid #1e293b; padding: 10px 12px; }
+  .fr-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .fr-src { display: inline-flex; align-items: center; box-sizing: border-box; height: 24px; font-family: var(--font-mono); font-size: 10px; color: var(--muted); border: 1px solid #1e293b; background: #050505; padding: 0 8px; border-radius: 6px; margin-left: 6px; line-height: 1; vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.65); }
+  .fr-badge { display: inline-flex; align-items: center; box-sizing: border-box; height: 24px; font-family: var(--font-mono); font-size: 11px; font-weight: 800; letter-spacing: 0.35px; padding: 0 10px; border-radius: 6px; line-height: 1; white-space: nowrap; border: 1px solid var(--border-hi); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.55), 0 1px 6px rgba(0, 0, 0, 0.25); }
+  .fr-badge.fr-rotation { color: #22d3ee; background: linear-gradient(180deg, rgba(34, 211, 238, 0.22) 0%, rgba(7, 13, 18, 0.92) 100%); border-color: rgba(34, 211, 238, 0.58); }
+  .fr-badge.fr-rebalance { color: #fb923c; background: linear-gradient(180deg, rgba(251, 146, 60, 0.22) 0%, rgba(18, 11, 7, 0.92) 100%); border-color: rgba(251, 146, 60, 0.62); }
+  .fr-badge.fr-panic { color: #f87171; background: linear-gradient(180deg, rgba(244, 63, 94, 0.22) 0%, rgba(15, 8, 12, 0.92) 100%); border-color: rgba(244, 63, 94, 0.72); }
+  .fr-badge.fr-neutral { color: #94a3b8; background: #050505; border-color: #1e293b; }
+  .fr-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 7px; }
+  .fr-cell { background: #050505; border: 1px solid #1e293b; border-radius: 4px; padding: 5px 7px; font-family: var(--font-mono); font-size: 11px; line-height: 1.3; }
+  .fr-cell-lbl { display: block; font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 2px; }
+  .fr-pending { font-size: 9px; color: #94a3b8; border: 1px solid #334155; border-radius: 3px; padding: 0 3px; margin-left: 3px; }
+  .fr-reason { font-size: 11.5px; color: #cbd5e1; line-height: 1.38; border-top: 1px solid #1e293b; padding-top: 6px; }
+  /* Unified Expiration Segmented Dock */
+  .exp-seg-dock { display: inline-flex; align-items: center; gap: 3px; background: #050505; border: 1px solid #1e293b; border-radius: 7px; padding: 3px; box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65); max-width: 100%; overflow-x: auto; }
+  .exp-seg-btn { background: transparent; color: #94a3b8; border: 1px solid transparent; border-radius: 5px; box-sizing: border-box; height: 24px; padding: 0 10px; font-size: 11.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; cursor: pointer; text-decoration: none; transition: all 0.14s ease; line-height: 1; }
+  .exp-seg-btn:hover { color: #f1f5f9; background: rgba(22, 29, 38, 0.85); border-color: rgba(148, 163, 184, 0.25); }
+  .exp-seg-tier { letter-spacing: 0.2px; }
+  .exp-seg-dt { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: inherit; opacity: 0.80; line-height: 1; }
+  .exp-seg-btn.active { background: rgba(6, 182, 212, 0.16); color: #f1f5f9; border-color: rgba(34, 211, 238, 0.55); box-shadow: 0 1px 6px rgba(6, 182, 212, 0.18); }
+  .exp-seg-btn.active .exp-seg-tier { color: #22d3ee; font-weight: 800; }
+  .exp-seg-btn.active .exp-seg-dt { color: #22d3ee; opacity: 1; font-weight: 800; }
+  /* Unified Diverging Strike Ladder */
+  .strike-ladder { background: #050505; border: 1px solid var(--border); border-radius: 5px; padding: 8px; font-size: 14px; }
+  .strike-ladder .sub { font-size: 12.5px; }
+  .strike-ladder .qbtn { font-size: 13px; }
+  .ladder-hdr { display: grid; grid-template-columns: 1fr 124px 1fr; text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); padding: 4px 0; border-bottom: 1px solid rgba(34, 211, 238, 0.45); margin-bottom: 3px; }
+  .ladder-pane { display: none; }
+  .ladder-pane.active { display: block; }
+  .ladder-row { display: grid; grid-template-columns: 1fr 124px 1fr; align-items: center; gap: 4px; padding: 4px 2px; border-bottom: 1px solid rgba(34, 211, 238, 0.34); }
+  .ladder-row.pin-row { background: rgba(6, 182, 212, 0.12); border-bottom: 1px solid rgba(34, 211, 238, 0.48); }
+  .ladder-row.spike-row-call { background: rgba(16, 185, 129, 0.08); border-bottom: 1px solid rgba(34, 211, 238, 0.48); }
+  .ladder-row.spike-row-put { background: rgba(239, 68, 68, 0.08); border-bottom: 1px solid rgba(34, 211, 238, 0.48); }
+  .ladder-row.spike-row-both { background: linear-gradient(90deg, rgba(239, 68, 68, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%); border-bottom: 1px solid rgba(34, 211, 238, 0.48); }
+  .ladder-ref { text-align: center; font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: #22d3ee; padding: 2px 0; border-top: 1px dashed #22d3ee; border-bottom: 1px dashed #22d3ee; background: rgba(6, 182, 212, 0.08); margin: 2px 0; }
+  .ladder-side { display: flex; align-items: center; gap: 5px; min-width: 0; }
+  .ladder-side.left { justify-content: flex-end; }
+  .ladder-side.right { justify-content: flex-start; }
+  .ladder-num { font-family: var(--font-mono); font-size: 11.5px; color: #cbd5e1; white-space: nowrap; min-width: 62px; }
+  .lnum-sep { color: #64748b; }
+  .ladder-side.left .lnum-vol, .ladder-hdr > span:first-child .lnum-vol { color: #f87171; font-weight: 700; }
+  .ladder-side.left .lnum-oi, .ladder-hdr > span:first-child .lnum-oi { color: rgba(252, 165, 165, 0.62); font-weight: 600; }
+  .ladder-side.right .lnum-vol, .ladder-hdr > span:last-child .lnum-vol { color: #34d399; font-weight: 700; }
+  .ladder-side.right .lnum-oi, .ladder-hdr > span:last-child .lnum-oi { color: rgba(110, 231, 183, 0.62); font-weight: 600; }
+  .ladder-side.left .ladder-num { text-align: right; }
+  .ladder-side.right .ladder-num { text-align: left; }
+  .ladder-bar-wrap { position: relative; flex: 1; height: 12px; background: #050505; border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 2px; overflow: hidden; }
+  .lbar-oi { position: absolute; top: 0; bottom: 0; }
+  .lbar-vol { position: absolute; top: 4px; bottom: 4px; border-radius: 1px; }
+  .ladder-bar-wrap.left .lbar-oi, .ladder-bar-wrap.left .lbar-vol { right: 0; }
+  .ladder-bar-wrap.right .lbar-oi, .ladder-bar-wrap.right .lbar-vol { left: 0; }
+  .lbar-oi.put { background: rgba(239, 68, 68, 0.28); }
+  .lbar-vol.put { background: #f87171; box-shadow: 0 0 6px rgba(248, 113, 113, 0.45); }
+  .lbar-oi.call { background: rgba(16, 185, 129, 0.28); }
+  .lbar-vol.call { background: #34d399; box-shadow: 0 0 6px rgba(52, 211, 153, 0.45); }
+  .ladder-mid { text-align: center; font-size: 12.5px; line-height: 1.2; border-left: 1px solid rgba(34, 211, 238, 0.28); border-right: 1px solid rgba(34, 211, 238, 0.28); padding: 1px 4px; }
+  .peak-caret { font-size: 8.5px; margin-right: 1px; vertical-align: baseline; }
+  .lnum-vol.peak-vol-num, .vol-peak-num { display: inline-block; font-weight: 800; padding: 0 2px; border-radius: 2px; line-height: 1.15; }
+  .lnum-vol.peak-vol-put, .vol-peak-num.vol-peak-put { color: #fb923c !important; background: rgba(251, 146, 60, 0.14); border-bottom: 1.5px solid #fb923c; }
+  .lnum-vol.peak-vol-call, .vol-peak-num.vol-peak-call { color: #22d3ee !important; background: rgba(34, 211, 238, 0.14); border-bottom: 1.5px solid #22d3ee; }
+  .lbar-vol.put.peak-vol-bar { background: #fb923c; box-shadow: 0 0 8px rgba(251, 146, 60, 0.65); }
+  .lbar-vol.call.peak-vol-bar { background: #22d3ee; box-shadow: 0 0 8px rgba(34, 211, 238, 0.65); }
+  .otm-oi-dim { color: #64748b; font-weight: 500; }
+  .sweet-spot-box { background: #050505; border: 1px solid var(--border); border-radius: 5px; padding: 7px 8px; }
+  .sweet-spot-table { margin-top: 0; }
+  .sweet-spot-table th, .sweet-spot-table td { padding: 2px 6px; font-size: 12px; line-height: 1.15; vertical-align: middle; border-color: rgba(34, 211, 238, 0.26); }
+  .sweet-spot-table .pill { height: auto; font-size: 9.5px; padding: 1px 4px; border-radius: 4px; line-height: 1.1; }
+  .sweet-tot-cell { display: flex; align-items: center; gap: 8px; }
+  .sweet-tot-val { min-width: 52px; display: inline-block; }
+  .sweet-bar { flex: 1; margin-top: 0; height: 5px; min-width: 50px; }
+  .otm-chain-box { margin-top: 8px; background: #050505; border: 1px solid var(--border); border-radius: 5px; padding: 7px 8px; }
+  .otm-pane { display: none; }
+  .otm-pane.active { display: block; }
+  .otm-chain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 8px; margin-top: 4px; }
+  .otm-sub-table { margin-top: 0; font-size: 11.5px; line-height: 1.15; }
+  .otm-sub-table th, .otm-sub-table td { padding: 2px 4px; vertical-align: middle; white-space: nowrap; border-color: rgba(34, 211, 238, 0.26); }
+  .otm-sub-table tr.otm-best-row td { background: rgba(16, 185, 129, 0.08); border-color: rgba(34, 211, 238, 0.40); }
+  .otm-sub-table tr.otm-best-row td:first-child { border-left: 3px solid #10b981; }
+  .otm-badge { display: inline-block; padding: 0 3px; border-radius: 3px; font-size: 9.5px; font-weight: 800; letter-spacing: 0.02em; line-height: 1.25; border: 1px solid rgba(148, 163, 184, 0.35); vertical-align: baseline; }
+  .otm-badge-emerald { color: #10b981; background: rgba(16, 185, 129, 0.14); border-color: rgba(16, 185, 129, 0.5); }
+  #sec-earnings-watcher { background: #050505; border: 1px solid #1e293b; border-radius: 6px; padding: 10px 12px; margin-top: 10px; }
+  .ew-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .ew-grid { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(300px, 1.35fr); gap: 10px; align-items: stretch; }
+  @media (max-width: 900px) { .ew-grid { grid-template-columns: 1fr; } }
+  #earnings-rubric-input { width: 100%; min-height: 112px; background: #050505; color: #e2e8f0; border: 1px solid #1e293b; border-radius: 5px; padding: 8px 10px; font-family: var(--font-mono); font-size: 12px; line-height: 1.45; resize: vertical; box-sizing: border-box; }
+  #earnings-rubric-input:focus { outline: none; border-color: #22d3ee; }
+  #earnings-summary-output { background: #050505; color: #e2e8f0; border: 1px solid #1e293b; border-radius: 5px; padding: 9px 11px; font-family: var(--font-mono); font-size: 12px; line-height: 1.5; white-space: pre-wrap; min-height: 112px; max-height: 320px; overflow-y: auto; }
+  .ew-status { font-size: 11.5px; color: #94a3b8; font-family: var(--font-mono); }
+  #live-call-listener { background: #050505; border: 1px solid #1e293b; border-radius: 6px; padding: 10px 12px; margin-top: 10px; }
+  .cl-controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+  #call-stream-url-input { flex: 1; min-width: 240px; background: #050505; color: #e2e8f0; border: 1px solid #1e293b; border-radius: 5px; padding: 6px 9px; font-family: var(--font-mono); font-size: 12px; box-sizing: border-box; }
+  #call-stream-url-input:focus, #call-stream-label-input:focus { outline: none; border-color: #22d3ee; }
+  #call-stream-label-input { width: 170px; background: #050505; color: #e2e8f0; border: 1px solid #1e293b; border-radius: 5px; padding: 6px 9px; font-family: var(--font-mono); font-size: 12px; box-sizing: border-box; }
+  #call-summary-output { background: #050505; color: #e2e8f0; border: 1px solid #1e293b; border-radius: 5px; padding: 9px 11px; font-family: var(--font-mono); font-size: 12px; line-height: 1.5; white-space: pre-wrap; min-height: 96px; max-height: 320px; overflow-y: auto; }
+  .spike-foot {
+    background: #050505;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    margin-top: 8px;
+    overflow: hidden;
+    font-size: 12.5px;
+  }
+  .spike-foot-hdr {
+    font-size: 12.5px;
+    color: var(--muted);
+    font-weight: 700;
+    padding: 5px 10px;
+    background: #050505;
+    border-bottom: 1px solid #1e293b;
+  }
+  .spike-foot-row {
+    display: grid;
+    grid-template-columns: 1.35fr 0.65fr 0.85fr 0.75fr;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+    border-top: 1px solid #222222;
+  }
+  .spike-foot-hdr + .spike-foot-row { border-top: none; }
+  .spike-foot-cell {
+    padding: 4px 8px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .spike-foot-cell:not(:last-child) { border-right: 1px solid #2e2e2e; }
+  /* Right-Bound Slide-Over Drawer */
+  #drawer-edge-tab {
+    position: fixed;
+    right: 0;
+    left: auto;
+    top: 50%;
+    width: auto;
+    min-height: 96px;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #050505;
+    color: #22d3ee;
+    border: 1px solid #06b6d4;
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+    padding: 28px 10px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    z-index: 80;
+    box-shadow: -3px 0 14px rgba(0, 0, 0, 0.7);
+  }
+  #drawer-edge-tab:hover { background: #0d131a; color: #f1f5f9; }
+  .drawer-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: #050505;
+    color: #22d3ee;
+    border: 1px solid #06b6d4;
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  #drawer-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .tk-watchlist {
+    margin-bottom: 10px;
+    padding: 9px 10px;
+    background: #050505;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .tk-grid-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  .tk-hdr-lbl {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+  }
+  .cyan-txt { color: #22d3ee; }
+  .amber-txt { color: #34d399; }
+  .tk-grid4 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .tk-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 7px 4px;
+    border-radius: 5px;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: border-color 0.14s, background 0.14s;
+  }
+  .tk-card.tk-stock {
+    border-color: rgba(34, 211, 238, 0.30);
+    background: rgba(6, 182, 212, 0.12);
+    color: #cffafe;
+  }
+  .tk-card.tk-stock:hover {
+    border-color: rgba(34, 211, 238, 0.72);
+    background: rgba(6, 182, 212, 0.26);
+    color: #ffffff;
+  }
+  .tk-card.tk-stock.active {
+    border-color: #22d3ee;
+    background: rgba(6, 182, 212, 0.34);
+    color: #ffffff;
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.45);
+  }
+  .tk-card.tk-idx {
+    border-color: rgba(16, 185, 129, 0.32);
+    background: rgba(16, 185, 129, 0.12);
+    color: #d1fae5;
+  }
+  .tk-card.tk-idx:hover {
+    border-color: rgba(52, 211, 153, 0.75);
+    background: rgba(16, 185, 129, 0.26);
+    color: #ffffff;
+  }
+  .tk-card.tk-idx.active {
+    border-color: #34d399;
+    background: rgba(16, 185, 129, 0.34);
+    color: #ffffff;
+    box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.45);
+  }
+  .tk-sym {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    line-height: 1.1;
+  }
+  .tk-tag {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    opacity: 0.78;
+    line-height: 1;
+  }
+  #drawer-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(2px);
+    z-index: 88;
+  }
+  #drawer-backdrop.open { display: block; }
+  #lab-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(740px, 95vw);
+    height: 100vh;
+    background: #050505;
+    border-left: 1px solid #334155;
+    z-index: 90;
+    transform: translateX(100%);
+    transition: transform 0.22s ease;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -12px 0 36px rgba(0, 0, 0, 0.9);
+  }
+  #lab-drawer.open { transform: translateX(0); }
+  .drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #050505;
+    border-bottom: 1px solid var(--border-hi);
+  }
+  .drawer-body { overflow-y: auto; padding: 12px; flex: 1; color-scheme: dark; scrollbar-width: thin; scrollbar-color: var(--border-hi) var(--bg-canvas); }
+  .drawer-body::-webkit-scrollbar { width: 8px; }
+  .drawer-body::-webkit-scrollbar-track { background: var(--bg-canvas); }
+  .drawer-body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 4px; border: 2px solid var(--bg-canvas); }
+  .drawer-body::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
+  @media (max-width: 1080px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+    .regime-stack { grid-template-columns: 1fr; }
+    .grid2 { grid-template-columns: 1fr; }
+    .viz-strip, .viz-strip.viz-strip-2 { grid-template-columns: 1fr; }
+    .viz-item:not(:last-child) { border-right: none; border-bottom: 1px solid var(--border); }
+    .viz-foot { grid-template-columns: 1fr; }
+    .viz-foot-item:not(:last-child) { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+  @media (max-width: 680px) {
+    body { padding: 12px 14px 28px 14px; }
+    .topbar { flex-direction: column; align-items: stretch; }
+    .nav-lbl { min-width: 100%; margin-bottom: 2px; }
+    .ladder-hdr, .ladder-row { grid-template-columns: 1fr 94px 1fr; }
+    .ladder-num { min-width: 44px; font-size: 10.5px; }
+  }
+</style>
+</head>
+<body>
+<div id="nav-loader"></div>
+<div id="page-loading-overlay" aria-hidden="true" role="status" aria-label="Loading market data"><div class="loading-spinner"></div></div>
+<div id="drawer-backdrop" onclick="toggleLabDrawer(false)"></div>
+
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <div class="brand-row">
+        <span class="live-dot closed" title="AFTER-HOURS (RTH CLOSED 4:00 PM ET)"></span>
+        <span class="tk-pill">ANT</span>
+        <h1><span class="sem-crimson">$81.82</span> <span style="font-size:16px;">(<span class="sem-crimson">-6.64%</span>)</span></h1>
+        <span class="clock-pill" id="live-et-clock" title="Live Eastern Time (US Market Clock)">TUE NOV 24, 2026 • 04:26:13 PM ET</span>
+      </div>
+      <div class="sub" style="margin-top:3px;">Snapshot: 2026-11-24 4:24 PM ET | Feed: yfinance_afterhours (Finnhub ready) | Run #625 (204 dates)</div>
+    </div>
+    <div class="topbar-actions">
+      <form class="topbar-search" method="GET" action="/">
+        <input type="hidden" name="tf" value="weekly">
+        <input type="text" name="ticker" value="ANT" placeholder="Ticker" aria-label="Ticker symbol">
+        <button type="submit" id="ticker-lookup-btn" aria-label="Lookup ticker" title="Lookup ticker"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+      </form>
+      <a class="qbtn topbar-btn topbar-icon-btn" id="refresh-live-btn" href="/?ticker=ANT&tf=weekly&refresh=1" aria-label="Refresh live data" title="Refresh live data (bypass 45s cache)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></a>
+      <a class="qbtn topbar-btn" href="/?view=chart&ticker=ANT&tf=weekly">Chart</a>
+      <a class="qbtn topbar-btn" href="/?view=vol-desk">Vol Desk</a>
+      <a class="qbtn topbar-btn" target="_blank" href="/api/readout?ticker=ANT&tf=weekly">Raw Data</a>
+    </div>
+  </div>
+
+  <div class="sticky-dock">
+    <div class="jump-bar">
+      <a href="#sec-today">1. Entry Check</a>
+      <a href="#sec-cal">Catalysts</a>
+      <a href="#sec-viz">2. Price Map</a>
+      <a href="#sec-walls">Walls &amp; Pin</a>
+      <a href="#sec-trend">SD Channels</a>
+      <a href="#sec-intel">3. News Filter</a>
+    </div>
+  </div>
+
+  
+
+  <div class="kpi-grid" id="sec-today">
+    <div class="box" style="margin-bottom:0; border-top: 2px solid var(--accent);">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px;">
+        <h2 style="margin:0;">TODAY'S PLAY</h2>
+        <span class="pill pill-muted">Tuesday (Real Trend Day — Post-Close (After 4:00 PM ET)) &bull; 4:24 PM ET</span>
+      </div>
+      <div class="play-pill-row">
+        <span class="z-badge z-intact" title="Pin Intact (Z < 1.0x): price stays inside expected bounds around the legacy OI magnet.">PIN INTACT &bull; Z = 0.00x</span>
+        <span class="pill pill-red">48H LANDMINE: 3 EVENT(S)</span>
+        <span class="pill pill-muted"><span>This Friday Pin <span class="sem-cyan">$81.82</span> (<span class="sem-slate">+0.0%</span>)</span></span>
+      </div>
+      <div class="z-context-note">Z measures how far price broke past expected bounds&mdash;above 1.5x means old levels broke and the setup needs reassessment.</div>
+      <div style="margin-bottom:5px;"><b>Regular session closed at 4:00 PM ET (now 4:24 PM ET). Reviewing EOD positioning for tomorrow.</b></div>
+      
+      <ul><li>SESSION CLOSED (After 4:00 PM ET): Regular trading hours (9:30 AM–4:00 PM ET) have ended for today.</li><li>No Friday option pin yet. Dealers are not trapping price.</li><li>Big funds build real stock positions today.</li><li>Busy day for earnings and mid-month news.</li></ul>
+      <div class="metric-blk regime-confirm-blk" id="regime-confirmation-meter" style="border-left: 3px solid #10b981;">
+        <div class="rc-head">
+          <span class="term-hdr" style="margin:0;">REGIME BREAK &bull; DUAL-CONFIRMATION METER</span>
+          <span class="rc-badge rc-ok">NOISE / CONTAINED</span>
+        </div>
+        <div class="rc-axis">
+          <div class="rc-axis-row">
+            <span><b>1. Historical Stretch (Trendline SD)</b></span>
+            <span class="mono"><span style="color:#34d399;font-weight:800;">+0.02 SD</span> <span class="sub">(Mid $81.79 &bull; 1SD &plusmn;$1.43)</span></span>
+          </div>
+          <div class="rc-gauge" style="background:linear-gradient(90deg, rgba(244,63,94,0.45) 0%, rgba(251,146,60,0.38) 25%, rgba(16,185,129,0.35) 50%, rgba(251,146,60,0.38) 75%, rgba(244,63,94,0.45) 100%);" title="Signed SD stretch from macro regression trendline (-3.0 to +3.0 SD)">
+            <div class="rc-tick" style="left:16.67%;" title="-2.0 SD"></div>
+            <div class="rc-tick" style="left:25.0%;" title="-1.5 SD"></div>
+            <div class="rc-tick" style="left:50.0%;background:rgba(16,185,129,0.75);" title="0.0 SD Trendline Mid"></div>
+            <div class="rc-tick" style="left:75.0%;" title="+1.5 SD"></div>
+            <div class="rc-tick" style="left:83.33%;" title="+2.0 SD"></div>
+            <div class="gauge-dot" style="left:50.3%;border-color:#34d399;top:-2px;width:11px;height:11px;"></div>
+          </div>
+          <div class="rc-scale"><span class="rc-lbl rc-lbl-start">-3.0 SD</span><span class="rc-lbl" style="left:16.67%;">-2.0</span><span class="rc-lbl" style="left:25.0%;color:#fb923c;font-weight:700;">-1.5</span><span class="rc-lbl" style="left:50.0%;color:#34d399;font-weight:700;">0 Mid</span><span class="rc-lbl" style="left:75.0%;color:#fb923c;font-weight:700;">+1.5</span><span class="rc-lbl" style="left:83.33%;">+2.0</span><span class="rc-lbl rc-lbl-end">+3.0 SD</span></div>
+        </div>
+        <div class="rc-axis">
+          <div class="rc-axis-row">
+            <span><b>2. Forward Options Breach (Chain Reset Z)</b></span>
+            <span class="mono"><span style="color:#22d3ee;font-weight:800;">Z = 0.00x</span> <span class="sub">(Pin $81.82 &bull; Exp &plusmn;$0.00)</span></span>
+          </div>
+          <div class="rc-gauge" style="background:linear-gradient(90deg, rgba(16,185,129,0.38) 0%, rgba(34,211,238,0.35) 25%, rgba(251,146,60,0.42) 37.5%, rgba(244,63,94,0.48) 100%);" title="Forward options implied move breach (0.0x to 4.0x+, break threshold at 1.5x)">
+            <div class="rc-tick" style="left:25.0%;" title="1.0x Wall Breach"></div>
+            <div class="rc-tick" style="left:37.5%;background:#f43f5e;" title="1.5x Chain Reset Break"></div>
+            <div class="rc-tick" style="left:75.0%;" title="3.0x"></div>
+            <div class="gauge-dot" style="left:2.0%;border-color:#22d3ee;top:-2px;width:11px;height:11px;"></div>
+          </div>
+          <div class="rc-scale"><span class="rc-lbl rc-lbl-start">0.0x Pin</span><span class="rc-lbl" style="left:25.0%;">1.0x</span><span class="rc-lbl" style="left:37.5%;color:#f87171;font-weight:700;">1.5x Break</span><span class="rc-lbl" style="left:75.0%;">3.0x</span><span class="rc-lbl rc-lbl-end">4.0x+</span></div>
+        </div>
+        <div class="rc-synthesis">Inside trendline bounds (+0.02 SD) and options expected move (Z=0.00x &lt; 1.5x)—normal dealer pinning &amp; intraday noise.</div>
+      </div>
+      <div class="metric-blk expected-range-blk">
+        <div class="er-head">
+          <span class="stat-label">EXPECTED RANGE</span>
+          <span class="mono"><span class="sem-cyan">$81.82</span> in <span class="sem-crimson">$81.82</span> &ndash; <span class="sem-emerald">$81.82</span></span>
+        </div>
+        <div class="micro-gauge" title="Spot inside Expected Move"><div class="gauge-dot" style="left:3.0%;"></div></div>
+        <div class="gauge-labels"><span class="sem-crimson">$82 Exp Low</span><span class="sem-cyan">ATM $81.82</span><span class="sem-emerald">$82 Exp High</span></div>
+      </div>
+      <div id="sec-cal" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);flex:1;display:flex;flex-direction:column;">
+        <h2>LANDMINES</h2>
+        <div class="table-wrap" style="flex:1;">
+          <table>
+            <thead><tr><th>Day &amp; Date</th><th>Time</th><th>Event</th><th>What It Means</th></tr></thead>
+            <tbody><tr class='hot'><td><b>TOMORROW</b> <span class='pill pill-red'>SOON</span><br><span class='sub'>2026-11-25</span></td><td>8:30 AM ET</td><td><b>PCE Inflation</b></td><td class='sub'>The Fed&#x27;s main inflation score.</td></tr><tr class='hot'><td><b>TOMORROW</b> <span class='pill pill-red'>SOON</span><br><span class='sub'>2026-11-25</span></td><td>8:30 AM ET</td><td><b>Weekly Jobless Claims</b></td><td class='sub'>Weekly layoff count at 8:30 AM.</td></tr><tr class='hot'><td><b>Thu Nov 26</b> <span class='pill pill-red'>SOON</span><br><span class='sub'>2026-11-26</span></td><td>8:30 AM ET</td><td><b>Weekly Jobless Claims</b></td><td class='sub'>Weekly layoff count at 8:30 AM.</td></tr><tr class=''><td><b>Fri Nov 27</b><br><span class='sub'>2026-11-27</span></td><td>8:30 AM ET</td><td><b>PCE Inflation</b></td><td class='sub'>The Fed&#x27;s main inflation score.</td></tr><tr class=''><td><b>Tue Dec 01</b><br><span class='sub'>2026-12-01</span></td><td>10:00 AM ET</td><td><b>JOLTS Job Openings</b></td><td class='sub'>Shows open US jobs at 10:00 AM.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="box" style="margin-bottom:0; border-top: 2px solid var(--cyan);">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px;">
+        <h2 style="margin:0;">OPTION PRICING</h2>
+        <span class="pill pill-muted">AWAITING OPTIONS LISTING <span class="iv-spread-inline">(<span class="sem-slate">+0.0%</span> spread)</span></span>
+      </div>
+      <div id="entry-edge-widget" class="edge-pill edge-selective" title="60-150d Call Entry Edge across Entry Check, Price Map, and News Filter">
+        <div class="edge-head">
+          <span>ENTRY EDGE: 55/100 &bull; SELECTIVE / SCALE</span>
+        </div>
+        <div class="edge-breakdown">
+          <div class="edge-row"><span class="edge-row-lbl">Timing 8/40</span><div class="edge-seg-track"><div class="edge-seg-fill" style="clip-path:inset(0 80% 0 0);"></div></div></div>
+          <div class="edge-row"><span class="edge-row-lbl">Map 35/35</span><div class="edge-seg-track"><div class="edge-seg-fill" style="clip-path:inset(0 0% 0 0);"></div></div></div>
+          <div class="edge-row"><span class="edge-row-lbl">News 12/25</span><div class="edge-seg-track"><div class="edge-seg-fill" style="clip-path:inset(0 52% 0 0);"></div></div></div>
+        </div>
+      </div>
+      <div class="regime-stack">
+        <div class="regime-metrics">
+          <div class="metric-blk">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <span class="stat-label">MARKET FEAR</span>
+              <span class="mono"><span style="color:#fb923c;font-weight:800;">58/100 &bull; CAUTIOUS (WATCH CURVE)</span> <span class="sub">(VIX 26.4 -0.25)</span></span>
+            </div>
+            <div class="micro-gauge" style="background:linear-gradient(90deg, rgba(16,185,129,0.35) 0%, rgba(34,211,238,0.35) 45%, rgba(251,146,60,0.38) 65%, rgba(244,63,94,0.42) 100%);" title="0-100 Non-Linear Curved Fear Index"><div class="gauge-dot" style="left:58.0%;border-color:#fb923c;"></div></div>
+            <div class="gauge-labels"><span style="color:#10b981;font-weight:700;">0 Calm</span><span style="color:#22d3ee;font-weight:700;">50 Inflection</span><span style="color:#f43f5e;font-weight:700;">75+ Stress</span></div>
+            <div class="sub mono" style="margin-top:3px;font-size:11px;">9d/3m Ratio: <span style="color:#fb923c;font-weight:700;">1.05 Backwardation</span> &bull; 3d Velocity: <span style="color:#10b981;font-weight:700;">-7.3%</span></div>
+          </div>
+          <div class="metric-blk">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <span class="stat-label">IMPLIED WEEKLY MOVE</span>
+              <span class="mono" style="font-size:15px;font-weight:800;"><span class="sem-cyan">±0.00%</span> <span class="sub" style="font-size:12.5px;font-weight:600;">(&plusmn;$0.00 / share)</span></span>
+            </div>
+            <div class="bar-track stacked" title="ATM Put vs Call Straddle Cost Split">
+              <div class="bar-fill dn-bg" style="width:50.0%"></div>
+              <div class="bar-fill up-bg" style="width:50.0%"></div>
+            </div>
+            <div class="gauge-labels mono" style="font-size:11.5px;margin-top:4px;align-items:baseline;">
+              <span><span class="sem-crimson">Put $0.00</span></span>
+              <span style="text-align:center;"><span style="color:#22d3ee;font-weight:800;letter-spacing:0.02em;">OPTIONS FAIRLY PRICED</span> <span class="sub">($0.00 ATM straddle &bull; +0.0% spread)</span></span>
+              <span><span class="sem-emerald">Call $0.00</span></span>
+            </div>
+            <div class="sub" style="margin-top:3px;font-size:11px;">Normal weekly swing — clean pricing across strikes</div>
+          </div>
+          <div class="metric-blk">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <span class="stat-label">ORDER FLOW</span>
+              <span class="mono"><span class="sem-emerald">P/C 0.0</span> <span class="sub">(<span class="sem-emerald">50% C</span> / <span class="sem-crimson">50% P</span>)</span></span>
+            </div>
+            <div class="bar-track stacked" title="Call vs Put Volume Ratio">
+              <div class="bar-fill up-bg" style="width:50.0%"></div>
+              <div class="bar-fill dn-bg" style="width:50.0%"></div>
+            </div>
+            <div class="sub" style="margin-top:3px;">No Listed Options Yet (Post-IPO)</div>
+          </div>
+          <div class="metric-blk flow-regime-blk" id="flow-regime-card">
+            <div class="fr-head">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span class="term-hdr" style="margin:0;">FLOW REGIME</span><span class="fr-src" style="margin-left:0;">15m: yfinance</span></div>
+              <span class="fr-badge fr-rotation">CASH-RAISE / ROTATION</span>
+            </div>
+            <div class="fr-strip">
+              <div class="fr-cell" title="Closing auction 15:45-16:00 ET volume vs 10:00-15:30 ET 15m average">
+                <span class="fr-cell-lbl">MOC Surge:</span>
+                <span style="color:#f1f5f9;font-weight:700;">0.3x</span>
+              </div>
+              <div class="fr-cell" title="Share of post-10:00 AM ET 15m closes below cumulative session VWAP">
+                <span class="fr-cell-lbl">VWAP Bleed:</span>
+                <span style="color:#34d399;font-weight:700;">33% bars &lt; VWAP</span>
+              </div>
+              <div class="fr-cell" title="Non-AI QQQ basket dispersion (PEP, COST, AMGN, TMUS, HON)">
+                <span class="fr-cell-lbl">Basket:</span>
+                <span style="color:#22d3ee;font-weight:700;">SELECTIVE</span>
+              </div>
+            </div>
+            <div class="fr-reason">Orderly cash-raising without panic (P/C 0.00, VIX -0.25, 33% bars &lt; VWAP) — systematic share supply (selective basket).</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:space-between;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;"><span class="term-hdr" style="margin:0;font-size:12px;">IMPLIED VOLATILITY (IV %) TERM STRUCTURE</span><span class="sub mono">Near-Term vs. 60&ndash;150d Target</span></div>
+          <svg class="mc-svg" viewBox="0 0 560 240" style="width:100%;height:auto;min-height:220px;background:#050505;border:1px solid #1e293b;border-radius:6px;display:block;"><defs>  <linearGradient id="tsAreaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#22d3ee" stop-opacity="0.28"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0.02"/></linearGradient></defs><line x1="50" y1="188.0" x2="534" y2="188.0" stroke="#1e293b" stroke-width="1"/><text x="42" y="192.2" text-anchor="end" fill="#94a3b8" font-size="13" font-weight="600">0%</text><line x1="50" y1="110.0" x2="534" y2="110.0" stroke="#1e293b" stroke-width="1"/><text x="42" y="114.2" text-anchor="end" fill="#94a3b8" font-size="13" font-weight="600">0%</text><line x1="50" y1="32.0" x2="534" y2="32.0" stroke="#1e293b" stroke-width="1"/><text x="42" y="36.2" text-anchor="end" fill="#94a3b8" font-size="13" font-weight="600">1%</text><polygon points="102.0,188 102.0,188.0 292.0,188.0 482.0,188.0 482.0,188" fill="url(#tsAreaGrad)"/><polyline points="102.0,188.0 292.0,188.0 482.0,188.0" fill="none" stroke="#22d3ee" stroke-width="3" stroke-linejoin="round"/><g><title>This Friday (3d (11-27)): 0.0% IV</title><circle cx="102.0" cy="188.0" r="6" fill="#050505" stroke="#22d3ee" stroke-width="2.5"/><text x="102.0" y="177.0" text-anchor="middle" fill="#22d3ee" font-size="15.5" font-weight="800">0.0%</text><text x="102.0" y="214" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700">This Friday</text><text x="102.0" y="232" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">3d (11-27)</text></g><g><title>Next Month (24d (12-18)): 0.0% IV</title><circle cx="292.0" cy="188.0" r="6" fill="#050505" stroke="#22d3ee" stroke-width="2.5"/><text x="292.0" y="177.0" text-anchor="middle" fill="#22d3ee" font-size="15.5" font-weight="800">0.0%</text><text x="292.0" y="214" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700">Next Month</text><text x="292.0" y="232" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">24d (12-18)</text></g><g><title>60-150d Target (91d (02-23)): 0.0% IV</title><circle cx="482.0" cy="188.0" r="6" fill="#050505" stroke="#22d3ee" stroke-width="2.5"/><text x="482.0" y="177.0" text-anchor="middle" fill="#22d3ee" font-size="15.5" font-weight="800">0.0%</text><text x="482.0" y="214" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700">60-150d Target</text><text x="482.0" y="232" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">91d (02-23)</text></g></svg>
+          <div class="sub" style="margin-top:5px;">Newly listed stock — options chains have not opened yet.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box" id="sec-viz">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;"><h2 style="margin:0;">FLOW &amp; MAGNET</h2><span class="pill pill-muted">Weekly Cycle (Exp: 2026-11-27 | 3d)</span></div>
+      <div><div class="exp-seg-dock" role="tablist" aria-label="Timeframe view"><a class="exp-seg-btn active" href="/?ticker=ANT&tf=weekly"><span class="exp-seg-tier">Weekly</span><span class="exp-seg-dt">1W</span></a><a class="exp-seg-btn" href="/?ticker=ANT&tf=monthly"><span class="exp-seg-tier">Monthly</span><span class="exp-seg-dt">1M</span></a></div></div>
+    </div>
+
+    <div class="legend-pills" id="svg-layer-toggles">
+      <button type="button" class="lpill active" data-layer="layer-price" onclick="toggleSvgLayer(this)"><span class="ldot" style="background:#ffffff"></span>Price</button>
+      <button type="button" class="lpill active" data-layer="layer-mp" onclick="toggleSvgLayer(this)"><span class="ldot" style="background:#f59e0b"></span>Max Pain Drift</button>
+      <button type="button" class="lpill active" data-layer="layer-em" onclick="toggleSvgLayer(this)"><span class="ldot" style="background:#38bdf8"></span>Realm Band</button>
+      <button type="button" class="lpill active" data-layer="layer-w1" onclick="toggleSvgLayer(this)"><span class="ldot" style="background:#0284c7"></span>Base OI</button>
+      <button type="button" class="lpill active" data-layer="layer-w23" onclick="toggleSvgLayer(this)"><span class="ldot" style="background:#10b981"></span>New Flow</button>
+    </div>
+
+    <div class="viz-strip">
+      <div class="viz-item">
+        <span class="viz-k">Expected Range</span>
+        <div class="viz-v"><b><span class="sem-crimson">$81.82</span> &ndash; <span class="sem-emerald">$81.82</span></b></div>
+        <div class="viz-sub"><span class="sem-cyan">±0.0% / ±$0.0</span> &bull; <span class="sem-cyan">ATM $81.82</span></div>
+      </div>
+      <div class="viz-item">
+        <span class="viz-k">Base (W1) vs New Flows (W2, W3)</span>
+        <div class="viz-v"><span class="pill pill-green">EXISTING VOLUME IN CONTROL</span></div>
+        <div class="viz-sub"><span class="sem-emerald">0.0%</span> of OI</div>
+      </div>
+      <div class="viz-item">
+        <span class="viz-k">Pin Gravity</span>
+        <div class="viz-v"><span class="z-badge z-intact z-badge-sm" title="Pin Intact (Z < 1.0x): price stays inside expected bounds around the legacy OI magnet.">PIN INTACT &bull; Z = 0.00x</span></div>
+        <div class="viz-sub">&gt;1.5x = legacy walls broke</div>
+      </div>
+    </div>
+
+    <svg class="mc-svg" id="main-wave-svg" viewBox="0 0 1080 537" style="width:100%;height:auto;border:1px solid #262626;border-radius:6px;margin-top:6px;display:block;"><style>.mc-svg text{font-family:"IBM Plex Mono","Cascadia Mono","SF Mono",Consolas,monospace;font-variant-numeric:tabular-nums;letter-spacing:-0.2px;} .svg-layer{transition:opacity .18s ease;} .svg-layer.layer-hidden{opacity:0.06;pointer-events:none;} .iv-chart-pane .iv-hover-badge{opacity:0;pointer-events:none;transition:opacity .16s ease;} .iv-chart-pane:hover .iv-hover-badge{opacity:1;}</style><defs>  <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#050505"/><stop offset="100%" stop-color="#050505"/></linearGradient>  <linearGradient id="emGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.14"/><stop offset="50%" stop-color="#38bdf8" stop-opacity="0.04"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.14"/></linearGradient>  <linearGradient id="priceArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e5e5e5" stop-opacity="0.16"/><stop offset="100%" stop-color="#e5e5e5" stop-opacity="0.0"/></linearGradient>  <linearGradient id="ivArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f43f5e" stop-opacity="0.22"/><stop offset="100%" stop-color="#f43f5e" stop-opacity="0.0"/></linearGradient>  <linearGradient id="w1Grad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#0284c7" stop-opacity="0.70"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.34"/></linearGradient>  <linearGradient id="w2Grad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#7e22ce" stop-opacity="0.70"/><stop offset="100%" stop-color="#a855f7" stop-opacity="0.34"/></linearGradient>  <linearGradient id="w3Grad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#059669" stop-opacity="0.75"/><stop offset="100%" stop-color="#10b981" stop-opacity="0.36"/></linearGradient></defs><rect x="0" y="0" width="1080" height="537" rx="6" fill="url(#bgGrad)"/><rect x="54" y="14" width="1012" height="360" fill="#050505" stroke="#262626" stroke-width="1"/><line x1="54" y1="350.0" x2="1066" y2="350.0" stroke="#161616" stroke-width="1"/><text x="48" y="353.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$79.1</text><line x1="54" y1="298.0" x2="1066" y2="298.0" stroke="#161616" stroke-width="1"/><text x="48" y="301.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$82.5</text><line x1="54" y1="246.0" x2="1066" y2="246.0" stroke="#161616" stroke-width="1"/><text x="48" y="249.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$86.0</text><line x1="54" y1="194.0" x2="1066" y2="194.0" stroke="#161616" stroke-width="1"/><text x="48" y="197.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$89.5</text><line x1="54" y1="142.0" x2="1066" y2="142.0" stroke="#161616" stroke-width="1"/><text x="48" y="145.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$93.0</text><line x1="54" y1="90.0" x2="1066" y2="90.0" stroke="#161616" stroke-width="1"/><text x="48" y="93.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$96.5</text><line x1="54" y1="38.0" x2="1066" y2="38.0" stroke="#161616" stroke-width="1"/><text x="48" y="41.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$99.9</text><g class="svg-layer layer-em"><rect x="54" y="308.7" width="1012" height="2.0" fill="url(#emGrad)"/><line x1="54" y1="308.7" x2="1066" y2="308.7" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4,4" opacity="0.65"/><line x1="54" y1="308.7" x2="1066" y2="308.7" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4,4" opacity="0.65"/><rect x="968.2" y="340.7" width="93.8" height="16.0" rx="3" fill="#06121b" fill-opacity="0.93" stroke="#0ea5e9" stroke-width="0.9"/><text x="1056.0" y="352.5" text-anchor="end" fill="#7dd3fc" font-size="11.0">Exp High $82</text></g><g class="svg-layer layer-w1"><text x="58.0" y="26.5" text-anchor="start" fill="#38bdf8" font-size="10.0" font-weight="700" letter-spacing="0.4" paint-order="stroke" stroke="#050505" stroke-width="2.8">W1 • BASELINE OI</text><rect x="54" y="14" width="0" height="0" fill="url(#w1Grad)"/></g><g class="svg-layer layer-w23"><text x="398.1" y="26.5" text-anchor="start" fill="#c084fc" font-size="10.0" font-weight="700" letter-spacing="0.4" paint-order="stroke" stroke="#050505" stroke-width="2.8">W2 • MID-CYCLE</text><text x="681.4" y="26.5" text-anchor="start" fill="#34d399" font-size="10.0" font-weight="700" letter-spacing="0.4" paint-order="stroke" stroke="#050505" stroke-width="2.8">W3 • FRESH SPIKES</text><rect x="54" y="14" width="0" height="0" fill="url(#w3Grad)"/></g><g class="svg-layer layer-mp"><line x1="54" y1="308.7" x2="1066" y2="308.7" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,3" opacity="0.65"/><polyline points="70.0,308.7 494.0,308.7 918.0,308.7" fill="none" stroke="#f59e0b" stroke-width="2.0" stroke-dasharray="6,4"/><circle cx="70.0" cy="308.7" r="5.0" fill="#050505" stroke="#f59e0b" stroke-width="1.8"/><circle cx="70.0" cy="308.7" r="2.0" fill="#fbbf24"/><circle cx="494.0" cy="308.7" r="5.0" fill="#050505" stroke="#f59e0b" stroke-width="1.8"/><circle cx="494.0" cy="308.7" r="2.0" fill="#fbbf24"/><circle cx="918.0" cy="308.7" r="5.0" fill="#050505" stroke="#f59e0b" stroke-width="1.8"/><circle cx="918.0" cy="308.7" r="2.0" fill="#fbbf24"/><rect x="964.4" y="260.7" width="97.6" height="16.0" rx="3" fill="#140d02" fill-opacity="0.93" stroke="#f59e0b" stroke-width="0.9"/><text x="1056.0" y="272.5" text-anchor="end" fill="#fcd34d" font-size="11.5" font-weight="700">🧲 Pin $81.82</text></g><g class="svg-layer layer-price"><line class="friday-grid-line" x1="352.7" y1="14" x2="352.7" y2="374" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,4" opacity="0.35"/><line x1="54" y1="308.7" x2="1066" y2="308.7" stroke="#e5e5e5" stroke-width="1" stroke-dasharray="2,3" opacity="0.55"/><polygon points="70.0,374 70.0,79.3 352.7,202.7 635.3,221.7 918.0,308.7 918.0,374" fill="url(#priceArea)"/><polyline points="70.0,79.3 352.7,202.7 635.3,221.7 918.0,308.7" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linejoin="round"/><circle cx="70.0" cy="79.3" r="5.0" fill="#050505" stroke="#38bdf8" stroke-width="1.8"/><circle cx="70.0" cy="79.3" r="2.0" fill="#ffffff"/><text x="70.0" y="390" text-anchor="middle" fill="#b8b8b8" font-size="11">11/19</text><circle cx="352.7" cy="202.7" r="5.2" fill="#050505" stroke="#f59e0b" stroke-width="2.0"/><circle cx="352.7" cy="202.7" r="2.2" fill="#fbbf24"/><g class="x-axis-friday" data-friday="11/20"><title>Friday (11/20): $88.91</title><line x1="352.7" y1="374" x2="352.7" y2="377.5" stroke="#f59e0b" stroke-width="1.6"/><rect x="332.2" y="378.5" width="41.0" height="15" rx="3" fill="#1c1204" stroke="#f59e0b" stroke-width="1.1"/><text x="352.7" y="390" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">11/20</text></g><circle cx="635.3" cy="221.7" r="5.0" fill="#050505" stroke="#38bdf8" stroke-width="1.8"/><circle cx="635.3" cy="221.7" r="2.0" fill="#ffffff"/><text x="635.3" y="390" text-anchor="middle" fill="#b8b8b8" font-size="11">11/23</text><circle cx="918.0" cy="308.7" r="5.0" fill="#050505" stroke="#38bdf8" stroke-width="1.8"/><circle cx="918.0" cy="308.7" r="2.0" fill="#ffffff"/><text x="918.0" y="390" text-anchor="middle" fill="#b8b8b8" font-size="11">11/24</text><rect x="76.0" y="57.3" width="51.1" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#383838" stroke-width="0.9"/><text x="82.0" y="69.1" text-anchor="start" fill="#f5f5f5" font-size="10.5">$97.17</text><rect x="327.1" y="180.7" width="51.1" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#383838" stroke-width="0.9"/><text x="352.7" y="192.5" text-anchor="middle" fill="#f5f5f5" font-size="10.5">$88.91</text><rect x="609.8" y="199.7" width="51.1" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#383838" stroke-width="0.9"/><text x="635.3" y="211.5" text-anchor="middle" fill="#f5f5f5" font-size="10.5">$87.64</text><rect x="860.9" y="258.7" width="51.1" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#383838" stroke-width="0.9"/><text x="906.0" y="270.5" text-anchor="end" fill="#f5f5f5" font-size="10.5">$81.82</text><rect x="971.6" y="300.7" width="90.4" height="16.0" rx="3" fill="#0c0c0c" fill-opacity="0.93" stroke="#666666" stroke-width="0.9"/><text x="1056.0" y="312.5" text-anchor="end" fill="#ffffff" font-size="11.5" font-weight="700">Spot $81.82</text></g><line x1="0" y1="398" x2="1080" y2="398" stroke="#1c1c1c" stroke-width="1"/><g class="iv-chart-pane"><rect x="54" y="402" width="1012" height="103" fill="#050505" stroke="#262626" stroke-width="1"/><line x1="54" y1="497.0" x2="1066" y2="497.0" stroke="#161616" stroke-width="1"/><text x="48" y="500.5" text-anchor="end" fill="#b8b8b8" font-size="11">0%</text><line x1="54" y1="478.2" x2="1066" y2="478.2" stroke="#161616" stroke-width="1"/><text x="48" y="481.7" text-anchor="end" fill="#b8b8b8" font-size="11">0%</text><line x1="54" y1="459.5" x2="1066" y2="459.5" stroke="#161616" stroke-width="1"/><text x="48" y="463.0" text-anchor="end" fill="#b8b8b8" font-size="11">0%</text><line x1="54" y1="440.8" x2="1066" y2="440.8" stroke="#161616" stroke-width="1"/><text x="48" y="444.3" text-anchor="end" fill="#b8b8b8" font-size="11">1%</text><line x1="54" y1="422.0" x2="1066" y2="422.0" stroke="#161616" stroke-width="1"/><text x="48" y="425.5" text-anchor="end" fill="#b8b8b8" font-size="11">1%</text><polygon points="70.0,505 70.0,497.0 494.0,497.0 918.0,497.0 918.0,505" fill="url(#ivArea)"/><polyline points="70.0,497.0 494.0,497.0 918.0,497.0" fill="none" stroke="#f43f5e" stroke-width="2.2" stroke-linejoin="round"/><circle cx="70.0" cy="497.0" r="5.0" fill="#050505" stroke="#f43f5e" stroke-width="1.8"/><circle cx="70.0" cy="497.0" r="2.0" fill="#fda4af"/><rect x="50.4" y="474.0" width="39.3" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#7f1d1d" stroke-width="0.9"/><text x="70.0" y="485.8" text-anchor="middle" fill="#fda4af" font-size="11.0" font-weight="700">0.0%</text><text x="70.0" y="522" text-anchor="middle" fill="#b8b8b8" font-size="11">Active Exp</text><circle cx="494.0" cy="497.0" r="5.0" fill="#050505" stroke="#f43f5e" stroke-width="1.8"/><circle cx="494.0" cy="497.0" r="2.0" fill="#fda4af"/><rect x="474.4" y="474.0" width="39.3" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#7f1d1d" stroke-width="0.9"/><text x="494.0" y="485.8" text-anchor="middle" fill="#fda4af" font-size="11.0" font-weight="700">0.0%</text><text x="494.0" y="522" text-anchor="middle" fill="#b8b8b8" font-size="11">30d Mid</text><circle cx="918.0" cy="497.0" r="5.0" fill="#050505" stroke="#f43f5e" stroke-width="1.8"/><circle cx="918.0" cy="497.0" r="2.0" fill="#fda4af"/><rect x="898.4" y="474.0" width="39.3" height="16.0" rx="3" fill="#050505" fill-opacity="0.93" stroke="#7f1d1d" stroke-width="0.9"/><text x="918.0" y="485.8" text-anchor="middle" fill="#fda4af" font-size="11.0" font-weight="700">0.0%</text><text x="918.0" y="522" text-anchor="middle" fill="#b8b8b8" font-size="11">60+d</text><g class="iv-hover-badge"><rect x="767.0" y="410.0" width="289.0" height="20" rx="4" fill="#0c0c0c" fill-opacity="0.95" stroke="#fbbf24" stroke-width="1"/><text x="775.0" y="423.5" fill="#fbbf24" font-size="11.5" font-weight="700">IV CURVE — Implied Move: ±0.0% (±$0.00)</text></g></g></svg>
+    <div class="viz-foot">
+      <div class="viz-foot-item">
+        <span class="viz-k">Wave Flow</span>
+        <div class="viz-foot-body">Fresh volume is only <span class="sem-emerald">0.0%</span> of existing walls (&lt;50%)—institutions are sitting tight on legacy <span class="sem-cyan">$81.82</span> contracts, keeping the <span class="sem-cyan">$81.82</span> pin firmly locked in.</div>
+      </div>
+      <div class="viz-foot-item">
+        <span class="viz-k">Pin Check</span>
+        <div class="viz-foot-body"><span class="sem-z-intact">Z=0.00x</span> (&lt;1.0x) validates the <span class="sem-cyan">$81.82</span> Friday Magnet—legacy walls remain intact and continue pulling price toward <span class="sem-cyan">$81.82</span>.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box lazy-sec" id="sec-walls">
+    <h2>WALLS &amp; PIN</h2>
+    <div class="viz-strip viz-strip-2">
+      <div class="viz-item">
+        <span class="viz-k">FRIDAY MAGNET</span>
+        <div class="viz-v"><b><span class="sem-cyan">$81.82</span></b></div>
+        <div class="viz-sub">Options not listed yet (Post-IPO — anchored to Spot).</div>
+      </div>
+      <div class="viz-item">
+        <span class="viz-k">OPEN INTEREST (2026-11-27)</span>
+        <div class="viz-v"><b>Calls: <span class="sem-emerald">0</span> | Puts: <span class="sem-crimson">0</span></b></div>
+        <div class="viz-sub mono">Today Vol &mdash; Calls: <span class="sem-emerald">0</span> | Puts: <span class="sem-crimson">0</span></div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:8px;">
+      <div>
+        <div class="strike-ladder">  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px;">    <div><b>STRIKE WALLS</b> <span class="sub">(Translucent = OI Wall &bull; Bright Fill = Today Vol)</span></div>    <div class="exp-seg-dock" role="tablist" aria-label="Expiration cycle"><button type="button" class="exp-seg-btn active" data-ladder-btn="front" onclick="switchLadder('front', this)"><span class="exp-seg-tier">Friday</span><span class="exp-seg-dt">11/27</span></button><button type="button" class="exp-seg-btn" data-ladder-btn="mid" onclick="switchLadder('mid', this)"><span class="exp-seg-tier">30+d</span><span class="exp-seg-dt">12-18</span></button><button type="button" class="exp-seg-btn" data-ladder-btn="back" onclick="switchLadder('back', this)"><span class="exp-seg-tier">60+d</span><span class="exp-seg-dt">02-23</span></button></div>  </div>  <div class="ladder-hdr"><span>&larr; PUT FLOORS (<span class="lnum-vol">Vol</span> <span class="lnum-sep">/</span> <span class="lnum-oi">OI</span>)</span><span>STRIKE (% SPOT)</span><span>CALL CEILINGS (<span class="lnum-vol">Vol</span> <span class="lnum-sep">/</span> <span class="lnum-oi">OI</span>) &rarr;</span></div>  <div class="ladder-pane active" data-ladder-pane="front"><div class="sub" style="padding:12px 0;">No wall strikes available for 2026-11-27.</div></div>  <div class="ladder-pane" data-ladder-pane="mid"><div class="sub" style="padding:12px 0;">No wall strikes available for 2026-12-18.</div></div>  <div class="ladder-pane" data-ladder-pane="back"><div class="sub" style="padding:12px 0;">No wall strikes available for 2027-02-23.</div></div>  </div>
+      </div>
+      <div>
+        <div class="sweet-spot-box">
+          <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px;">
+            <b>DEALER SWEET-SPOT (2026-11-27)</b>
+            <span class="sub">Lowest total cash payout = Friday Pin magnet.</span>
+          </div>
+          <div class="table-wrap">
+            <table class="chain-table sweet-spot-table">
+              <thead><tr><th>Strike</th><th>Call Payout</th><th>Put Payout</th><th>Total Payout</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="otm-chain-box" id="otm-sub-dollar-chain">  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px;">    <b id="otm-chain-title">OTM SUB-$1.00 OPTIONS CHAIN (2026-11-27)</b>    <div class="exp-seg-dock" role="tablist" aria-label="Expiration cycle"><button type="button" class="exp-seg-btn active" data-otm-btn="front" data-otm-exp="2026-11-27" onclick="switchOtmChain('front', this)"><span class="exp-seg-tier">Friday</span><span class="exp-seg-dt">11/27</span></button><button type="button" class="exp-seg-btn" data-otm-btn="mid" data-otm-exp="2026-12-18" onclick="switchOtmChain('mid', this)"><span class="exp-seg-tier">30+d</span><span class="exp-seg-dt">12-18</span></button><button type="button" class="exp-seg-btn" data-otm-btn="back" data-otm-exp="2027-02-23" onclick="switchOtmChain('back', this)"><span class="exp-seg-tier">60+d</span><span class="exp-seg-dt">02-23</span></button></div>  </div>  <div class="otm-pane active" data-otm-pane="front"><div class="otm-chain-grid"><div><div style='font-size:11px;font-weight:700;color:#f87171;margin-bottom:2px;letter-spacing:0.3px;'>OTM PUTS • Strike &lt; Spot</div><div class='table-wrap'><table class='chain-table otm-sub-table'><thead><tr><th>Strike</th><th>Price</th><th>Bid/Ask</th><th>Vol/OI</th><th>IV</th></tr></thead><tbody><tr><td colspan='5' class='sub'>No OTM puts &lt;= $1.00.</td></tr></tbody></table></div></div><div><div style='font-size:11px;font-weight:700;color:#34d399;margin-bottom:2px;letter-spacing:0.3px;'>OTM CALLS • Strike &gt; Spot</div><div class='table-wrap'><table class='chain-table otm-sub-table'><thead><tr><th>Strike</th><th>Price</th><th>Bid/Ask</th><th>Vol/OI</th><th>IV</th></tr></thead><tbody><tr><td colspan='5' class='sub'>No OTM calls &lt;= $1.00.</td></tr></tbody></table></div></div></div></div>  <div class="otm-pane" data-otm-pane="mid"><div class="otm-chain-grid"><div><div style='font-size:11px;font-weight:700;color:#f87171;margin-bottom:2px;letter-spacing:0.3px;'>OTM PUTS • Strike &lt; Spot</div><div class='table-wrap'><table class='chain-table otm-sub-table'><thead><tr><th>Strike</th><th>Price</th><th>Bid/Ask</th><th>Vol/OI</th><th>IV</th></tr></thead><tbody><tr><td colspan='5' class='sub'>No OTM puts &lt;= $1.00.</td></tr></tbody></table></div></div><div><div style='font-size:11px;font-weight:700;color:#34d399;margin-bottom:2px;letter-spacing:0.3px;'>OTM CALLS • Strike &gt; Spot</div><div class='table-wrap'><table class='chain-table otm-sub-table'><thead><tr><th>Strike</th><th>Price</th><th>Bid/Ask</th><th>Vol/OI</th><th>IV</th></tr></thead><tbody><tr><td colspan='5' class='sub'>No OTM calls &lt;= $1.00.</td></tr></tbody></table></div></div></div></div>  <div class="otm-pane" data-otm-pane="back"><div class="otm-chain-grid"><div><div style='font-size:11px;font-weight:700;color:#f87171;margin-bottom:2px;letter-spacing:0.3px;'>OTM PUTS • Strike &lt; Spot</div><div class='table-wrap'><table class='chain-table otm-sub-table'><thead><tr><th>Strike</th><th>Price</th><th>Bid/Ask</th><th>Vol/OI</th><th>IV</th></tr></thead><tbody><tr><td colspan='5' class='sub'>No OTM puts &lt;= $1.00.</td></tr></tbody></table></div></div><div><div style='font-size:11px;font-weight:700;color:#34d399;margin-bottom:2px;letter-spacing:0.3px;'>OTM CALLS • Strike &gt; Spot</div><div class='table-wrap'><table class='chain-table otm-sub-table'><thead><tr><th>Strike</th><th>Price</th><th>Bid/Ask</th><th>Vol/OI</th><th>IV</th></tr></thead><tbody><tr><td colspan='5' class='sub'>No OTM calls &lt;= $1.00.</td></tr></tbody></table></div></div></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box lazy-sec" id="sec-trend">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;"><h2 style="margin:0;">MACRO TRENDLINE &amp; SD CHANNELS</h2><span class="pill pill-muted">2&ndash;3Y Weekly Candlesticks</span></div>
+      <div class="legend-pills" style="margin-top:0;">
+        <span class="lpill active"><span class="ldot" style="background:#34d399"></span>+1 sd / -1 sd</span>
+        <span class="lpill active"><span class="ldot" style="background:#facc15"></span>+2 sd / -2 sd</span>
+        <span class="lpill active"><span class="ldot" style="background:#fb923c"></span>+3 sd / -3 sd</span>
+      </div>
+    </div>
+    <svg class="mc-svg" id="sd-channel-svg" viewBox="0 0 960 390" style="width:100%;height:auto;border:1px solid #262626;border-radius:6px;margin-top:6px;display:block;"><defs>  <linearGradient id="sdBgGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#050505"/><stop offset="100%" stop-color="#050505"/></linearGradient>  <clipPath id="sdPlotClip"><rect x="58" y="16" width="846" height="338"/></clipPath></defs><rect x="0" y="0" width="960" height="390" rx="6" fill="url(#sdBgGrad)"/><rect x="58" y="16" width="846" height="338" fill="#050505" stroke="#262626" stroke-width="1"/><line x1="58" y1="354.0" x2="904" y2="354.0" stroke="#161616" stroke-width="1"/><text x="51" y="357.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$74</text><line x1="58" y1="286.4" x2="904" y2="286.4" stroke="#161616" stroke-width="1"/><text x="51" y="290.2" text-anchor="end" fill="#b8b8b8" font-size="11.5">$82</text><line x1="58" y1="218.8" x2="904" y2="218.8" stroke="#161616" stroke-width="1"/><text x="51" y="222.6" text-anchor="end" fill="#b8b8b8" font-size="11.5">$91</text><line x1="58" y1="151.2" x2="904" y2="151.2" stroke="#161616" stroke-width="1"/><text x="51" y="155.0" text-anchor="end" fill="#b8b8b8" font-size="11.5">$100</text><line x1="58" y1="83.6" x2="904" y2="83.6" stroke="#161616" stroke-width="1"/><text x="51" y="87.4" text-anchor="end" fill="#b8b8b8" font-size="11.5">$108</text><line x1="58" y1="16.0" x2="904" y2="16.0" stroke="#161616" stroke-width="1"/><text x="51" y="19.8" text-anchor="end" fill="#b8b8b8" font-size="11.5">$117</text><line x1="68.0" y1="16" x2="68.0" y2="354" stroke="#121212" stroke-width="1"/><line x1="68.0" y1="354" x2="68.0" y2="358" stroke="#334155" stroke-width="1"/><text x="68.0" y="372" text-anchor="middle" fill="#b8b8b8" font-size="11">11/19</text><line x1="321.3" y1="16" x2="321.3" y2="354" stroke="#121212" stroke-width="1"/><line x1="321.3" y1="354" x2="321.3" y2="358" stroke="#334155" stroke-width="1"/><text x="321.3" y="372" text-anchor="middle" fill="#b8b8b8" font-size="11">11/20</text><line x1="574.7" y1="16" x2="574.7" y2="354" stroke="#121212" stroke-width="1"/><line x1="574.7" y1="354" x2="574.7" y2="358" stroke="#334155" stroke-width="1"/><text x="574.7" y="372" text-anchor="middle" fill="#b8b8b8" font-size="11">11/23</text><line x1="828.0" y1="16" x2="828.0" y2="354" stroke="#121212" stroke-width="1"/><line x1="828.0" y1="354" x2="828.0" y2="358" stroke="#334155" stroke-width="1"/><text x="828.0" y="372" text-anchor="middle" fill="#b8b8b8" font-size="11">11/24</text><g clip-path="url(#sdPlotClip)"><polygon points="58.0,145.3 904.0,268.2 904.0,279.3 58.0,156.4" fill="#f97316" fill-opacity="0.06"/><polygon points="58.0,200.9 904.0,323.8 904.0,335.0 58.0,212.1" fill="#f97316" fill-opacity="0.06"/><polygon points="58.0,156.4 904.0,279.3 904.0,290.5 58.0,167.6" fill="#eab308" fill-opacity="0.07"/><polygon points="58.0,189.8 904.0,312.7 904.0,323.8 58.0,200.9" fill="#eab308" fill-opacity="0.07"/><polygon points="58.0,167.6 904.0,290.5 904.0,312.7 58.0,189.8" fill="#10b981" fill-opacity="0.09"/><line class="sd-trendline" x1="58.0" y1="178.7" x2="904.0" y2="301.6" stroke="#e2e8f0" stroke-width="1.6" stroke-dasharray="6,4" opacity="0.90"/><line class="sd-rail" x1="58.0" y1="145.3" x2="904.0" y2="268.2" stroke="#fb923c" stroke-width="1.4" stroke-dasharray="4,3" opacity="0.92"/><line class="sd-rail" x1="58.0" y1="156.4" x2="904.0" y2="279.3" stroke="#facc15" stroke-width="1.4" stroke-dasharray="5,3" opacity="0.92"/><line class="sd-rail" x1="58.0" y1="167.6" x2="904.0" y2="290.5" stroke="#34d399" stroke-width="1.6" opacity="0.92"/><line class="sd-rail" x1="58.0" y1="189.8" x2="904.0" y2="312.7" stroke="#34d399" stroke-width="1.6" opacity="0.92"/><line class="sd-rail" x1="58.0" y1="200.9" x2="904.0" y2="323.8" stroke="#facc15" stroke-width="1.4" stroke-dasharray="5,3" opacity="0.92"/><line class="sd-rail" x1="58.0" y1="212.1" x2="904.0" y2="335.0" stroke="#fb923c" stroke-width="1.4" stroke-dasharray="4,3" opacity="0.92"/><g class="sd-candle"><title>2026-11-19 | O: $111.50 | H: $115.10 | L: $92.72 | C: $97.17</title><line class="candle-wick" x1="68.0" y1="31.4" x2="68.0" y2="205.5" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="63.2" y="59.4" width="9.5" height="111.5" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-11-20 | O: $89.86 | H: $92.56 | L: $83.05 | C: $88.91</title><line class="candle-wick" x1="321.3" y1="206.7" x2="321.3" y2="280.7" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="316.6" y="227.8" width="9.5" height="7.3" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-11-23 | O: $93.65 | H: $94.24 | L: $84.61 | C: $87.64</title><line class="candle-wick" x1="574.7" y1="193.7" x2="574.7" y2="268.6" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="570.0" y="198.3" width="9.5" height="46.7" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><g class="sd-candle"><title>2026-11-24 | O: $83.44 | H: $83.49 | L: $75.61 | C: $81.82</title><line class="candle-wick" x1="828.0" y1="277.3" x2="828.0" y2="338.6" stroke="#f87171" stroke-width="1.2"/><rect class="candle-body" x="823.2" y="277.7" width="9.5" height="12.6" fill="#ef4444" stroke="#f87171" stroke-width="0.6"/></g><line class="sd-last-line" x1="828.0" y1="290.3" x2="845.2" y2="290.3" stroke="#f87171" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.85"/></g><g class="sd-last-price"><rect x="845.2" y="281.3" width="54.8" height="18.0" rx="3" fill="#0c0c0c" fill-opacity="0.95" stroke="#f87171" stroke-width="1.2"/><text x="894.0" y="294.3" text-anchor="end" fill="#ffffff" font-size="11.5" font-weight="700">$81.82</text></g><text class="sd-rail-label" x="910.0" y="271.7" text-anchor="start" fill="#fb923c" font-size="11.5" font-weight="700">+3 sd</text><text class="sd-rail-label" x="910.0" y="284.7" text-anchor="start" fill="#facc15" font-size="11.5" font-weight="700">+2 sd</text><text class="sd-rail-label" x="910.0" y="297.7" text-anchor="start" fill="#34d399" font-size="11.5" font-weight="700">+1 sd</text><text class="sd-rail-label" x="910.0" y="316.2" text-anchor="start" fill="#34d399" font-size="11.5" font-weight="700">-1 sd</text><text class="sd-rail-label" x="910.0" y="329.2" text-anchor="start" fill="#facc15" font-size="11.5" font-weight="700">-2 sd</text><text class="sd-rail-label" x="910.0" y="342.2" text-anchor="start" fill="#fb923c" font-size="11.5" font-weight="700">-3 sd</text></svg>
+  </div>
+
+  <div class="box lazy-sec" id="sec-intel" style="border-top: 3px solid var(--cyan);">
+    <h2>INTEL FEED</h2>
+
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-label">RATES</div>
+        <div class="stat-val"><span class="sem-slate">0%</span> (<span class="sem-slate">+0.00</span>)</div>
+        <div class="sub">10Y-3M Spread: <span class="sem-slate">+0.00%</span></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">DOLLAR</div>
+        <div class="stat-val"><span class="sem-slate">0</span> (<span class="sem-slate">+0.00%</span>)</div>
+        <div class="sub"></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">SECTORS</div>
+        <div class="stat-val">SMH <span class="sem-emerald">+0.00%</span> | URA <span class="sem-emerald">+0.00%</span></div>
+        <div class="sub">AI Compute vs Grid Power Pulse</div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:8px;">
+      <div>
+        <b>SEC FILINGS</b>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Form</th><th>Signal</th><th>Flagged Items (EDGAR Link)</th></tr></thead>
+            <tbody><tr><td colspan='4'>No SEC filings cached for this ticker yet.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <b>GLOBAL ALERTS</b>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Severity &amp; Sympathy</th><th>Headline &amp; Source</th></tr></thead>
+            <tbody><tr><td colspan='2'>No OSINT events cached yet.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="sec-earnings-watcher">
+    <div class="ew-head">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span class="term-hdr" style="margin:0;font-size:12px;">SEC 8-K EARNINGS RUBRIC EVALUATOR (LOCAL OLLAMA)</span>
+        <span class="ew-status" id="earnings-watcher-status">Idle</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <button type="button" class="qbtn" id="ew-save-rubric-btn" onclick="saveEarningsRubric()">Save Rubric</button>
+        <button type="button" class="qbtn" id="ew-poll-btn" onclick="triggerEarningsPoll('poll_now')">Poll Now / Test</button>
+        <button type="button" class="qbtn" id="ew-test-latest-btn" onclick="triggerEarningsPoll('test_latest')">Test Latest 8-K</button>
+      </div>
+    </div>
+    <div class="ew-grid">
+      <textarea id="earnings-rubric-input" aria-label="Earnings Rubric Prompt" placeholder="Enter your custom SEC 8-K earnings evaluation rubric..."></textarea>
+      <div id="earnings-summary-output" aria-live="polite">Waiting for Form 8-K / Exhibit 99.1 summary (auto-polls at 4:15 PM ET or click Poll Now / Test)...</div>
+    </div>
+  </div>
+
+  <div id="live-call-listener">
+    <div class="ew-head">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span class="term-hdr" style="margin:0;font-size:12px;">LIVE CALL AUDIO LISTENER (60S CHUNKS &bull; FASTER-WHISPER + OLLAMA)</span>
+        <span class="ew-status" id="call-listener-status">Idle</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <button type="button" class="qbtn" id="cl-listen-url-btn" onclick="startCallListener('url')">Listen URL</button>
+        <button type="button" class="qbtn" id="cl-listen-sys-btn" onclick="startCallListener('system_audio')">Listen System Audio</button>
+        <button type="button" class="qbtn" id="cl-stop-btn" onclick="stopCallListener()" style="border-color:rgba(244,63,94,0.45);color:#f87171;">Stop</button>
+      </div>
+    </div>
+    <div class="cl-controls">
+      <input type="text" id="call-stream-url-input" aria-label="Earnings Call Audio or Stream URL" placeholder="Paste YouTube / .m3u8 IR webcast URL (or leave blank for Windows System Audio)..." />
+      <input type="text" id="call-stream-label-input" aria-label="Earnings Call Label" value="ANT Earnings Call" placeholder="Call label (e.g. NVDA Q3 Call)" />
+    </div>
+    <div id="call-summary-output" aria-live="polite">Idle — paste a stream URL or click Listen System Audio to transcribe 60s chunks locally via faster-whisper &amp; stream an objective Ollama recap...</div>
+  </div>
+</div>
+
+<!-- EXPANDABLE RIGHT-BOUND SLIDE-OVER DRAWER: WATCHLIST, EOD AUDITS, TRANCHE JOURNAL & CREATOR ARCHIVE -->
+<aside id="lab-drawer" aria-label="Lab and Intel Background Drawer">
+  <div class="drawer-head">
+    <div>
+      <span class="term-hdr" style="margin:0;">LAB DRAWER</span>
+      <span class="sub" style="margin-left:8px;">Watchlist, Audits &amp; Journal</span>
+    </div>
+    <button type="button" onclick="toggleLabDrawer(false)" title="Collapse drawer" aria-label="Collapse drawer" style="padding:3px 10px;font-weight:700;font-size:14px;">&rarr;</button>
+  </div>
+  <div class="drawer-body">
+    <div class="tk-watchlist"><div class="tk-grid-hdr"><span class="tk-hdr-lbl cyan-txt">Stocks</span><span class="sub">Weekly / Monthly</span></div><div class="tk-grid4"><a class="tk-card tk-stock" href="/?ticker=NVDA&tf=weekly"><span class="tk-sym">NVDA</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock" href="/?ticker=TSLA&tf=weekly"><span class="tk-sym">TSLA</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock" href="/?ticker=AMD&tf=weekly"><span class="tk-sym">AMD</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock" href="/?ticker=META&tf=weekly"><span class="tk-sym">META</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock" href="/?ticker=PLTR&tf=weekly"><span class="tk-sym">PLTR</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock" href="/?ticker=COIN&tf=weekly"><span class="tk-sym">COIN</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock" href="/?ticker=AMZN&tf=weekly"><span class="tk-sym">AMZN</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock" href="/?ticker=UUUU&tf=weekly"><span class="tk-sym">UUUU</span><span class="tk-tag">W/M</span></a><a class="tk-card tk-stock active" href="/?ticker=ANT&tf=weekly"><span class="tk-sym">ANT</span><span class="tk-tag">W/M</span></a></div><div class="tk-grid-hdr" style="margin-top:8px;"><span class="tk-hdr-lbl amber-txt">0DTE Indices</span><span class="sub">Daily Cycle</span></div><div class="tk-grid4"><a class="tk-card tk-idx" href="/?ticker=SPY&tf=weekly"><span class="tk-sym">SPY</span><span class="tk-tag">0DTE</span></a><a class="tk-card tk-idx" href="/?ticker=QQQ&tf=weekly"><span class="tk-sym">QQQ</span><span class="tk-tag">0DTE</span></a><a class="tk-card tk-idx" href="/?ticker=IWM&tf=weekly"><span class="tk-sym">IWM</span><span class="tk-tag">0DTE</span></a><a class="tk-card tk-idx" href="/?ticker=DIA&tf=weekly"><span class="tk-sym">DIA</span><span class="tk-tag">0DTE</span></a><a class="tk-card tk-idx" href="/?ticker=SPX&tf=weekly"><span class="tk-sym">SPX</span><span class="tk-tag">0DTE</span></a><a class="tk-card tk-idx" href="/?ticker=XSP&tf=weekly"><span class="tk-sym">XSP</span><span class="tk-tag">0DTE</span></a><a class="tk-card tk-idx" href="/?ticker=NDX&tf=weekly"><span class="tk-sym">NDX</span><span class="tk-tag">0DTE</span></a><a class="tk-card tk-idx" href="/?ticker=RUT&tf=weekly"><span class="tk-sym">RUT</span><span class="tk-tag">0DTE</span></a></div></div>
+    <div class="box lazy-sec" id="sec-audit" style="margin-bottom:10px;">
+      <h2>TRADE AUDIT</h2>
+
+      <div style="margin-bottom:12px;">
+        <b>End-of-Day Open Interest vs. Prior Day Volume Check (Did Volume Stick?)</b>
+        <div class="table-wrap">
+          <table class="chain-table">
+            <thead><tr><th>Expire</th><th>Contract</th><th>Prior Vol</th><th>Prior OI &rarr; Current OI</th><th>Settlement Verdict</th></tr></thead>
+            <tbody><tr><td colspan='5'>No spikes logged yet.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <b>Friday Close vs. Monday Open IV &amp; Weekend Decay Audit (60&ndash;150d Benchmark Call)</b>
+        <div class="table-wrap">
+          <table class="chain-table">
+            <thead><tr><th>Session</th><th>60&ndash;150d Contract</th><th>Mark (Extrinsic)</th><th>IV % (Change)</th><th>Audit Note</th></tr></thead>
+            <tbody><tr><td class='mono'>2026-11-24 <span class='sub'>(Tuesday)</span></td><td class='mono'>2027-02-23 <b>$81.82C</b></td><td class='mono'><b>$0.0</b> <span class='sub'>(Ext: $0.0)</span></td><td class='mono'><b>0.0%</b> <span class='sub'>(+0.0%)</span></td><td class='sub'>Baseline logged for 2027-02-23 $81.82 Call (60-150d)</td></tr><tr><td class='mono'>2026-11-24 <span class='sub'>(Tuesday)</span></td><td class='mono'>2027-02-23 <b>$76.44C</b></td><td class='mono'><b>$0.0</b> <span class='sub'>(Ext: $0.0)</span></td><td class='mono'><b>0.0%</b> <span class='sub'>(+0.0%)</span></td><td class='sub'>Baseline logged for 2027-02-23 $76.44 Call (60-150d)</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <b>Sympathy Catalyst &amp; Extrinsic Value Tranche Journal</b>
+        <div class="table-wrap">
+          <table class="chain-table">
+            <thead><tr><th>Contract</th><th>Entry &rarr; Now Mark</th><th>Entry &rarr; Now Extrinsic ($)</th><th>Entry &rarr; Now IV (%)</th><th>Catalyst / Sympathy Note</th></tr></thead>
+            <tbody><tr><td class='mono'><b>ANT</b> 2027-02-23 <b>$81.82C</b></td><td class='mono'>$0.0 &rarr; <b>$0.0</b></td><td class='mono'>$0.0 &rarr; <b>$0.0</b> <span class='up'>(+0.00)</span></td><td class='mono'>0.0% &rarr; <b>0.0%</b> <span class='up'>(+0.0%)</span></td><td class='sub'>Auto-tracked 60-150d OTM Call | Next Catalyst: PCE Inflation</td></tr><tr><td class='mono'><b>ANT</b> 2027-02-23 <b>$76.44C</b></td><td class='mono'>$0.0 &rarr; <b>$0.0</b></td><td class='mono'>$0.0 &rarr; <b>$0.0</b> <span class='up'>(+0.00)</span></td><td class='mono'>0.0% &rarr; <b>0.0%</b> <span class='up'>(+0.0%)</span></td><td class='sub'>Auto-tracked 60-150d OTM Call | Next Catalyst: PCE Inflation</td></tr></tbody>
+          </table>
+        </div>
+        <form method="GET" action="/add_tranche" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;background:var(--bg-elevated);padding:9px 11px;border:1px solid var(--border);border-radius:6px;">
+          <input type="hidden" name="ticker" value="ANT">
+          <input type="hidden" name="spot" value="81.82">
+          <label class="fld"><span>Expire</span><input type="text" name="exp" value="2027-02-23" style="width:105px;" placeholder="YYYY-MM-DD"></label>
+          <label class="fld"><span>Strike</span><input type="number" step="0.5" name="strike" value="81.82" style="width:80px;" placeholder="Strike"></label>
+          <label class="fld"><span>Mark $</span><input type="number" step="0.05" name="mark" value="0.0" style="width:80px;" placeholder="Mark $"></label>
+          <label class="fld"><span>IV %</span><input type="number" step="0.1" name="iv" value="0.0" style="width:74px;" placeholder="IV %"></label>
+          <label class="fld"><span>Catalyst Note</span><input type="text" name="note" value="Sympathy / Scaling Tranche" style="width:210px;" placeholder="Catalyst Note"></label>
+          <button type="submit" class="qbtn-accent" style="padding:7px 13px;">Save Tranche</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="box lazy-sec">
+      <h2>CREATOR NOTES</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Creator</th><th>Video Title</th><th>Transcript</th><th>Detected Tags</th></tr></thead>
+          <tbody><tr><td colspan='5'>No YouTube creator videos cached yet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <!--
+    <div class="box lazy-sec" style="margin-top:10px;">
+      <b>QUICK READ</b>
+      <ul></ul>
+    </div>
+    -->
+  </div>
+</aside>
+<div role="button" tabindex="0" id="drawer-edge-tab" onclick="toggleLabDrawer()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleLabDrawer();}" title="Open Watchlist, Post-Close Audit &amp; Journal" aria-label="Open slide-over drawer">&larr;</div>
+
+<script>
+function showPageLoader() {
+  var b = document.getElementById('nav-loader');
+  if (b) b.style.width = '72%';
+  var o = document.getElementById('page-loading-overlay');
+  if (o) o.classList.add('active');
+}
+function hidePageLoader() {
+  var b = document.getElementById('nav-loader');
+  if (b) b.style.width = '0';
+  var o = document.getElementById('page-loading-overlay');
+  if (o) o.classList.remove('active');
+}
+window.addEventListener('pageshow', hidePageLoader);
+window.addEventListener('beforeunload', showPageLoader);
+document.querySelectorAll('a.qbtn:not([target="_blank"]), a.exp-seg-btn:not([target="_blank"]), a.tk-card, form').forEach(function(el) {
+  var ev = el.tagName === 'FORM' ? 'submit' : 'click';
+  el.addEventListener(ev, showPageLoader);
+});
+function toggleSvgLayer(btn) {
+  var cls = btn.getAttribute('data-layer');
+  var svg = document.getElementById('main-wave-svg');
+  if (!svg || !cls) return;
+  var active = btn.classList.toggle('active');
+  svg.querySelectorAll('.' + cls).forEach(function(g) {
+    g.classList.toggle('layer-hidden', !active);
+  });
+}
+function switchLadder(targetPane, btn) {
+  var box = btn.closest('.strike-ladder');
+  if (!box) return;
+  box.querySelectorAll('[data-ladder-btn]').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-ladder-btn') === targetPane);
+  });
+  box.querySelectorAll('.ladder-pane').forEach(function(p) {
+    p.classList.toggle('active', p.getAttribute('data-ladder-pane') === targetPane);
+  });
+}
+function switchOtmChain(targetPane, btn) {
+  var box = btn.closest('.otm-chain-box');
+  if (!box) return;
+  box.querySelectorAll('[data-otm-btn]').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-otm-btn') === targetPane);
+  });
+  box.querySelectorAll('.otm-pane').forEach(function(p) {
+    p.classList.toggle('active', p.getAttribute('data-otm-pane') === targetPane);
+  });
+  var ttl = box.querySelector('#otm-chain-title');
+  var exp = btn.getAttribute('data-otm-exp');
+  if (ttl && exp) ttl.textContent = 'OTM SUB-$1.00 OPTIONS CHAIN (' + exp + ')';
+}
+function toggleLabDrawer(forceOpen) {
+  var d = document.getElementById('lab-drawer');
+  var bk = document.getElementById('drawer-backdrop');
+  if (!d || !bk) return;
+  var open = (typeof forceOpen === 'boolean') ? forceOpen : !d.classList.contains('open');
+  d.classList.toggle('open', open);
+  bk.classList.toggle('open', open);
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') toggleLabDrawer(false);
+});
+(function() {
+  if (window.location.hash === '#sec-audit' || window.location.search.indexOf('added=1') !== -1) {
+    toggleLabDrawer(true);
+  }
+  var el = document.getElementById('live-et-clock');
+  if (!el || typeof Intl === 'undefined') return;
+  var fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    weekday: 'short', month: 'short', day: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+  });
+  function tick() {
+    var parts = {};
+    fmt.formatToParts(new Date()).forEach(function(p) { parts[p.type] = p.value; });
+    var s = (parts.weekday + ' ' + parts.month + ' ' + parts.day + ', ' + parts.year + ' • ' + parts.hour + ':' + parts.minute + ':' + parts.second + ' ' + parts.dayPeriod + ' ET').toUpperCase();
+    el.textContent = s;
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+(function() {
+  var LS_KEY = 'aeos_earnings_rubric';
+  var DEFAULT_RUBRIC = "1. Headline Revenue & EPS vs. Prior Quarter / YoY (Beat or Miss?)\n2. Data Center / Core Segment Revenue & Margin Trajectory\n3. Next-Quarter Revenue, Gross Margin, & OpEx Guidance\n4. Inventory, Supply-Chain, Customer Concentration, or Regulatory Red Flags\n5. 3-Bullet Executive Verdict (Bullish / Neutral / Bearish)";
+  var rubricEl = document.getElementById('earnings-rubric-input');
+  var summaryEl = document.getElementById('earnings-summary-output');
+  var statusEl = document.getElementById('earnings-watcher-status');
+  if (!rubricEl || !summaryEl || !statusEl) return;
+
+  var activeTicker = "ANT";
+  var isLocal = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost');
+  var apiBase = isLocal ? 'http://localhost:8000' : '';
+
+  try {
+    var saved = localStorage.getItem(LS_KEY);
+    rubricEl.value = (saved && saved.trim()) ? saved : DEFAULT_RUBRIC;
+  } catch (e) {
+    rubricEl.value = DEFAULT_RUBRIC;
+  }
+
+  function renderWatcherState(st) {
+    if (!st || typeof st !== 'object') return;
+    var parts = [st.status || 'Idle'];
+    if (st.processed_at) parts.push('Processed: ' + st.processed_at);
+    else if (st.last_checked_at) parts.push('Checked: ' + st.last_checked_at);
+    if (st.model_used) parts.push(st.model_used);
+    statusEl.textContent = parts.join(' • ');
+    if (st.status && st.status.indexOf('8-K Processed') !== -1) statusEl.style.color = '#10b981';
+    else if (st.status === 'Polling' || st.status === 'Processing 8-K') statusEl.style.color = '#22d3ee';
+    else if (st.status === 'Error') statusEl.style.color = '#f43f5e';
+    else statusEl.style.color = '#94a3b8';
+
+    if (st.summary && st.summary.trim()) {
+      summaryEl.textContent = st.summary;
+    } else if (st.error && st.error.trim()) {
+      summaryEl.textContent = 'Watcher notice: ' + st.error;
+    }
+    if (st.rubric && st.rubric.trim() && document.activeElement !== rubricEl) {
+      var lsVal = '';
+      try { lsVal = localStorage.getItem(LS_KEY) || ''; } catch (e) {}
+      if (!lsVal.trim()) {
+        rubricEl.value = st.rubric;
+      }
+    }
+  }
+
+  function ewFetch(path, opts) {
+    var primary = apiBase ? (apiBase + path) : path;
+    return fetch(primary, opts).catch(function(err) {
+      if (apiBase) return fetch(path, opts);
+      throw err;
+    });
+  }
+
+  window.saveEarningsRubric = function() {
+    var val = rubricEl.value || '';
+    try { localStorage.setItem(LS_KEY, val); } catch (e) {}
+    ewFetch('/api/earnings-rubric', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rubric: val, ticker: activeTicker })
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d && d.state) renderWatcherState(d.state);
+      statusEl.textContent = 'Rubric Saved • ' + (statusEl.textContent || 'Idle');
+    }).catch(function() {
+      statusEl.textContent = 'Saved in browser (backend :8000 offline)';
+      statusEl.style.color = '#fb923c';
+    });
+  };
+
+  window.triggerEarningsPoll = function(actionName) {
+    var val = rubricEl.value || '';
+    try { localStorage.setItem(LS_KEY, val); } catch (e) {}
+    statusEl.textContent = 'Polling SEC EDGAR + Ollama...';
+    statusEl.style.color = '#22d3ee';
+    ewFetch('/api/earnings-rubric', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rubric: val, ticker: activeTicker })
+    }).finally(function() {
+      ewFetch('/api/earnings-poll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: actionName || 'poll_now', ticker: activeTicker })
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d && d.state) renderWatcherState(d.state);
+      }).catch(function() {
+        statusEl.textContent = 'Watcher backend offline (run earnings_watcher.py on :8000)';
+        statusEl.style.color = '#fb923c';
+      });
+    });
+  };
+
+  function pollEarningsStatus() {
+    fetch('http://localhost:8000/api/earnings-status').catch(function() {
+      return isLocal ? Promise.reject() : fetch('/api/earnings-status');
+    }).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function(st) {
+      renderWatcherState(st);
+    }).catch(function() {
+      // Keep quiet when local :8000 service isn't started yet
+    });
+  }
+
+  rubricEl.addEventListener('change', function() {
+    try { localStorage.setItem(LS_KEY, rubricEl.value || ''); } catch (e) {}
+  });
+  pollEarningsStatus();
+  setInterval(pollEarningsStatus, 5000);
+
+  var callStatusEl = document.getElementById('call-listener-status');
+  var callSummaryEl = document.getElementById('call-summary-output');
+  var callUrlEl = document.getElementById('call-stream-url-input');
+  var callLabelEl = document.getElementById('call-stream-label-input');
+
+  function renderCallListenerState(st) {
+    if (!st || typeof st !== 'object' || !callStatusEl || !callSummaryEl) return;
+    var rawSt = String(st.status || 'idle');
+    var stUp = rawSt.charAt(0).toUpperCase() + rawSt.slice(1);
+    var parts = [stUp];
+    if (st.label) parts.push(st.label);
+    if (typeof st.chunks_processed === 'number' && st.chunks_processed > 0) {
+      parts.push('Chunks: ' + st.chunks_processed);
+    }
+    if (st.last_chunk_timestamp) parts.push(st.last_chunk_timestamp);
+    callStatusEl.textContent = parts.join(' • ');
+
+    if (rawSt === 'listening') callStatusEl.style.color = '#10b981';
+    else if (rawSt === 'processing') callStatusEl.style.color = '#22d3ee';
+    else if (rawSt === 'error') callStatusEl.style.color = '#f43f5e';
+    else callStatusEl.style.color = '#94a3b8';
+
+    var blocks = [];
+    if (st.running_summary && st.running_summary.trim()) {
+      blocks.push(st.running_summary.trim());
+    }
+    if (st.latest_transcript_chunk && st.latest_transcript_chunk.trim()) {
+      blocks.push('--- LATEST 60S TRANSCRIPT ---\n' + st.latest_transcript_chunk.trim());
+    }
+    if (st.error && st.error.trim()) {
+      blocks.push('Listener notice: ' + st.error.trim());
+    }
+    if (blocks.length > 0) {
+      callSummaryEl.textContent = blocks.join('\n\n');
+    }
+  }
+
+  window.startCallListener = function(mode) {
+    var urlVal = callUrlEl ? (callUrlEl.value || '').trim() : '';
+    var labelVal = callLabelEl ? (callLabelEl.value || '').trim() : (activeTicker + ' Earnings Call');
+    if (callStatusEl) {
+      callStatusEl.textContent = (mode === 'system_audio') ? 'Starting System Audio...' : 'Resolving Stream URL...';
+      callStatusEl.style.color = '#22d3ee';
+    }
+    ewFetch('/api/call-listener/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: mode, url: urlVal, label: labelVal })
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d && d.state) renderCallListenerState(d.state);
+    }).catch(function() {
+      if (callStatusEl) {
+        callStatusEl.textContent = 'Call listener backend offline (run earnings_watcher.py on :8000)';
+        callStatusEl.style.color = '#fb923c';
+      }
+    });
+  };
+
+  window.stopCallListener = function() {
+    ewFetch('/api/call-listener/stop', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d && d.state) renderCallListenerState(d.state);
+    }).catch(function() {
+      if (callStatusEl) {
+        callStatusEl.textContent = 'Call listener backend offline';
+        callStatusEl.style.color = '#fb923c';
+      }
+    });
+  };
+
+  function pollCallListenerStatus() {
+    fetch('http://localhost:8000/api/call-listener/status').catch(function() {
+      return isLocal ? Promise.reject() : fetch('/api/call-listener/status');
+    }).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function(st) {
+      renderCallListenerState(st);
+    }).catch(function() {
+      // Keep quiet when local :8000 service isn't running
+    });
+  }
+
+  pollCallListenerStatus();
+  setInterval(pollCallListenerStatus, 5000);
+})();
+</script>
+</body>
+</html>
