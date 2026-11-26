@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Market Intelligence Terminal</title>
+<title>Mark3t</title>
 <style>
   :root {
     color-scheme: dark;
@@ -186,7 +186,7 @@
   </div>
 
   <main class="frame-wrap">
-    <iframe id="term-frame" title="Market Intelligence Terminal"></iframe>
+    <iframe id="term-frame" title="Mark3t"></iframe>
     <div id="empty-state" class="empty-state">
       <b style="color:#22d3ee;font-size:15px;">Waiting for Live Laptop Server or Cached Snapshot</b>
       <div id="empty-detail" class="sub"></div>
@@ -207,6 +207,8 @@
     ticker: (params.get("ticker") || "NVDA").toUpperCase(),
     tf: (params.get("tf") || "weekly").toLowerCase(),
     view: (params.get("view") || "").toLowerCase(),
+    interval: params.get("interval") || "",
+    ext: params.get("ext") || "",
     customUrl: (localStorage.getItem("mc_backend_url") || "").replace(/\/+$/, ""),
     tunnelUrl: "",
     apiTunnelUrl: "",
@@ -387,7 +389,7 @@
       });
       if (!res.ok) throw new Error("HTTP " + res.status);
       var htmlText = await res.text();
-      if (htmlText.indexOf("Market Intelligence Terminal") === -1) {
+      if (htmlText.indexOf("Mark3t") === -1 && htmlText.indexOf("Market Intelligence Terminal") === -1) {
         throw new Error("Unexpected response");
       }
       var qp = new URLSearchParams((pathAndQuery.split("?")[1] || ""));
@@ -408,7 +410,9 @@
       emptyState.classList.remove("open");
       state.mode = "live";
       var labelHost = state.backendUrl.indexOf("127.0.0.1") !== -1 ? "LOCALHOST" : "LIVE TUNNEL";
-      var metaLabel = state.view === "vol-desk" ? "VOL DESK" : (state.ticker + " (" + state.tf + ")");
+      var metaLabel = state.view === "vol-desk"
+        ? "VOL DESK"
+        : (state.view === "chart" ? ("CHART \u2022 " + state.ticker) : (state.ticker + " (" + state.tf + ")"));
       setStatus("live", "LIVE \u2022 " + labelHost, metaLabel);
       frame.removeAttribute("src");
       frame.srcdoc = htmlText;
@@ -494,7 +498,11 @@
       var suffix = isRetry ? "&refresh=1" : "";
       var targetPath = state.view === "vol-desk"
         ? ("/?view=vol-desk" + suffix)
-        : ("/?ticker=" + encodeURIComponent(state.ticker) + "&tf=" + encodeURIComponent(state.tf) + suffix);
+        : (state.view === "chart"
+          ? ("/?view=chart&ticker=" + encodeURIComponent(state.ticker) + "&tf=" + encodeURIComponent(state.tf) +
+             (state.interval ? ("&interval=" + encodeURIComponent(state.interval)) : "") +
+             (state.ext ? ("&ext=" + encodeURIComponent(state.ext)) : "") + suffix)
+          : ("/?ticker=" + encodeURIComponent(state.ticker) + "&tf=" + encodeURIComponent(state.tf) + suffix));
       await fetchLivePath(targetPath);
       return;
     }
